@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Authors: Andrea Ruzzenenti <andrea.ruzzenenti@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/dev/IJoypadController.h>
@@ -19,13 +21,17 @@ using namespace yarp::os;
 
 #define JoyData yarp::dev::IJoypadEvent::joyData
 
-yarp::dev::IJoypadEventDriven::IJoypadEventDriven() : IJoypadEventDriven(10){}
+yarp::dev::IJoypadEventDriven::IJoypadEventDriven() : IJoypadEventDriven(0.01){}
 
-yarp::dev::IJoypadEventDriven::IJoypadEventDriven(int rate) : RateThread(rate)
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
+yarp::dev::IJoypadEventDriven::IJoypadEventDriven(int rate) : IJoypadEventDriven(rate / 1000.0) {}
+#endif
+yarp::dev::IJoypadEventDriven::IJoypadEventDriven(double period) : PeriodicThread(period),
+                                                                   m_event(nullptr),
+                                                                   EventDrivenEnabled(false)
 {
-    EventDrivenEnabled = false;
-    m_event = nullptr;
 }
+
 
 bool isEqual(const float& a, const float& b, const float& tolerance)
 {
@@ -142,7 +148,7 @@ void yarp::dev::IJoypadEventDriven::run()
             if(!isEqual(value, old_buttons[i], 0.00001f))
             {
                 perform = true;
-                buttons.push_back(JoyData<float>(i, value));
+                buttons.emplace_back(i, value);
                 old_buttons[i] = value;
             }
         }
@@ -157,7 +163,7 @@ void yarp::dev::IJoypadEventDriven::run()
             if(!isEqual(value, old_axes[i], 0.00001))
             {
                 perform = true;
-                axes.push_back(JoyData<double>(i, value));
+                axes.emplace_back(i, value);
                 old_axes[i] = value;
             }
         }
@@ -172,7 +178,7 @@ void yarp::dev::IJoypadEventDriven::run()
             if(value != old_hats[i])
             {
                 perform = true;
-                hats.push_back(JoyData<unsigned char>(i, value));
+                hats.emplace_back(i, value);
                 old_hats[i] = value;
             }
         }
@@ -187,7 +193,7 @@ void yarp::dev::IJoypadEventDriven::run()
             if(!isEqual(value, old_trackballs[i], 0.00001))
             {
                 perform = true;
-                trackBalls.push_back(JoyData<yarp::sig::Vector>(i, value));
+                trackBalls.emplace_back(i, value);
                 old_trackballs[i] = value;
             }
         }
@@ -202,7 +208,7 @@ void yarp::dev::IJoypadEventDriven::run()
             if(!isEqual(value, old_sticks[i], 0.00001))
             {
                 perform = true;
-                sticks.push_back(JoyData<yarp::sig::Vector>(i, value));
+                sticks.emplace_back(i, value);
                 old_sticks[i] = value;
             }
         }
@@ -217,7 +223,7 @@ void yarp::dev::IJoypadEventDriven::run()
             if(!isEqual(value, old_touches[i], 0.00001))
             {
                 perform = true;
-                Touch.push_back(JoyData<yarp::sig::Vector>(i, value));
+                Touch.emplace_back(i, value);
                 old_touches[i] = value;
             }
         }
@@ -401,7 +407,7 @@ bool yarp::dev::IJoypadController::executeAction(int action_id)
 bool yarp::dev::IJoypadController::parseActions(const yarp::os::Searchable& cfg, int* count)
 {
     int  dummy;
-    int  i;
+    size_t  i;
     int& actCount = count ? *count : dummy;
     if(!cfg.check(buttActionGroupName))
     {
@@ -435,22 +441,22 @@ bool yarp::dev::IJoypadController::parseActions(const yarp::os::Searchable& cfg,
             actCount = 0;
             return false;
         }
-        if(!keyvalue.get(0).isInt()                 ||
-            keyvalue.get(0).asInt() < 0             ||
-            keyvalue.get(0).asInt() > buttonCount-1 ||
+        if(!keyvalue.get(0).isInt32()                 ||
+            keyvalue.get(0).asInt32() < 0             ||
+           (unsigned int) keyvalue.get(0).asInt32() > buttonCount-1 ||
            !keyvalue.get(1).isString())
         {
             myError() << "Button's actions parameters must be in the format 'unsigned int string' and the button id must be in range";
             actCount = 0;
             return false;
         }
-        myInfo() << "assigning actions" << keyvalue.get(1).asString() << "to button" << keyvalue.get(0).asInt();
-        m_actions[keyvalue.get(0).asInt()] = keyvalue.get(1).asString();
+        myInfo() << "assigning actions" << keyvalue.get(1).asString() << "to button" << keyvalue.get(0).asInt32();
+        m_actions[keyvalue.get(0).asInt32()] = keyvalue.get(1).asString();
     }
 
     actCount = i;
-    myInfo() << actCount << "action parsed succesfully";
+    myInfo() << actCount << "action parsed successfully";
     return true;
 }
 
-yarp::dev::IJoypadEvent::~IJoypadEvent(){};
+yarp::dev::IJoypadEvent::~IJoypadEvent() = default;;

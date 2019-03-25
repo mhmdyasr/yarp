@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef TCPROSCARRIER_INC
@@ -43,14 +44,14 @@ private:
     int seq;
     WireTwiddler twiddler;
     WireTwiddlerWriter twiddler_output;
-    yarp::os::ConstString kind;
+    std::string kind;
     bool persistent;
-    ConstString wire_type;
-    ConstString user_type;
-    ConstString md5sum;
-    ConstString message_definition;
+    std::string wire_type;
+    std::string user_type;
+    std::string md5sum;
+    std::string message_definition;
 
-    ConstString getRosType(ConnectionState& proto);
+    std::string getRosType(ConnectionState& proto);
 
 protected:
     bool isService;
@@ -67,60 +68,60 @@ public:
         persistent = true;
     }
 
-    virtual Carrier *create() override {
+    Carrier *create() const override {
         return new TcpRosCarrier();
     }
 
-    virtual ConstString getName() override {
+    std::string getName() const override {
         return isService?"rossrv":"tcpros";
     }
 
-    virtual bool isConnectionless() override {
+    bool isConnectionless() const override {
         return false;
     }
 
-    virtual bool canAccept() override {
+    bool canAccept() const override {
         return true;
     }
 
-    virtual bool canOffer() override {
+    bool canOffer() const override {
         return true;
     }
 
-    virtual bool isTextMode() override {
+    bool isTextMode() const override {
         return false;
     }
 
-    virtual bool isBareMode() override {
+    bool isBareMode() const override {
         return true;
     }
 
-    virtual bool canEscape() override {
+    bool canEscape() const override {
         return false;
     }
 
-    virtual bool requireAck() override {
+    bool requireAck() const override {
         return false;
     }
 
-    virtual bool supportReply() override {
+    bool supportReply() const override {
         return true;
     }
 
-    virtual bool isPush() override {
+    bool isPush() const override {
         // if topic-like, pull ; if service-like, push!
         return isService;
     }
 
-    virtual bool isLocal() override {
+    bool isLocal() const override {
         return false;
     }
 
-    virtual ConstString toString() override {
+    std::string toString() const override {
         return isService?"rossrv_carrier":"tcpros_carrier";
     }
 
-    virtual void getHeader(const Bytes& header) override {
+    void getHeader(Bytes& header) const override {
         // no header, will need to do some fancy footwork
         const char *target = "NONONONO";
         for (size_t i=0; i<8 && i<header.length(); i++) {
@@ -128,21 +129,21 @@ public:
         }
     }
 
-    virtual bool checkHeader(const Bytes& header) override;
+    bool checkHeader(const Bytes& header) override;
 
-    virtual void setParameters(const Bytes& header) override;
+    void setParameters(const Bytes& header) override;
 
     // Now, the initial hand-shaking
 
-    virtual bool prepareSend(ConnectionState& proto) override {
+    bool prepareSend(ConnectionState& proto) override {
         return true;
     }
 
-    virtual bool sendHeader(ConnectionState& proto) override;
+    bool sendHeader(ConnectionState& proto) override;
 
-    virtual bool expectSenderSpecifier(ConnectionState& proto) override;
+    bool expectSenderSpecifier(ConnectionState& proto) override;
 
-    virtual bool expectExtraHeader(ConnectionState& proto) override {
+    bool expectExtraHeader(ConnectionState& proto) override {
         return true;
     }
 
@@ -151,36 +152,36 @@ public:
         return true;
     }
 
-    virtual bool expectReplyToHeader(ConnectionState& proto) override;
+    bool expectReplyToHeader(ConnectionState& proto) override;
 
-    virtual bool isActive() override {
+    bool isActive() const override {
         return true;
     }
 
 
     // Payload time!
 
-    virtual bool write(ConnectionState& proto, SizedWriter& writer) override;
+    bool write(ConnectionState& proto, SizedWriter& writer) override;
 
-    virtual bool reply(ConnectionState& proto, SizedWriter& writer) override;
+    bool reply(ConnectionState& proto, SizedWriter& writer) override;
 
     virtual bool sendIndex(ConnectionState& proto, SizedWriter& writer) {
         return true;
     }
 
-    virtual bool expectIndex(ConnectionState& proto) override {
+    bool expectIndex(ConnectionState& proto) override {
         return true;
     }
 
-    virtual bool sendAck(ConnectionState& proto) override {
+    bool sendAck(ConnectionState& proto) override {
         return true;
     }
 
-    virtual bool expectAck(ConnectionState& proto) override {
+    bool expectAck(ConnectionState& proto) override {
         return true;
     }
 
-    virtual ConstString getBootstrapCarrierName() override { return ""; }
+    std::string getBootstrapCarrierName() const override { return {}; }
 
     virtual int connect(const yarp::os::Contact& src,
                         const yarp::os::Contact& dest,
@@ -206,7 +207,7 @@ public:
         isService = true;
     }
 
-    virtual Carrier *create() override {
+    Carrier *create() const override {
         return new RosSrvCarrier();
     }
 };

@@ -1,12 +1,20 @@
 /*
- * Copyright (C) 2010 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-// ********************************************************
-// *** THIS FILE IS CURRENTLY UNDER DEVELOPMENT / DEBUG ***
-// ********************************************************
 
 #define _USE_MATH_DEFINES
 
@@ -49,18 +57,18 @@ bool laserHokuyo::open(yarp::os::Searchable& config)
 
     //list of mandatory options
     //TODO change comments
-    period = general_config.check("Period", Value(50), "Period of the sampling thread").asInt();
+    period = general_config.check("Period", Value(50), "Period of the sampling thread").asInt32() / 1000.0;
 
     if (general_config.check("max_angle") == false) { yError() << "Missing max_angle param"; return false; }
     if (general_config.check("min_angle") == false) { yError() << "Missing min_angle param"; return false; }
-    max_angle = general_config.find("max_angle").asDouble();
-    min_angle = general_config.find("min_angle").asDouble();
+    max_angle = general_config.find("max_angle").asFloat64();
+    min_angle = general_config.find("min_angle").asFloat64();
 
-    start_position = general_config.check("Start_Position", Value(0), "Start position").asInt();
-    end_position = general_config.check("End_Position", Value(1080), "End Position").asInt();
+    start_position = general_config.check("Start_Position", Value(0), "Start position").asInt32();
+    end_position = general_config.check("End_Position", Value(1080), "End Position").asInt32();
 
-    error_codes = general_config.check("Convert_Error_Codes", Value(0), "Substitute error codes with legal measurments").asInt();
-    yarp::os::ConstString s = general_config.check("Laser_Mode", Value("GD"), "Laser Mode (GD/MD").asString();
+    error_codes = general_config.check("Convert_Error_Codes", Value(0), "Substitute error codes with legal measurments").asInt32();
+    std::string s = general_config.check("Laser_Mode", Value("GD"), "Laser Mode (GD/MD").asString();
 
     if (general_config.check("Measurement_Units"))
     {
@@ -86,7 +94,7 @@ bool laserHokuyo::open(yarp::os::Searchable& config)
         laser_mode = GD_MODE;
         yError("Laser_mode not found. Using GD mode (single acquisition)");
     }
-    setRate(period);
+    setPeriod(period);
 
     bool br2 = config.check("SERIAL_PORT_CONFIGURATION");
     if (br2 == false)
@@ -107,7 +115,7 @@ bool laserHokuyo::open(yarp::os::Searchable& config)
         return false;
     }
 
-    pSerial=0;
+    pSerial=nullptr;
     driver.view(pSerial);
 
     if (!pSerial)
@@ -244,14 +252,12 @@ bool laserHokuyo::open(yarp::os::Searchable& config)
         b_ans.clear();
     }
 
-    Time::turboBoost();
-    RateThread::start();
-    return true;
+    return PeriodicThread::start();
 }
 
 bool laserHokuyo::close()
 {
-    RateThread::stop();
+    PeriodicThread::stop();
 
     Bottle b;
     Bottle b_ans;
@@ -272,7 +278,7 @@ bool laserHokuyo::close()
 
 bool laserHokuyo::getDistanceRange(double& min, double& max)
 {
-    //should return range 0.1-30m (or 100, 30000mm depending on the measurment units)
+    //should return range 0.1-30m (or 100, 30000mm depending on the measurement units)
     min = 0.1;
     max = 30;
     return true;
@@ -349,7 +355,13 @@ bool laserHokuyo::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
 #endif
         size_t size = laser_data.size();
         data.resize(size);
-        if (max_angle < min_angle) { yError() << "getLaserMeasurement failed"; return false; }
+        if (max_angle < min_angle)
+        {
+            yError() << "getLaserMeasurement failed";
+            mutex.unlock();
+            return false;
+        }
+
         double laser_angle_of_view = max_angle - min_angle;
         for (size_t i = 0; i < size; i++)
         {
@@ -476,7 +488,7 @@ int laserHokuyo::readData(const Laser_mode_type laser_mode, const char* text_dat
         if (calculateCheckSum(text_data, text_data_len - 2, expected_checksum) < 0)
         {
             #ifdef LASER_DEBUG
-            yDebug("Cheksum error, line: %d: %s\n", current_line, text_data);
+            yDebug("Checksum error, line: %d: %s\n", current_line, text_data);
             #endif
             return HOKUYO_STATUS_ERROR_INVALID_CHECKSUM;
         }
@@ -573,7 +585,6 @@ void laserHokuyo::run()
     }
 
     //SystemClock::delaySystem (0.100);
-    mutex.unlock();
 }
 
 void laserHokuyo::threadRelease()
@@ -584,7 +595,7 @@ void laserHokuyo::threadRelease()
 #endif
 }
 
-bool laserHokuyo::getDeviceInfo(yarp::os::ConstString &device_info)
+bool laserHokuyo::getDeviceInfo(std::string &device_info)
 {
     this->mutex.lock();
     device_info = info;

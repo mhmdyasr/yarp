@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Author: Andrea Ruzzenenti <andrea.ruzzenenti@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "JoypadControlClient.h"
@@ -39,12 +41,12 @@ bool JoypadControlClient::getJoypadInfo()
     temp       = m_rpc_only;
     m_rpc_only = true;
     vector<tuple<int, JoypadControl::LoopablePort*, string> > vocabs_ports;
-    vocabs_ports.push_back(make_tuple(VOCAB_BUTTON,    &m_buttonsPort,   "/buttons"));
-    vocabs_ports.push_back(make_tuple(VOCAB_AXIS,      &m_axisPort,      "/axis"));
-    vocabs_ports.push_back(make_tuple(VOCAB_STICK,     &m_stickPort,     "/stick"));
-    vocabs_ports.push_back(make_tuple(VOCAB_TRACKBALL, &m_trackballPort, "/trackballs"));
-    vocabs_ports.push_back(make_tuple(VOCAB_TOUCH,     &m_touchPort,     "/touch"));
-    vocabs_ports.push_back(make_tuple(VOCAB_HAT,       &m_hatsPort,      "/hat"));
+    vocabs_ports.emplace_back(VOCAB_BUTTON,    &m_buttonsPort,   "/buttons");
+    vocabs_ports.emplace_back(VOCAB_AXIS,      &m_axisPort,      "/axis");
+    vocabs_ports.emplace_back(VOCAB_STICK,     &m_stickPort,     "/stick");
+    vocabs_ports.emplace_back(VOCAB_TRACKBALL, &m_trackballPort, "/trackballs");
+    vocabs_ports.emplace_back(VOCAB_TOUCH,     &m_touchPort,     "/touch");
+    vocabs_ports.emplace_back(VOCAB_HAT,       &m_hatsPort,      "/hat");
 
     for(auto vocab_port : vocabs_ports)
     {
@@ -132,7 +134,7 @@ bool JoypadControlClient::open(yarp::os::Searchable& config)
         return false;
     }
 
-    yInfo() << "handshake succeded! retrieving info";
+    yInfo() << "handshake succeeded! retrieving info";
 
     if(!getJoypadInfo())
     {
@@ -201,9 +203,9 @@ bool JoypadControlClient::getCount(const int& vocab_toget, unsigned int& value)
     cmd.addVocab(vocab_toget);
     cmd.addVocab(VOCAB_COUNT);
     m_rpcPort.write(cmd, response);
-    if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isInt())
+    if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isInt32())
     {
-        value = response.get(1).asInt();
+        value = response.get(1).asInt32();
         return true;
     }
     else
@@ -249,11 +251,11 @@ bool JoypadControlClient::getRawStickDoF(unsigned int stick_id, unsigned int& Do
     cmd.addVocab(VOCAB_GET);
     cmd.addVocab(VOCAB_STICKDOF);
     cmd.addVocab(VOCAB_COUNT);
-    cmd.addInt(stick_id);
+    cmd.addInt32(stick_id);
     m_rpcPort.write(cmd, response);
-    if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isInt())
+    if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isInt32())
     {
-        DoF = response.get(1).asInt();
+        DoF = response.get(1).asInt32();
         return true;
     }
     else
@@ -272,11 +274,11 @@ bool JoypadControlClient::getRawButton(unsigned int button_id, float& value)
         cmd.addVocab(VOCAB_GET);
         cmd.addVocab(VOCAB_BUTTON);
         cmd.addVocab(VOCAB_VALUE);
-        cmd.addInt(button_id);
+        cmd.addInt32(button_id);
         m_rpcPort.write(cmd, response);
-        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isDouble())
+        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isFloat64())
         {
-            value = response.get(1).asDouble();
+            value = response.get(1).asFloat64();
             return true;
         }
         else
@@ -312,12 +314,12 @@ bool JoypadControlClient::getRawTrackball(unsigned int trackball_id, yarp::sig::
         cmd.addVocab(VOCAB_GET);
         cmd.addVocab(VOCAB_TRACKBALL);
         cmd.addVocab(VOCAB_VALUE);
-        cmd.addInt(trackball_id);
+        cmd.addInt32(trackball_id);
         m_rpcPort.write(cmd, response);
-        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isDouble() && response.get(2).isDouble())
+        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isFloat64() && response.get(2).isFloat64())
         {
-            value.push_back(response.get(1).asDouble());
-            value.push_back(response.get(2).asDouble());
+            value.push_back(response.get(1).asFloat64());
+            value.push_back(response.get(2).asFloat64());
             return true;
         }
         else
@@ -351,11 +353,11 @@ bool JoypadControlClient::getRawHat(unsigned int hat_id, unsigned char& value)
         cmd.addVocab(VOCAB_GET);
         cmd.addVocab(VOCAB_HAT);
         cmd.addVocab(VOCAB_VALUE);
-        cmd.addInt(hat_id);
+        cmd.addInt32(hat_id);
         m_rpcPort.write(cmd, response);
-        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isInt())
+        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isInt32())
         {
-            value = response.get(1).asInt();
+            value = response.get(1).asInt32();
             return true;
         }
         else
@@ -388,11 +390,11 @@ bool JoypadControlClient::getRawAxis(unsigned int axis_id, double& value)
         cmd.addVocab(VOCAB_GET);
         cmd.addVocab(VOCAB_AXIS);
         cmd.addVocab(VOCAB_VALUE);
-        cmd.addInt(axis_id);
+        cmd.addInt32(axis_id);
         m_rpcPort.write(cmd, response);
-        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isDouble())
+        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isFloat64())
         {
-            value = response.get(1).asDouble();
+            value = response.get(1).asFloat64();
             return true;
         }
         else
@@ -430,12 +432,12 @@ bool JoypadControlClient::getRawStick(unsigned int stick_id, yarp::sig::Vector& 
         cmd.addVocab(VOCAB_GET);
         cmd.addVocab(VOCAB_STICKDOF);
         cmd.addVocab(VOCAB_VALUE);
-        cmd.addInt(stick_id);
+        cmd.addInt32(stick_id);
         m_rpcPort.write(cmd, response);
 
-        if(response.get(0).asVocab() == VOCAB_OK && response.get(1).isInt())
+        if(response.get(0).asVocab() == VOCAB_OK && response.get(1).isInt32())
         {
-            dof = response.get(1).asInt();
+            dof = response.get(1).asInt32();
         }
         else
         {
@@ -446,15 +448,15 @@ bool JoypadControlClient::getRawStick(unsigned int stick_id, yarp::sig::Vector& 
         cmd.addVocab(VOCAB_STICK);
         cmd.addVocab(VOCAB_VALUE);
         cmd.addVocab(coordmode);
-        cmd.addInt(stick_id);
+        cmd.addInt32(stick_id);
         m_rpcPort.write(cmd, response);
         if(response.get(0).asVocab() == VOCAB_OK)
         {
             for(int i = 0; i < dof; i++)
             {
-                if(response.get(i).isDouble())
+                if(response.get(i).isFloat64())
                 {
-                    value.push_back(response.get(i).asDouble());
+                    value.push_back(response.get(i).asFloat64());
                 }
                 else
                 {
@@ -504,12 +506,12 @@ bool JoypadControlClient::getRawTouch(unsigned int touch_id, yarp::sig::Vector& 
         cmd.addVocab(VOCAB_GET);
         cmd.addVocab(VOCAB_TOUCH);
         cmd.addVocab(VOCAB_VALUE);
-        cmd.addInt(touch_id);
+        cmd.addInt32(touch_id);
         m_rpcPort.write(cmd, response);
-        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isDouble() && response.get(2).isDouble())
+        if(response.get(0).asVocab() == VOCAB_OK && response .get(1).isFloat64() && response.get(2).isFloat64())
         {
-            value.push_back(response.get(1).asDouble());
-            value.push_back(response.get(2).asDouble());
+            value.push_back(response.get(1).asFloat64());
+            value.push_back(response.get(2).asFloat64());
             return true;
         }
         else

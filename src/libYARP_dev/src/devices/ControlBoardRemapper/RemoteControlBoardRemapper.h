@@ -1,8 +1,10 @@
 /*
-* Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
-* Author: Lorenzo Natale, Silvio Traversaro
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #ifndef YARP_DEV_CONTROLBOARDREMAPPER_REMOTECONTROLBOARDREMAPPER_H
 #define YARP_DEV_CONTROLBOARDREMAPPER_REMOTECONTROLBOARDREMAPPER_H
@@ -17,7 +19,7 @@ namespace dev {
 
 
 /**
- *  @ingroup dev_impl_wrapper
+ *  @ingroup dev_impl_network_clients
  *
  * \section RemoteControlBoardRemapper
  * A device that takes a list of axes from multiple controlboards, a list
@@ -121,20 +123,20 @@ public:
      * Default open() method.
      * @return always false since initialization requires parameters.
      */
-    virtual bool open() override { return false; }
+    bool open() override { return false; }
 
    /**
      * Open the device driver.
      * @param prop is a Searchable object which contains the parameters.
      * Allowed parameters are described in the class documentation.
      */
-    virtual bool open(yarp::os::Searchable &prop) override;
+    bool open(yarp::os::Searchable &prop) override;
 
     /**
      * Close the device driver by deallocating all resources and closing ports.
      * @return true if successful or false otherwise.
      */
-    virtual bool close() override;
+    bool close() override;
 };
 
 }

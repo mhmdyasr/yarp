@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/impl/SplitString.h>
 #include <yarp/manager/localbroker.h>
@@ -36,7 +35,7 @@
     #define PIPE_TIMEOUT        0
     #define PIPE_EVENT          1
     #define PIPE_SIGNALED       2
-    #define C_MAXARGS           128         // max number of the command parametes
+    #define C_MAXARGS           128         // max number of the command parameters
 #endif
 
 using namespace yarp::os;
@@ -332,7 +331,7 @@ int LocalBroker::running()
 
 
 /**
- *  connecttion broker
+ *  connection broker
  */
 bool LocalBroker::connect(const char* from, const char* to,
             const char* carrier, bool persist)
@@ -364,8 +363,7 @@ bool LocalBroker::connect(const char* from, const char* to,
         return false;
     }
 
-    NetworkBase::connect(from, to, carrier);
-    if(!connected(from, to, carrier))
+    if(!NetworkBase::connect(from, to, carrier) || !connected(from, to, carrier))
     {
         strError = "cannot connect ";
         strError +=from;
@@ -443,7 +441,7 @@ const char* LocalBroker::requestRpc(const char* szport, const char* request, dou
     style.timeout = (timeout>0.0) ? timeout : CONNECTION_TIMEOUT;
     bool ret;
     for(int i=0; i<10; i++) {
-        ret = NetworkBase::connect(port.getName().c_str(), szport, style);
+        ret = NetworkBase::connect(port.getName(), szport, style);
         if(ret) break;
         SystemClock::delaySystem(1.0);
     }
@@ -456,7 +454,7 @@ const char* LocalBroker::requestRpc(const char* szport, const char* request, dou
     Bottle msg, response;
     msg.fromString(request);
     ret = port.write(msg, response);
-    NetworkBase::disconnect(port.getName().c_str(), szport);
+    NetworkBase::disconnect(port.getName(), szport);
     if(!response.size() || !ret) {
         port.close();
         return nullptr;
@@ -515,7 +513,7 @@ void LocalBroker::run()
 {
 
 #if defined(_WIN32)
-    //windows implementaion
+    //windows implementation
     DWORD dwRead;
     CHAR buff[1024];
     while(!Thread::isStopping())
@@ -657,7 +655,7 @@ int LocalBroker::ExecuteCmd(void)
     }
 
     // adding new env variables
-    yarp::os::ConstString cstrEnvName;
+    std::string cstrEnvName;
     if(strEnv.size())
     {
         yarp::os::impl::SplitString ss(strEnv.c_str(), ';');
@@ -748,7 +746,7 @@ bool LocalBroker::stopCmd(int pid)
     // I believe we do not need this. It is ignored by console applications created with CREATE_NEW_PROCESS_GROUP
     GenerateConsoleCtrlEvent(CTRL_C_EVENT, pid);
 
-    //send BREAK_EVENT becaue we created the process with CREATE_NEW_PROCESS_GROUP
+    //send BREAK_EVENT because we created the process with CREATE_NEW_PROCESS_GROUP
     GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, pid);
 
     CloseHandle(hProc);
@@ -979,7 +977,12 @@ int LocalBroker::ExecuteCmd()
         close(pipe_child_to_parent[WRITE_TO_PIPE]);
         FILE* in_from_child = fdopen(pipe_child_to_parent[READ_FROM_PIPE],"r");
         int flags=fcntl(pipe_child_to_parent[READ_FROM_PIPE],F_GETFL,0);
-        fcntl(pipe_child_to_parent[READ_FROM_PIPE],F_SETFL,flags|O_NONBLOCK);
+        if (fcntl(pipe_child_to_parent[READ_FROM_PIPE],F_SETFL,flags|O_NONBLOCK) == -1)
+        {
+            strError = string("Can't set flag on pipe: ") + string(strerror(errno));
+            fclose(in_from_child);
+            return 0;
+        }
 
         string retError;
         waitPipe(pipe_child_to_parent[READ_FROM_PIPE]);

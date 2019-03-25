@@ -1,13 +1,17 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Lorenzo Natale
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_CALIBRATORINTERFACES_H
 #define YARP_DEV_CALIBRATORINTERFACES_H
 
 #include <yarp/dev/DeviceDriver.h>
+#include <yarp/os/Vocab.h>
 
 namespace yarp {
     namespace dev {
@@ -96,51 +100,50 @@ public:
     /**
      * @brief homingSingleJoint: call the homing procedure for a single joint
      * @param j: joint to be calibrated
-     * @return true if homing was succesful, false otherwise
+     * @return true if homing was successful, false otherwise
      */
     virtual bool homingSingleJoint(int j)=0;
 
     /**
      * @brief homingWholePart: call the homing procedure for a the whole part/device
-     * @return true if homing was succesful, false otherwise
+     * @return true if homing was successful, false otherwise
      */
     virtual bool homingWholePart()=0;
 
     /**
      * @brief parkSingleJoint(): start the parking procedure for the single joint
-     * @return true if succesful
+     * @return true if successful
      */
     virtual bool parkSingleJoint(int j, bool _wait=true)=0;
 
     /**
      * @brief parkWholePart: start the parking procedure for the whole part
-     * @return true if succesful
+     * @return true if successful
      */
     virtual bool parkWholePart()=0;
 
     /**
      * @brief quitCalibrate: interrupt the calibration procedure
-     * @return true if succesful
+     * @return true if successful
      */
     virtual bool quitCalibrate()=0;
 
     /**
      * @brief quitPark: interrupt the park procedure
-     * @return true if succesful
+     * @return true if successful
      */
     virtual bool quitPark()=0;
 };
 
-#define VOCAB_REMOTE_CALIBRATOR_INTERFACE           VOCAB4('r','e','c','a')
-
-#define VOCAB_IS_CALIBRATOR_PRESENT                 VOCAB4('i','s','c','a')
-#define VOCAB_CALIBRATE_SINGLE_JOINT                VOCAB3('c','a','l')
-#define VOCAB_CALIBRATE_WHOLE_PART                  VOCAB4('c','a','l','s')
-#define VOCAB_HOMING_SINGLE_JOINT                   VOCAB3('h','o','m')
-#define VOCAB_HOMING_WHOLE_PART                     VOCAB4('h','o','m','s')
-#define VOCAB_PARK_SINGLE_JOINT                     VOCAB3('p','a','r')
-#define VOCAB_PARK_WHOLE_PART                       VOCAB4('p','a','r','s')
-#define VOCAB_QUIT_CALIBRATE                        VOCAB4('q','u','c','a')
-#define VOCAB_QUIT_PARK                             VOCAB4('q','u','p','a')
+constexpr yarp::conf::vocab32_t VOCAB_REMOTE_CALIBRATOR_INTERFACE           = yarp::os::createVocab('r','e','c','a');
+constexpr yarp::conf::vocab32_t VOCAB_IS_CALIBRATOR_PRESENT                 = yarp::os::createVocab('i','s','c','a');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_SINGLE_JOINT                = yarp::os::createVocab('c','a','l');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_WHOLE_PART                  = yarp::os::createVocab('c','a','l','s');
+constexpr yarp::conf::vocab32_t VOCAB_HOMING_SINGLE_JOINT                   = yarp::os::createVocab('h','o','m');
+constexpr yarp::conf::vocab32_t VOCAB_HOMING_WHOLE_PART                     = yarp::os::createVocab('h','o','m','s');
+constexpr yarp::conf::vocab32_t VOCAB_PARK_SINGLE_JOINT                     = yarp::os::createVocab('p','a','r');
+constexpr yarp::conf::vocab32_t VOCAB_PARK_WHOLE_PART                       = yarp::os::createVocab('p','a','r','s');
+constexpr yarp::conf::vocab32_t VOCAB_QUIT_CALIBRATE                        = yarp::os::createVocab('q','u','c','a');
+constexpr yarp::conf::vocab32_t VOCAB_QUIT_PARK                             = yarp::os::createVocab('q','u','p','a');
 
 #endif // YARP_DEV_CALIBRATORINTERFACES_H

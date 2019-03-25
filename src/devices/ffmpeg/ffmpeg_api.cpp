@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2008 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "ffmpeg_api.h"
@@ -18,11 +20,7 @@ int stable_img_convert (AVPicture *dst, int dst_pix_fmt,
                                        (AVPixelFormat)src_pix_fmt,
                                        src_width, src_height,
                                        (AVPixelFormat)dst_pix_fmt,
-#ifdef SWS_BILINEAR
                                        SWS_BILINEAR,
-#else
-                                       0,
-#endif
                                        nullptr, nullptr, nullptr);
 
       //printf("Done looking for a context\n");

@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Authors: Andrea Ruzzenenti <andrea.ruzzenenti@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IJOYPADCONTROLLER_H
@@ -10,7 +12,8 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/api.h>
 #include <yarp/os/Vocab.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
+#include <yarp/dev/GenericVocabs.h>
 #include <map>
 #include <vector>
 
@@ -32,7 +35,7 @@ public:
     enum JoypadCtrl_coordinateMode {JypCtrlcoord_POLAR  =  0, JypCtrlcoord_CARTESIAN = 1};
 
 protected:
-    std::map<int, std::string> m_actions;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARGS(std::map<int, std::string>) m_actions;
 
     virtual bool parseActions(const yarp::os::Searchable& cfg, int *count = nullptr);
     virtual bool executeAction(int action_id);
@@ -51,7 +54,7 @@ public:
      * @brief eventDriven
      * @param enable a bool to turn on or off the eventDriven mode
      * * @param event a pointer to a valid yarp::dev::IJoypadEvent object whom action() method will be called on event detection
-     * @return true if succeded. false otherwise
+     * @return true if succeeded. false otherwise
      */
     virtual bool eventDriven(bool enable, yarp::dev::IJoypadEvent* event = nullptr){return false;}
     virtual bool isEventDriven(){return false;}
@@ -60,7 +63,7 @@ public:
       Get number of Axes
      * @brief getAxisCount
      * @param axes_count unsigned int reference that will contain the result
-     * @return true if succeded. false otherwise
+     * @return true if succeeded. false otherwise
      */
     virtual bool getAxisCount(unsigned int& axis_count) = 0;
 
@@ -68,7 +71,7 @@ public:
       Get number of Buttons
      * @brief getButtonCount
      * @param button_count unsigned int reference that will contain the result
-     * @return true if succeded. false otherwise
+     * @return true if succeeded. false otherwise
      */
     virtual bool getButtonCount(unsigned int& button_count) = 0;
 
@@ -76,7 +79,7 @@ public:
       Get number of trackballs
      * @brief getTrackballCount
      * @param Trackball_count unsigned int reference that will contain the result
-     * @return true if succeded. false otherwise
+     * @return true if succeeded. false otherwise
      */
     virtual bool getTrackballCount(unsigned int& Trackball_count) = 0;
 
@@ -84,7 +87,7 @@ public:
       Get number of Hats
      * @brief getHatsCount
      * @param Hat_count unsigned int reference that will contain the result
-     * @return true if succeded. false otherwise
+     * @return true if succeeded. false otherwise
      */
     virtual bool getHatCount(unsigned int& Hat_count) = 0;
 
@@ -93,7 +96,7 @@ public:
       or a combination of the two
      * @brief hasTouchSurface
      * @param touch_count unsigned int reference that will contain the result
-     * @return true if succeded. false otherwise
+     * @return true if succeeded. false otherwise
      */
     virtual bool getTouchSurfaceCount(unsigned int& touch_count) = 0;
 
@@ -101,7 +104,7 @@ public:
       get the number of the sticks
      * @brief getStickCount
      * @param stick_count unsigned int reference that will contain the result
-     * @return bool if succeded, false otherwise
+     * @return bool if succeeded, false otherwise
      */
     virtual bool getStickCount(unsigned int& stick_count) = 0;
 
@@ -110,7 +113,7 @@ public:
     * @brief getStickDoF
     * @param stick_id Id of the stick. must be > -1 && < getStickCount(), return false otherwise
     * @param DoF an unsigned int reference that will contain the value.
-    * @return true if succeded, false otherwise
+    * @return true if succeeded, false otherwise
     */
     virtual bool getStickDoF(unsigned int stick_id, unsigned int& DoF) = 0;
 
@@ -119,7 +122,7 @@ public:
     * @brief getButton
     * @param button_id Id of the button to get. Must be > -1 && < getButtonCount(), return false otherwise
     * @param value reference to be valued. The value will be from 0.0 (not even touched) to 1.0 (fully pressed)
-    * @return true if succeded, false otherwise
+    * @return true if succeeded, false otherwise
     */
     virtual bool getButton(unsigned int button_id, float& value) = 0;
 
@@ -128,7 +131,7 @@ public:
     * @brief getTrackball
     * @param trackball_id Id of the Trackball to get. Must be > -1 && < getTrackballCount(), return false otherwise
     * @param value reference to be valued. the value will be from 0.0 (not moving) to 1.0 (full velocity)
-    * @return true if succeded, false otherwise
+    * @return true if succeeded, false otherwise
     */
     virtual bool getTrackball(unsigned int trackball_id, yarp::sig::Vector& value) = 0;
 
@@ -137,7 +140,7 @@ public:
     * @brief getHat
     * @param hat_id Id of the POV hat to get. Must be > -1 && < getHatCount(), return false otherwise
     * @param value reference to be valued. use the YRPJOY_HAT_ macro series to get the currently pressed directions
-    * @return true if succeded, false otherwise
+    * @return true if succeeded, false otherwise
     */
     virtual bool getHat(unsigned int hat_id, unsigned char& value) = 0;
 
@@ -148,7 +151,7 @@ public:
     * @param value reference to be valued. the absolute boundaries for the values should be -1.0 and 1.0 However
     * the actual range depends on the physical device (example: analog trigger does not have a central position thus can
     * give a value from 0.0 to 0.1)
-    * @return true if succeded, false otherwise
+    * @return true if succeeded, false otherwise
     */
     virtual bool getAxis(unsigned int axis_id, double& value) = 0;
 
@@ -159,7 +162,7 @@ public:
     * @param value a vector that will contain the joystick position. the size of the vector will give you the Number of degrees of freedom
     * and the value will be from -1.0 to 1.0
     * @param coordinate_mode to get data in cartesian mode or polar (spheric in 3 dof position cases) mode
-    * @return true if succeded, false otherwise
+    * @return true if succeeded, false otherwise
     */
     virtual bool getStick(unsigned int stick_id, yarp::sig::Vector& value, JoypadCtrl_coordinateMode coordinate_mode) = 0;
 
@@ -167,7 +170,7 @@ public:
      Get the value of a touch if present, return false otherwise
     * @brief getTouch
     * @param value a vector that will contain the touch values normalized from 0.0 to 1.0.
-    * @return true if succeded, false otherwise
+    * @return true if succeeded, false otherwise
     */
     virtual bool getTouch(unsigned int touch_id, yarp::sig::Vector& value) = 0;
 };
@@ -199,18 +202,18 @@ public:
 
 
 
-class YARP_dev_API yarp::dev::IJoypadEventDriven : yarp::os::RateThread,
+class YARP_dev_API yarp::dev::IJoypadEventDriven : yarp::os::PeriodicThread,
                                                    public yarp::dev::IJoypadController
 {
 private:
     yarp::dev::IJoypadEvent*       m_event;
     bool                           EventDrivenEnabled;
-    std::vector<float>             old_buttons;
-    std::vector<double>            old_axes;
-    std::vector<unsigned char>     old_hats;
-    std::vector<yarp::sig::Vector> old_trackballs;
-    std::vector<yarp::sig::Vector> old_sticks;
-    std::vector<yarp::sig::Vector> old_touches;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::vector<float>)             old_buttons;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::vector<double>)            old_axes;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::vector<unsigned char>)     old_hats;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::vector<yarp::sig::Vector>) old_trackballs;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::vector<yarp::sig::Vector>) old_sticks;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::vector<yarp::sig::Vector>) old_touches;
 protected:
     virtual bool getRawAxisCount(unsigned int& axis_count) = 0;
     virtual bool getRawButtonCount(unsigned int& button_count) = 0;
@@ -231,19 +234,19 @@ protected:
 
 public:
 
-    virtual bool getAxisCount(unsigned int& axis_count) override final;
-    virtual bool getButtonCount(unsigned int& button_count) override final;
-    virtual bool getTrackballCount(unsigned int& Trackball_count) override final;
-    virtual bool getHatCount(unsigned int& Hat_count) override final;
-    virtual bool getTouchSurfaceCount(unsigned int& touch_count) override final;
-    virtual bool getStickCount(unsigned int& stick_count) override final;
-    virtual bool getStickDoF(unsigned int stick_id, unsigned int& DoF) override final;
-    virtual bool getButton(unsigned int button_id, float& value) override final;
-    virtual bool getTrackball(unsigned int trackball_id, yarp::sig::Vector& value) override final;
-    virtual bool getHat(unsigned int hat_id, unsigned char& value) override final;
-    virtual bool getAxis(unsigned int axis_id, double& value) override final;
-    virtual bool getStick(unsigned int stick_id, yarp::sig::Vector& value, JoypadCtrl_coordinateMode coordinate_mode) override final;
-    virtual bool getTouch(unsigned int touch_id, yarp::sig::Vector& value) override final;
+    bool getAxisCount(unsigned int& axis_count) override final;
+    bool getButtonCount(unsigned int& button_count) override final;
+    bool getTrackballCount(unsigned int& Trackball_count) override final;
+    bool getHatCount(unsigned int& Hat_count) override final;
+    bool getTouchSurfaceCount(unsigned int& touch_count) override final;
+    bool getStickCount(unsigned int& stick_count) override final;
+    bool getStickDoF(unsigned int stick_id, unsigned int& DoF) override final;
+    bool getButton(unsigned int button_id, float& value) override final;
+    bool getTrackball(unsigned int trackball_id, yarp::sig::Vector& value) override final;
+    bool getHat(unsigned int hat_id, unsigned char& value) override final;
+    bool getAxis(unsigned int axis_id, double& value) override final;
+    bool getStick(unsigned int stick_id, yarp::sig::Vector& value, JoypadCtrl_coordinateMode coordinate_mode) override final;
+    bool getTouch(unsigned int touch_id, yarp::sig::Vector& value) override final;
     using IJoypadController::JoypadCtrl_coordinateMode;
     using IJoypadController::JypCtrlcoord_CARTESIAN;
     using IJoypadController::JypCtrlcoord_POLAR;
@@ -251,14 +254,21 @@ public:
 
 
     IJoypadEventDriven();
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
+#if defined(_MSC_VER) && _MSC_VER <= 1900 // VS 2015
+    explicit IJoypadEventDriven(YARP_DEPRECATED_MSG("Use IJoypadEventDriven(double)") int rate);
+#else
+    YARP_DEPRECATED_MSG("Use IJoypadEventDriven(double)")
+    explicit IJoypadEventDriven(int rate);
+#endif
+#endif
+    explicit IJoypadEventDriven(double period);
 
-    IJoypadEventDriven(int rate);
+    bool threadInit() override final;
+    void run() override final;
 
-    virtual bool threadInit() override final;
-    virtual void run() override final;
-
-    virtual bool eventDriven(bool enable, yarp::dev::IJoypadEvent* event = nullptr) override;
-    virtual bool isEventDriven() override { return EventDrivenEnabled;}
+    bool eventDriven(bool enable, yarp::dev::IJoypadEvent* event = nullptr) override;
+    bool isEventDriven() override { return EventDrivenEnabled;}
 };
 
 
@@ -272,23 +282,17 @@ public:
 #define YRPJOY_HAT_LEFTUP	 (YRPJOY_HAT_LEFT |YRPJOY_HAT_UP)
 #define YRPJOY_HAT_LEFTDOWN	 (YRPJOY_HAT_LEFT |YRPJOY_HAT_DOWN)
 
-#define VOCAB_OK          VOCAB2('o','k')
-#define VOCAB_FAILED      VOCAB4('f','a','i','l')
-#define VOCAB_IJOYPADCTRL VOCAB4('i','j','p','c')
-#ifndef VOCAB_GET
-#define VOCAB_GET         VOCAB3('g','e','t')
-#endif
-#define VOCAB_BUTTON      VOCAB4('b','u','t','n')
-#define VOCAB_TRACKBALL   VOCAB4('t','r','b','l')
-#define VOCAB_HAT         VOCAB3('h','a','t')
-#define VOCAB_AXIS        VOCAB4('a','x','i','s')
-#define VOCAB_STICK       VOCAB4('s','t','c','k')
-#define VOCAB_STICKDOF    VOCAB4('s','d','o','f')
-#define VOCAB_TOUCH       VOCAB4('t','u','c','h')
-#define VOCAB_COUNT       VOCAB3('c','n','t')
-#define VOCAB_VALUE       VOCAB3('v','a','l')
-#define VOCAB_POLAR       VOCAB4('p','o','l','r')
-#define VOCAB_CARTESIAN   VOCAB4('c','a','r','t')
+constexpr yarp::conf::vocab32_t VOCAB_IJOYPADCTRL = yarp::os::createVocab('i','j','p','c');
+
+constexpr yarp::conf::vocab32_t VOCAB_BUTTON      = yarp::os::createVocab('b','u','t','n');
+constexpr yarp::conf::vocab32_t VOCAB_TRACKBALL   = yarp::os::createVocab('t','r','b','l');
+constexpr yarp::conf::vocab32_t VOCAB_HAT         = yarp::os::createVocab('h','a','t');
+constexpr yarp::conf::vocab32_t VOCAB_AXIS        = yarp::os::createVocab('a','x','i','s');
+constexpr yarp::conf::vocab32_t VOCAB_STICK       = yarp::os::createVocab('s','t','c','k');
+constexpr yarp::conf::vocab32_t VOCAB_STICKDOF    = yarp::os::createVocab('s','d','o','f');
+constexpr yarp::conf::vocab32_t VOCAB_TOUCH       = yarp::os::createVocab('t','u','c','h');
+constexpr yarp::conf::vocab32_t VOCAB_POLAR       = yarp::os::createVocab('p','o','l','r');
+constexpr yarp::conf::vocab32_t VOCAB_CARTESIAN   = yarp::os::createVocab('c','a','r','t');
 
 #endif //#define YARP_DEV_IJOYPADCONTROLLER_H
 

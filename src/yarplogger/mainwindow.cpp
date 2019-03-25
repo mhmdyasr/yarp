@@ -1,20 +1,20 @@
-/* 
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo
- * email:  marco.randazzo@iit.it
- * website: www.robotcub.org
- * Permission is granted to copy, distribute, and/or modify this program
- * under the terms of the GNU General Public License, version 2 or any
- * later version published by the Free Software Foundation.
+/*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * A copy of the license can be found at
- * http://www.robotcub.org/icub/license/gpl.txt
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
- * Public License for more details
-*/
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -212,7 +212,7 @@ void MainWindow::on_clearLogTab(int model_row)
     for (int i=0; i<ui->logtabs->count(); i++)
         if (ui->logtabs->tabText(i) == logname) 
             {
-                LogTab* l = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
+                auto* l = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
                 if (l) l->clear_model_logs();
                 break;
             }
@@ -292,7 +292,7 @@ void MainWindow::ctxMenu(const QPoint &pos)
     std::string logname = model_yarprunports->item(model_row,1)->text().toStdString();
     bool log_enabled = theLogger->get_log_enable_by_port_complete(logname);
 
-    QMenu *menu = new QMenu;
+    auto* menu = new QMenu;
     menu->addAction(tr("Clear current log"), this, SLOT(on_clearLogTab_action()));
     menu->addAction(tr("Export current log to text file"), this, SLOT(on_saveLogTab_action()));
     menu->addAction(log_enabled ? tr("Disable current log") : tr("Enable current log"), this, SLOT(on_enableLogTab_action()));
@@ -300,7 +300,7 @@ void MainWindow::ctxMenu(const QPoint &pos)
     menu->exec(ui->yarprunTreeView->mapToGlobal(pos));
 }
 
-MainWindow::MainWindow(yarp::os::ResourceFinder rf, QWidget *parent) :
+MainWindow::MainWindow(const yarp::os::ResourceFinder& rf, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -387,7 +387,7 @@ void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)
     filter.append("*");
     QRegExp regExp(filter, Qt::CaseInsensitive, QRegExp::Wildcard);
 
-    LogTab* logtab = ui->logtabs->currentWidget()->findChild<LogTab*>("logtab");
+    auto* logtab = ui->logtabs->currentWidget()->findChild<LogTab*>("logtab");
 
     if (logtab) logtab->proxyModelSearch->setFilterRegExp(regExp);
 }
@@ -418,8 +418,8 @@ void MainWindow::on_yarprunTreeView_doubleClicked(const QModelIndex &pre_index)
     }
     else
     {
-        QTabWidget* tab = new QTabWidget(this);
-        QVBoxLayout* l= new QVBoxLayout(tab);
+        auto* tab = new QTabWidget(this);
+        auto* l= new QVBoxLayout(tab);
         LogTab* tmpLogTab = new LogTab(theLogger, system_message, tabname.toStdString(), this);
         tmpLogTab->displayYarprunTimestamp(displayYarprunTimestamps);
         tmpLogTab->displayLocalTimestamp(displayLocalTimestamps);
@@ -432,7 +432,7 @@ void MainWindow::on_yarprunTreeView_doubleClicked(const QModelIndex &pre_index)
         int newtab_index = ui->logtabs->addTab(tab, tabname);
         ui->logtabs->setCurrentIndex(newtab_index);
     }
-    apply_button_filters(); //@@@@NOT WOKRING HERE
+    apply_button_filters(); //@@@@NOT WORKING HERE
 }
 
 QString MainWindow::recomputeFilters()
@@ -445,7 +445,7 @@ QString MainWindow::recomputeFilters()
     bool e_error   = this->ui->DisplayErrorEnable->isChecked();
     bool e_all     = this->ui->DisplayUnformattedEnable->isChecked();
     int f = 0;
-    if (e_trace)   {if (f>0) filter=filter +"|"; filter = filter + "^TRACE$";   f++;}
+    if (e_trace)                                {filter = filter + "^TRACE$";   f++;}
     if (e_debug)   {if (f>0) filter=filter +"|"; filter = filter + "^DEBUG$";   f++;}
     if (e_info)    {if (f>0) filter=filter +"|"; filter = filter + "^INFO$";    f++;}
     if (e_warning) {if (f>0) filter=filter +"|"; filter = filter + "^WARNING$"; f++;}
@@ -462,7 +462,7 @@ void MainWindow::apply_button_filters()
     regExp.setPattern(recomputeFilters());
     for (int i=0; i<ui->logtabs->count(); i++)
     {
-        LogTab* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
+        auto* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
         if (logtab) {
             logtab->proxyModelButtons->setFilterRegExp(regExp);
             logtab->proxyModelButtons->setFilterKeyColumn(2);
@@ -505,7 +505,7 @@ void MainWindow::on_actionShow_YarprunTimestamps_toggled(bool arg1)
     displayYarprunTimestamps = arg1;
     for (int i=0; i<ui->logtabs->count(); i++)
     {
-        LogTab* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
+        auto* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
         if (logtab) 
         {
             logtab->displayYarprunTimestamp(displayYarprunTimestamps);
@@ -518,7 +518,7 @@ void MainWindow::on_actionShow_LocalTimestamps_toggled(bool arg1)
     displayLocalTimestamps = arg1;
     for (int i=0; i<ui->logtabs->count(); i++)
     {
-        LogTab* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
+        auto* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
         if (logtab) 
         {
             logtab->displayLocalTimestamp(displayLocalTimestamps);
@@ -565,7 +565,7 @@ void MainWindow::on_actionShow_Error_Level_toggled(bool arg1)
     displayErrorLevel = arg1;
     for (int i=0; i<ui->logtabs->count(); i++)
     {
-        LogTab* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
+        auto* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
         if (logtab) 
         {
             logtab->displayErrorLevel(displayErrorLevel);
@@ -578,7 +578,7 @@ void MainWindow::on_actionShow_Colors_toggled(bool arg1)
     displayColors = arg1;
     for (int i=0; i<ui->logtabs->count(); i++)
     {
-        LogTab* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
+        auto* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
         if (logtab) 
         {
             logtab->displayColors(displayColors);
@@ -591,7 +591,7 @@ void MainWindow::on_actionShow_Grid_toggled(bool arg1)
     displayGrid = arg1;
     for (int i=0; i<ui->logtabs->count(); i++)
     {
-        LogTab* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
+        auto* logtab = ui->logtabs->widget(i)->findChild<LogTab*>("logtab");
         if (logtab) 
         {
             logtab->displayGrid(displayGrid);
@@ -623,7 +623,7 @@ void MainWindow::on_actionStart_Logger_triggered()
     }
     else
     {
-        system_message->addMessage("Unable to start: maybe logger port is conflicting with another running process?",MESSAGE_LEVEL_ERROR);
+        system_message->addMessage("Unable to start: maybe logger port is conflicting with another running process?\nOnly one logger can be executed on the same network.",MESSAGE_LEVEL_ERROR);
     }
 }
 

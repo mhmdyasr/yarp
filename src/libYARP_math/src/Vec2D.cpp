@@ -1,10 +1,15 @@
 /*
-* Author: Marco Randazzo
-* Copyright (C) 2017 Istituto Italiano di Tecnologia (IIT)
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #include <yarp/math/Vec2D.h>
+
+#include <yarp/os/ConnectionReader.h>
+#include <yarp/os/ConnectionWriter.h>
 #include <yarp/math/Math.h>
 #include <sstream>
 #include <cmath>
@@ -19,97 +24,97 @@ YARP_BEGIN_PACK
 class Vec2DPortContentHeader
 {
 public:
-    yarp::os::NetInt32 listTag;
-    yarp::os::NetInt32 listLen;
-    Vec2DPortContentHeader() : listTag(0), listLen(0) {}
+    yarp::os::NetInt32 listTag{0};
+    yarp::os::NetInt32 listLen{0};
+    Vec2DPortContentHeader() = default;
 };
 YARP_END_PACK
 
-namespace yarp
+namespace yarp {
+namespace math {
+template<>
+bool Vec2D<double>::read(yarp::os::ConnectionReader& connection)
 {
-    namespace math
+    // auto-convert text mode interaction
+    connection.convertTextMode();
+    Vec2DPortContentHeader header;
+    bool ok = connection.expectBlock((char*)&header, sizeof(header));
+    if (!ok) return false;
+
+    if (header.listLen == 2 && header.listTag == (BOTTLE_TAG_LIST | BOTTLE_TAG_FLOAT64))
     {
-        template<>
-        bool Vec2D<double>::read(yarp::os::ConnectionReader& connection)
-        {
-            // auto-convert text mode interaction
-            connection.convertTextMode();
-            Vec2DPortContentHeader header;
-            bool ok = connection.expectBlock((char*)&header, sizeof(header));
-            if (!ok) return false;
-
-            if (header.listLen == 2 && header.listTag == (BOTTLE_TAG_LIST | BOTTLE_TAG_DOUBLE))
-            {
-                this->x = connection.expectDouble();
-                this->y = connection.expectDouble();
-            }
-            else
-            {
-                return false;
-            }
-
-            return !connection.isError();
-        }
-
-        template<>
-        bool Vec2D<int>::read(yarp::os::ConnectionReader& connection)
-        {
-            // auto-convert text mode interaction
-            connection.convertTextMode();
-            Vec2DPortContentHeader header;
-            bool ok = connection.expectBlock((char*)&header, sizeof(header));
-            if (!ok) return false;
-
-            if (header.listLen == 2 && header.listTag == (BOTTLE_TAG_LIST | BOTTLE_TAG_INT))
-            {
-                this->x = connection.expectInt();
-                this->y = connection.expectInt();
-            }
-            else
-            {
-                return false;
-            }
-
-            return !connection.isError();
-        }
-
-        template<>
-        bool Vec2D<double>::write(yarp::os::ConnectionWriter& connection)
-        {
-            Vec2DPortContentHeader header;
-
-            header.listTag = (BOTTLE_TAG_LIST | BOTTLE_TAG_DOUBLE);
-            header.listLen = 2;
-
-            connection.appendBlock((char*)&header, sizeof(header));
-
-            connection.appendDouble(this->x);
-            connection.appendDouble(this->y);
-
-            connection.convertTextMode();
-
-            return !connection.isError();
-        }
-
-        template<>
-        bool Vec2D<int>::write(yarp::os::ConnectionWriter& connection)
-        {
-            Vec2DPortContentHeader header;
-
-            header.listTag = (BOTTLE_TAG_LIST | BOTTLE_TAG_INT);
-            header.listLen = 2;
-
-            connection.appendBlock((char*)&header, sizeof(header));
-
-            connection.appendInt(this->x);
-            connection.appendInt(this->y);
-
-            connection.convertTextMode();
-
-            return !connection.isError();
-        }
+        this->x = connection.expectFloat64();
+        this->y = connection.expectFloat64();
     }
+    else
+    {
+        return false;
+    }
+
+    return !connection.isError();
 }
+
+template<>
+bool Vec2D<int>::read(yarp::os::ConnectionReader& connection)
+{
+    // auto-convert text mode interaction
+    connection.convertTextMode();
+    Vec2DPortContentHeader header;
+    bool ok = connection.expectBlock((char*)&header, sizeof(header));
+    if (!ok) return false;
+
+    if (header.listLen == 2 && header.listTag == (BOTTLE_TAG_LIST | BOTTLE_TAG_INT32))
+    {
+        this->x = connection.expectInt32();
+        this->y = connection.expectInt32();
+    }
+    else
+    {
+        return false;
+    }
+
+    return !connection.isError();
+}
+
+template<>
+bool Vec2D<double>::write(yarp::os::ConnectionWriter& connection) const
+{
+    Vec2DPortContentHeader header;
+
+    header.listTag = (BOTTLE_TAG_LIST | BOTTLE_TAG_FLOAT64);
+    header.listLen = 2;
+
+    connection.appendBlock((char*)&header, sizeof(header));
+
+    connection.appendFloat64(this->x);
+    connection.appendFloat64(this->y);
+
+    connection.convertTextMode();
+
+    return !connection.isError();
+}
+
+template<>
+bool Vec2D<int>::write(yarp::os::ConnectionWriter& connection) const
+{
+    Vec2DPortContentHeader header;
+
+    header.listTag = (BOTTLE_TAG_LIST | BOTTLE_TAG_INT32);
+    header.listLen = 2;
+
+    connection.appendBlock((char*)&header, sizeof(header));
+
+    connection.appendInt32(this->x);
+    connection.appendInt32(this->y);
+
+    connection.convertTextMode();
+
+    return !connection.isError();
+}
+
+} // namespace math
+} // namespace yarp
+
 
 template <typename T>
 std::string yarp::math::Vec2D<T>::toString(int precision, int width) const
@@ -200,7 +205,7 @@ yarp::math::Vec2D<T>& yarp::math::Vec2D<T>::operator =(const yarp::math::Vec2D<T
 }
 
 template <typename T>
-bool yarp::math::Vec2D<T>::operator ==(const yarp::math::Vec2D<T>& rhs)
+bool yarp::math::Vec2D<T>::operator ==(const yarp::math::Vec2D<T>& rhs) const
 {
     if (this->x == rhs.x &&
         this->y == rhs.y) return true;
@@ -208,7 +213,7 @@ bool yarp::math::Vec2D<T>::operator ==(const yarp::math::Vec2D<T>& rhs)
 }
 
 template <typename T>
-bool yarp::math::Vec2D<T>::operator !=(const yarp::math::Vec2D<T>& rhs)
+bool yarp::math::Vec2D<T>::operator !=(const yarp::math::Vec2D<T>& rhs) const
 {
     if (this->x == rhs.x &&
         this->y == rhs.y) return false;
@@ -224,4 +229,3 @@ template yarp::math::Vec2D<int>    YARP_math_API operator * (const yarp::sig::Ma
 
 template class YARP_math_API yarp::math::Vec2D<double>;
 template class YARP_math_API yarp::math::Vec2D<int>;
-

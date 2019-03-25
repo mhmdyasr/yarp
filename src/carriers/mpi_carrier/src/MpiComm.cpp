@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2011 Daniel Krieg
- * Author: Daniel Krieg <krieg@fias.uni-frankfurt.de>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2010 Daniel Krieg <krieg@fias.uni-frankfurt.de>
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/MpiComm.h>
 #include <yarp/os/Log.h>
@@ -11,6 +13,7 @@
 #include <mpi.h>
 
 #include <cstdlib>
+#include <utility>
 #include <unistd.h>
 
 using namespace yarp::os;
@@ -18,13 +21,13 @@ using namespace yarp::os;
 /* --------------------------------------- */
 /* MpiControlThread */
 
-yarp::os::MpiControlThread *MpiControl = NULL;
+yarp::os::MpiControlThread *MpiControl = nullptr;
 
-void finalizeMPI(void) {
+void finalizeMPI() {
     if (MpiControl) {
         MpiControl->finalize();
         delete MpiControl;
-        MpiControl = NULL;
+        MpiControl = nullptr;
     }
     int ct = 0;
     int finalized;
@@ -58,7 +61,7 @@ bool MpiControlThread::threadInit() {
     // We need full multithread support for MPI
     int requested = MPI_THREAD_MULTIPLE;
     // Passing NULL for argc/argv pointers is fine for MPI-2
-    int err = MPI_Init_thread(NULL, NULL, requested , &provided);
+    int err = MPI_Init_thread(nullptr, nullptr, requested , &provided);
     if (err != MPI_SUCCESS ) {
         yError("MpiControlThread: Couldn't initialize MPI\n");
         return false;
@@ -78,8 +81,8 @@ bool MpiControlThread::threadInit() {
 /* --------------------------------------- */
 /* MpiComm */
 
-MpiComm::MpiComm(ConstString name) : name(name) {
-    if (MpiControl == NULL) {
+MpiComm::MpiComm(std::string name) : name(std::move(name)) {
+    if (MpiControl == nullptr) {
         MpiControl = new yarp::os::MpiControlThread;
     }
     if (! MpiControl->isRunning()) {
@@ -103,15 +106,15 @@ MpiComm::MpiComm(ConstString name) : name(name) {
 }
 
 //TODO: replace by static variable check??!?
-bool MpiComm::notLocal(ConstString other) {
-    if (other == ConstString(unique_id)) {
+bool MpiComm::notLocal(std::string other) {
+    if (other == std::string(unique_id)) {
         yError("MPI does not support process local communication\n");
         return false;
     }
     return true;
 }
 
-bool MpiComm::connect(ConstString port) {
+bool MpiComm::connect(std::string port) {
 
     char* port_name = new char[port.length()+1];
     memcpy(port_name, port.c_str(), port.length());

@@ -1,12 +1,14 @@
-# Copyright (C) 2017 Istituto Italiano di Tecnologia (IIT)
-# Author: Marco Randazzo
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 yarp_prepare_plugin(rpLidar2
                     CATEGORY device
                     TYPE RpLidar2
                     INCLUDE rpLidar2.h
-                    DEPENDS CREATE_DEVICE_LIBRARY_MODULES)
+                    DEPENDS "NOT APPLE;TARGET YARP::YARP_math")
 
 if(NOT SKIP_rpLidar2)
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -18,9 +20,6 @@ if(NOT SKIP_rpLidar2)
   elseif(UNIX)
     set(RPLIDAR_ARCH_DIR linux)
   endif()
-
-  include_directories(SYSTEM ${RPLIDAR_SDK_ROOT}/include
-                             ${RPLIDAR_SDK_ROOT}/src)
 
   set(RPLIDAR_SDK_SRCS ${RPLIDAR_SDK_ROOT}/src/rplidar_driver.cpp
                        ${RPLIDAR_SDK_ROOT}/src/arch/${RPLIDAR_ARCH_DIR}/net_serial.cpp
@@ -38,20 +37,32 @@ if(NOT SKIP_rpLidar2)
     endif()
   endif()
 
-  add_definitions(-D_USE_MATH_DEFINES)
-  yarp_add_plugin(rpLidar2 rpLidar2.h
-                           rpLidar2.cpp
-                           ${RPLIDAR_SDK_SRCS})
 
-  target_link_libraries(rpLidar2 YARP::YARP_OS
-                                YARP::YARP_sig
-                                YARP::YARP_dev)
-  yarp_install(TARGETS rpLidar2
-               EXPORT YARP
-               COMPONENT runtime
+  yarp_add_plugin(yarp_rpLidar2 rpLidar2.h
+                                rpLidar2.cpp
+                                ${RPLIDAR_SDK_SRCS})
+  target_compile_definitions(yarp_rpLidar2 PRIVATE _USE_MATH_DEFINES)
+
+  target_include_directories(yarp_rpLidar2 SYSTEM PRIVATE ${RPLIDAR_SDK_ROOT}/include
+                                                          ${RPLIDAR_SDK_ROOT}/src)
+  target_link_libraries(yarp_rpLidar2 PRIVATE YARP::YARP_OS
+                                              YARP::YARP_sig
+                                              YARP::YARP_dev
+                                              YARP::YARP_math)
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+                                                      YARP_sig
+                                                      YARP_dev)
+
+  yarp_install(TARGETS yarp_rpLidar2
+               EXPORT YARP_${YARP_PLUGIN_MASTER}
+               COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
                ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
   yarp_install(FILES rpLidar2.ini
-               COMPONENT runtime
+               COMPONENT ${YARP_PLUGIN_MASTER}
                DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+
+  set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
+
+  set_property(TARGET yarp_rpLidar2 PROPERTY FOLDER "Plugins/Device")
 endif()

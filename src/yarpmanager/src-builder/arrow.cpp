@@ -1,3 +1,25 @@
+/*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+/**
+ * Original license follows:
+ */
+
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
@@ -100,10 +122,10 @@ GraphicModel* Arrow::getModel()
     return &model;
 }
 
-void Arrow::setConnection(Connection conn)
+void Arrow::setConnection(const Connection& conn)
 {
     connection = conn;
-    QString label = conn.carrier();
+    QString label = connection.carrier();
     if(!label.isEmpty()){
         textLbl.setText(label);
     }
@@ -127,7 +149,7 @@ void Arrow::setConnection(Connection conn)
             for(unsigned int i=2; i<mod.points.size() - 1;i++){
                 GyPoint p = mod.points[i];
                 QPointF point(p.x,p.y);
-                LineHandle *handle = new LineHandle(point,this);
+                auto* handle = new LineHandle(point,this);
                 handleList.append(handle);
                 polyline.append(point);
                 qDebug() << "APPENDING " << handle;
@@ -445,7 +467,7 @@ void Arrow::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 void Arrow::addHandle(QPointF clickPos)
 {
-    LineHandle *handle = new LineHandle(clickPos,this);
+    auto* handle = new LineHandle(clickPos,this);
     handle->setSelected(true);
     if(handleList.isEmpty()){
         handleList.append(handle);
@@ -536,17 +558,13 @@ LineHandle::LineHandle(QPointF center, Arrow *parent) : QGraphicsRectItem(parent
     qDebug() << "CENTER CREATED IN " << center;
 }
 
-LineHandle::~LineHandle()
-{
-    //parent->removeHandle(this);
-    //scene()->removeItem(this);
-}
+LineHandle::~LineHandle() = default;
 
 QPointF LineHandle::computeTopLeftGridPoint(const QPointF &pointP){
     int gridSize = 16;
     qreal xV = gridSize/2 + floor(pointP.x()/gridSize)*gridSize;
     qreal yV = gridSize/2 + floor(pointP.y()/gridSize)*gridSize;
-    return QPointF(xV, yV);
+    return {xV, yV};
 }
 
 
@@ -700,7 +718,7 @@ Label::Label(QString label, QGraphicsItem *parent) : QGraphicsTextItem(label,par
 
     sigHandler = new ItemSignalHandler((QGraphicsItem*)this,ArrowLabelItemType,nullptr);
     comboWidget = new QGraphicsProxyWidget(this);
-    QComboBox *combo = new QComboBox();
+    auto* combo = new QComboBox();
     combo->setEditable(true);
     parentArrow = (Arrow*)parent;
     QObject::connect(combo,SIGNAL(activated(QString)),
@@ -727,10 +745,8 @@ Label::Label(QString label, QGraphicsItem *parent) : QGraphicsTextItem(label,par
     parentArrow->update();
 
 }
-Label::~Label()
-{
-    //scene()->removeItem(this);
-}
+
+Label::~Label() = default;
 
 void Label::setHasMoved(bool moved)
 {
@@ -832,5 +848,5 @@ QPointF Label::computeTopLeftGridPoint(const QPointF &pointP){
     int gridSize = 16;
     qreal xV = gridSize/2 + floor(pointP.x()/gridSize)*gridSize;
     qreal yV = gridSize/2 + floor(pointP.y()/gridSize)*gridSize;
-    return QPointF(xV, yV);
+    return {xV, yV};
 }

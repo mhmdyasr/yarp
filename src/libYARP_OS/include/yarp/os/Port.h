@@ -1,21 +1,23 @@
 /*
- * Copyright (C) 2006, 2007 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_PORT_H
 #define YARP_OS_PORT_H
 
 #include <yarp/os/api.h>
+
+#include <yarp/os/PortReader.h>
+#include <yarp/os/PortReaderCreator.h>
+#include <yarp/os/PortWriter.h>
 #include <yarp/os/Portable.h>
 #include <yarp/os/UnbufferedContactable.h>
-#include <yarp/os/PortReader.h>
-#include <yarp/os/PortWriter.h>
-#include <yarp/os/PortReaderCreator.h>
 
-// Defined in this file:
-namespace yarp { namespace os { class Port; }}
 
 namespace yarp {
 namespace os {
@@ -48,10 +50,6 @@ class YARP_OS_API Port : public UnbufferedContactable
 {
 
 public:
-#ifndef YARP_NO_DEPRECATED // since YARP 2.3.72
-    using Contactable::open;
-#endif // YARP_NO_DEPRECATED
-
     /**
      * Constructor.
      *
@@ -66,7 +64,7 @@ public:
     virtual ~Port();
 
     // Documented in Contactable
-    bool open(const ConstString& name) override;
+    bool open(const std::string& name) override;
 
     // Documented in Contactable
     bool open(const Contact& contact, bool registerName = true) override;
@@ -85,13 +83,13 @@ public:
      *             port will claim to be from.
      * @return true on success
      */
-    bool openFake(const ConstString& name);
+    bool openFake(const std::string& name);
 
     // Documented in Contactable
-    bool addOutput(const ConstString& name) override;
+    bool addOutput(const std::string& name) override;
 
     // Documented in Contactable
-    bool addOutput(const ConstString& name, const ConstString& carrier) override;
+    bool addOutput(const std::string& name, const std::string& carrier) override;
 
     // Documented in Contactable
     bool addOutput(const Contact& contact) override;
@@ -100,20 +98,22 @@ public:
     void close() override;
 
     // Documented in Contactable
-    virtual void interrupt() override;
+    void interrupt() override;
 
     // Documented in Contactable
-    virtual void resume() override;
+    void resume() override;
 
     // Documented in Contactable
     Contact where() const override;
 
     // Documented in UnbufferedContactable
-    bool write(PortWriter& writer, PortWriter *callback = nullptr) const override;
+    bool write(const PortWriter& writer,
+               const PortWriter* callback = nullptr) const override;
 
     // Documented in UnbufferedContactable
-    bool write(PortWriter& writer, PortReader& reader,
-               PortWriter *callback = nullptr) const override;
+    bool write(const PortWriter& writer,
+               PortReader& reader,
+               const PortWriter* callback = nullptr) const override;
 
     // Documented in UnbufferedContactable
     bool read(PortReader& reader, bool willReply = false) override;
@@ -128,7 +128,7 @@ public:
     void setReader(PortReader& reader) override;
 
     // Documented in Contactable
-    virtual void setAdminReader(PortReader& reader) override;
+    void setAdminReader(PortReader& reader) override;
 
     /**
      * Set a creator for readers for port data.
@@ -154,25 +154,25 @@ public:
     bool isWriting() override;
 
     // Documented in Contactable
-    virtual bool setEnvelope(PortWriter& envelope) override;
+    bool setEnvelope(PortWriter& envelope) override;
 
     // Documented in Contactable
-    virtual bool getEnvelope(PortReader& envelope) override;
+    bool getEnvelope(PortReader& envelope) override;
 
     // Documented in Contactable
-    virtual int getInputCount() override;
+    int getInputCount() override;
 
     // Documented in Contactable
-    virtual int getOutputCount() override;
+    int getOutputCount() override;
 
     // Documented in Contactable
-    virtual void getReport(PortReport& reporter) override;
+    void getReport(PortReport& reporter) override;
 
     // Documented in Contactable
-    virtual void setReporter(PortReport& reporter) override;
+    void setReporter(PortReport& reporter) override;
 
     // Documented in Contactable
-    virtual void resetReporter() override;
+    void resetReporter() override;
 
     /**
      * Turn on/off "admin" mode.
@@ -221,19 +221,19 @@ public:
     int getVerbosity();
 
     // Documented in Contactable
-    virtual Type getType() override;
+    Type getType() override;
 
     // Documented in Contactable
-    virtual void promiseType(const Type& typ) override;
+    void promiseType(const Type& typ) override;
 
     // Documented in Contactable
-    virtual Property *acquireProperties(bool readOnly) override;
+    Property* acquireProperties(bool readOnly) override;
 
     // Documented in Contactable
-    virtual void releaseProperties(Property *prop) override;
+    void releaseProperties(Property* prop) override;
 
     // Documented in Contactable
-    virtual void includeNodeInName(bool flag) override;
+    void includeNodeInName(bool flag) override;
 
     /**
      * Check if the port has been opened.
@@ -241,30 +241,29 @@ public:
     bool isOpen() const;
 
     // Documented in Contactable
-    virtual bool setCallbackLock(yarp::os::Mutex *mutex = nullptr) override;
+    bool setCallbackLock(yarp::os::Mutex* mutex = nullptr) override;
 
     // Documented in Contactable
-    virtual bool removeCallbackLock() override;
+    bool removeCallbackLock() override;
 
     // Documented in Contactable
-    virtual bool lockCallback() override;
+    bool lockCallback() override;
 
     // Documented in Contactable
-    virtual bool tryLockCallback() override;
+    bool tryLockCallback() override;
 
     // Documented in Contactable
-    virtual void unlockCallback() override;
+    void unlockCallback() override;
 
 private:
-    void *implementation;
+    void* implementation;
     bool owned;
 
-    void *needImplementation() const;
+    void* needImplementation() const;
 
     bool open(const Contact& contact,
               bool registerName,
-              const char *fakeName);
-
+              const char* fakeName);
 };
 
 } // namespace os

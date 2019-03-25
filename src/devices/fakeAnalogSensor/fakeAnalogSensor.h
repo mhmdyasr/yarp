@@ -1,13 +1,16 @@
-// Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
-// Authors: Alberto Cardellino
-// email:   alberto.cardellino@iit.it
-// CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+/*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #ifndef YARP_DEVICE_FAKE_ANALOGSENSOR
 #define YARP_DEVICE_FAKE_ANALOGSENSOR
 
-#include <yarp/os/RateThread.h>
-#include <yarp/os/Semaphore.h>
+#include <yarp/os/PeriodicThread.h>
+#include <yarp/os/Mutex.h>
 
 #include <yarp/dev/all.h>
 #include <yarp/dev/IAnalogSensor.h>
@@ -30,42 +33,42 @@ namespace yarp{
 */
 
 class yarp::dev::FakeAnalogSensor : public yarp::dev::DeviceDriver,
-                                    public yarp::os::RateThread,
+                                    public yarp::os::PeriodicThread,
                                     public yarp::dev::IAnalogSensor
 {
 private:
 
-    yarp::os::Semaphore     mutex;
+    yarp::os::Mutex         mutex;
 
-    yarp::os::ConstString   name;    // device name
+    std::string   name;    // device name
     unsigned int            channelsNum;
     short                   status;
     double                  timeStamp;
     yarp::sig::Vector       data;
 
 public:
-    FakeAnalogSensor(int period = 20);
+    FakeAnalogSensor(double period = 0.02);
 
     ~FakeAnalogSensor();
 
-    virtual bool open(yarp::os::Searchable& config) override;
-    virtual bool close() override;
+    bool open(yarp::os::Searchable& config) override;
+    bool close() override;
 
     //IAnalogSensor interface
-    virtual int getChannels() override;
-    virtual int getState(int ch) override;
-    virtual int read(yarp::sig::Vector &out) override;
+    int getChannels() override;
+    int getState(int ch) override;
+    int read(yarp::sig::Vector &out) override;
 
-    virtual int calibrateSensor() override;
-    virtual int calibrateSensor(const yarp::sig::Vector& v) override;
+    int calibrateSensor() override;
+    int calibrateSensor(const yarp::sig::Vector& v) override;
 
-    virtual int calibrateChannel(int ch) override;
-    virtual int calibrateChannel(int ch, double v) override;
+    int calibrateChannel(int ch) override;
+    int calibrateChannel(int ch, double v) override;
 
     // RateThread interface
-    virtual void run() override;
-    virtual bool threadInit() override;
-    virtual void threadRelease() override;
+    void run() override;
+    bool threadInit() override;
+    void threadRelease() override;
 };
 
 

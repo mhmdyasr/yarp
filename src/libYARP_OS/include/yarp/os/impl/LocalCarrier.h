@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_IMPL_LOCALCARRIER_H
@@ -9,6 +12,11 @@
 
 #include <yarp/os/AbstractCarrier.h>
 #include <yarp/os/Semaphore.h>
+#include <yarp/os/Mutex.h>
+#include <yarp/os/TwoWayStream.h>
+#include <yarp/os/InputStream.h>
+#include <yarp/os/OutputStream.h>
+#include <yarp/os/Portable.h>
 
 
 namespace yarp {
@@ -35,7 +43,9 @@ public:
     void revoke(LocalCarrier *carrier);
 
 private:
-    yarp::os::Semaphore senderMutex, receiverMutex, received;
+    yarp::os::Mutex senderMutex;
+    yarp::os::Mutex receiverMutex;
+    yarp::os::Semaphore received;
     LocalCarrier *sender, *receiver;
 };
 
@@ -50,24 +60,24 @@ class yarp::os::impl::LocalCarrierStream : public TwoWayStream,
 public:
     void attach(LocalCarrier *owner, bool sender);
 
-    virtual InputStream& getInputStream() override;
-    virtual OutputStream& getOutputStream() override;
-    virtual const Contact& getLocalAddress() override;
-    virtual const Contact& getRemoteAddress() override;
-    virtual bool setTypeOfService(int tos) override;
+    InputStream& getInputStream() override;
+    OutputStream& getOutputStream() override;
+    const Contact& getLocalAddress() const override;
+    const Contact& getRemoteAddress() const override;
+    bool setTypeOfService(int tos) override;
 
     using yarp::os::InputStream::read;
-    virtual YARP_SSIZE_T read(const yarp::os::Bytes& b) override;
+    yarp::conf::ssize_t read(yarp::os::Bytes& b) override;
 
     using yarp::os::OutputStream::write;
-    virtual void write(const yarp::os::Bytes& b) override;
+    void write(const yarp::os::Bytes& b) override;
 
-    virtual void reset() override;
-    virtual void beginPacket() override;
-    virtual void endPacket() override;
-    virtual void interrupt() override;
-    virtual void close() override;
-    virtual bool isOk() override;
+    void reset() override;
+    void beginPacket() override;
+    void endPacket() override;
+    void interrupt() override;
+    void close() override;
+    bool isOk() const override;
 
 private:
     Contact localAddress, remoteAddress;
@@ -86,25 +96,25 @@ public:
 
     virtual ~LocalCarrier();
 
-    virtual Carrier *create() override;
+    Carrier *create() const override;
 
-    virtual ConstString getName() override;
+    std::string getName() const override;
 
-    virtual bool requireAck() override;
-    virtual bool isConnectionless() override;
-    virtual bool canEscape() override;
-    virtual bool isLocal() override;
-    virtual ConstString getSpecifierName();
-    virtual bool checkHeader(const Bytes& header) override;
-    virtual void getHeader(const Bytes& header) override;
-    virtual void setParameters(const Bytes& header) override;
-    virtual bool sendHeader(ConnectionState& proto) override;
-    virtual bool expectExtraHeader(ConnectionState& proto) override;
+    bool requireAck() const override;
+    bool isConnectionless() const override;
+    bool canEscape() const override;
+    bool isLocal() const override;
+    virtual std::string getSpecifierName() const;
+    bool checkHeader(const Bytes& header) override;
+    void getHeader(Bytes& header) const override;
+    void setParameters(const Bytes& header) override;
+    bool sendHeader(ConnectionState& proto) override;
+    bool expectExtraHeader(ConnectionState& proto) override;
     virtual bool becomeLocal(ConnectionState& proto, bool sender);
-    virtual bool write(ConnectionState& proto, SizedWriter& writer) override;
-    virtual bool respondToHeader(ConnectionState& proto) override;
-    virtual bool expectReplyToHeader(ConnectionState& proto) override;
-    virtual bool expectIndex(ConnectionState& proto) override;
+    bool write(ConnectionState& proto, SizedWriter& writer) override;
+    bool respondToHeader(ConnectionState& proto) override;
+    bool expectReplyToHeader(ConnectionState& proto) override;
+    bool expectIndex(ConnectionState& proto) override;
 
     void removePeer();
     void shutdown();
@@ -114,9 +124,10 @@ protected:
     bool doomed;
     yarp::os::Portable *ref;
     LocalCarrier *peer;
-    yarp::os::Semaphore peerMutex;
-    yarp::os::Semaphore sent, received;
-    ConstString portName;
+    yarp::os::Mutex peerMutex;
+    yarp::os::Semaphore sent;
+    yarp::os::Semaphore received;
+    std::string portName;
 
     static LocalCarrierManager manager;
 };

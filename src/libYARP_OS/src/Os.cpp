@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2009 RobotCub Consortium
- * Author: Lorenzo Natale
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/Os.h>
 
@@ -19,45 +21,15 @@
 
 #ifdef YARP_HAS_ACE
 # include <ace/ACE.h>
+// In one the ACE headers there is a definition of "main" for WIN32
+# ifdef main
+#  undef main
+# endif
 #endif
 
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 2.3.70
-yarp::os::YarpSignalHandler yarp::os::signal(int signum, yarp::os::YarpSignalHandler sighandler)
-{
-    switch (signum) {
-        case yarp::os::YARP_SIGINT:
-            return yarp::os::impl::signal(SIGINT, sighandler);
-        case yarp::os::YARP_SIGTERM:
-            return yarp::os::impl::signal(SIGTERM, sighandler);
-        default:
-            return nullptr; //signal not implemented yet
-    }
-}
-#endif // YARP_NO_DEPRECATED
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 2.3.70
-void yarp::os::exit(int exit_code)
-{
-    std::exit(exit_code); //may cause crash... exit is not recommended in processes with multi thread, see http://www.cplusplus.com/reference/cstdlib/exit/
-}
-#endif // YARP_NO_DEPRECATED
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 2.3.70
-void yarp::os::abort(bool verbose)
-{
-#if defined(_WIN32)
-    if (verbose==false) {
-        //to suppress windows dialog message
-        _set_abort_behavior(0, _WRITE_ABORT_MSG);
-        _set_abort_behavior(0, _CALL_REPORTFAULT);
-    }
-#else
-    YARP_UNUSED(verbose);
+#if defined(__APPLE__)
+#include <yarp/os/impl/MacOSAPI.h>
 #endif
-    std::abort();   // exit is not recommended in processes with multi thread, see http://www.cplusplus.com/reference/cstdlib/exit/ and http://www.cplusplus.com/reference/cstdlib/abort/
-}
-#endif // YARP_NO_DEPRECATED
 
 const char *yarp::os::getenv(const char *var)
 {
@@ -69,9 +41,37 @@ int yarp::os::mkdir(const char *p)
     return yarp::os::impl::mkdir(p, 0755);
 }
 
-int yarp::os::mkdir_p(const char *p, int ignoreLevels) {
-    bool ok = yarp::os::impl::NameConfig::createPath(p, ignoreLevels);
-    return ok?0:1;
+int yarp::os::mkdir_p(const char *p, int ignoreLevels)
+{
+    std::string fileName(p);
+
+    size_t index = fileName.rfind('/');
+    if (index==std::string::npos) {
+#if defined(_WIN32)
+        index = fileName.rfind('\\');
+        if (index==std::string::npos) {
+            return 1;
+        }
+#else
+        return 1;
+#endif
+    }
+    std::string base = fileName.substr(0, index);
+    if (yarp::os::stat((char*)base.c_str())<0) {
+        int result = yarp::os::mkdir_p(base.c_str(), ignoreLevels-1);
+        if (result != 0) {
+            return 1;
+        }
+    }
+    if (ignoreLevels<=0) {
+        if (yarp::os::stat(fileName.c_str())<0) {
+            if (yarp::os::mkdir(fileName.c_str())>=0) {
+                return 0;
+            }
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int yarp::os::rmdir(const char *p)
@@ -96,6 +96,35 @@ int yarp::os::getpid()
     return pid;
 }
 
+void yarp::os::gethostname(char* hostname, size_t size)
+{
+    yarp::os::impl::gethostname(hostname, size);
+    if (std::strlen(hostname)==0) {
+        std::strncpy(hostname, "no_hostname", size);
+    }
+}
+
+char* yarp::os::getcwd(char *buf, size_t size)
+{
+    return yarp::os::impl::getcwd(buf, size);
+}
+
+void yarp::os::setEnergySavingModeState(bool enabled)
+{
+#if defined(__APPLE__)
+    static void* handle = 0;
+    if (!enabled && !handle) {
+        handle = disableAppNap();
+    } else {
+        restoreAppNap(handle);
+    }
+
+#endif
+}
+
+
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
+
 void yarp::os::setprogname(const char *progname)
 {
 #ifdef YARP_HAS_ACE
@@ -105,7 +134,6 @@ void yarp::os::setprogname(const char *progname)
     YARP_UNUSED(progname);
 #endif
 }
-
 
 void yarp::os::getprogname(char* progname, size_t size)
 {
@@ -123,41 +151,16 @@ void yarp::os::getprogname(char* progname, size_t size)
 #endif
 }
 
-
-void yarp::os::gethostname(char* hostname, size_t size)
-{
-    yarp::os::impl::gethostname(hostname, size);
-    if (std::strlen(hostname)==0) {
-        std::strncpy(hostname, "no_hostname", size);
-    }
-}
-
-char* yarp::os::getcwd(char *buf, size_t size)
-{
-    return yarp::os::impl::getcwd(buf, size);
-}
-
 int yarp::os::fork()
 {
-    pid_t pid = yarp::os::impl::fork();
+#if defined(YARP_HAS_ACE)
+    pid_t pid = ACE_OS::fork();
+#elif defined(__unix__)
+    pid_t pid = ::fork();
+#else
+YARP_COMPILER_ERROR(Cannot implement fork on this platform)
+#endif
     return pid;
 }
 
-
-#if defined(__APPLE__)
-#include "yarp/os/impl/MacOSAPI.h"
-#endif
-
-
-void yarp::os::setEnergySavingModeState(bool enabled)
-{
-#if defined(__APPLE__)
-    static void* handle = 0;
-    if (!enabled && !handle) {
-        handle = disableAppNap();
-    } else {
-        restoreAppNap(handle);
-    }
-
-#endif
-}
+#endif // YARP_NO_DEPRECATED

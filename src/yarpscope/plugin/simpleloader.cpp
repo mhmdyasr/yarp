@@ -1,11 +1,18 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "simpleloader.h"
@@ -74,15 +81,15 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
     }
 
     if (options->check("min")) {
-        plot_minval = (float)options->find("min").asDouble();
+        plot_minval = (float)options->find("min").asFloat64();
     }
 
     if (options->check("max")) {
-        plot_maxval = (float)options->find("max").asDouble();
+        plot_maxval = (float)options->find("max").asFloat64();
     }
 
     if (options->check("size")) {
-        plot_size = options->find("size").asInt();
+        plot_size = options->find("size").asInt32();
     }
 
     if (options->check("bgcolor")) {
@@ -100,11 +107,11 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
 
     if (!indexValue.isList()) {
         // SINGLE PLOT
-        graph_index = indexValue.asInt();
+        graph_index = indexValue.asInt32();
 
         if (options->check("graph_title")) {
             if (options->find("graph_title").isList()) {
-                qCritical("\"graph_title\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("graph_title" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
@@ -113,7 +120,7 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
 
         if (options->check("color")) {
             if (options->find("color").isList()) {
-                qCritical("\"color\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("color" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
@@ -122,7 +129,7 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
 
         if (options->check("type")) {
             if (options->find("type").isList()) {
-                qCritical("\"type\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("type" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
@@ -131,11 +138,11 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
 
         if (options->check("graph_size")) {
             if (options->find("graph_size").isList()) {
-                qCritical("\"graph_size\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("graph_size" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
-            graph_size =  options->find("graph_size").asInt();
+            graph_size =  options->find("graph_size").asInt32();
         } else {
             graph_size = default_graph_size;
         }
@@ -152,13 +159,13 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
         if (options->check("graph_title")) {
             const yarp::os::Value &titlesValue = options->find("graph_title");
             if (!titlesValue.isList()) {
-                qCritical("\"graph_title\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("graph_title" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
             titles = *titlesValue.asList();
             if (titles.size() != indexes.size()) {
-                qCritical("\"graph_title\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("graph_title" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
@@ -169,13 +176,13 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
         if (options->check("color")) {
             const yarp::os::Value &colorsValue = options->find("color");
             if (!colorsValue.isList()) {
-                qCritical("\"color\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("color" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
             colors = *colorsValue.asList();
             if (colors.size() != indexes.size()) {
-                qCritical("\"color\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("color" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
@@ -186,13 +193,13 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
         if (options->check("type")) {
             const yarp::os::Value &typesValue = options->find("type");
             if (!typesValue.isList()) {
-                qCritical("\"type\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("type" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
             types = *typesValue.asList();
             if (types.size() != indexes.size()) {
-                qCritical("\"type\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("type" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
@@ -203,13 +210,13 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
         if (options->check("graph_size")) {
             const yarp::os::Value &sizesValue = options->find("graph_size");
             if (!sizesValue.isList()) {
-                qCritical("\"graph_size\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("graph_size" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
             sizes = *sizesValue.asList();
             if (sizes.size() != indexes.size()) {
-                qCritical("\"graph_size\" and \"index\" arguments should have the same number of elements");
+                qCritical(R"("graph_size" and "index" arguments should have the same number of elements)");
                 *ok = false;
                 return;
             }
@@ -217,8 +224,8 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
             sizes = yarp::os::Bottle::getNullBottle();
         }
 
-        for (int i = 0; i < indexes.size(); i++) {
-            graph_index = indexes.get(i).asInt();
+        for (size_t i = 0; i < indexes.size(); i++) {
+            graph_index = indexes.get(i).asInt32();
 
             if (!titles.isNull()) {
                 graph_title = QString("%1").arg(titles.get(i).asString().data());
@@ -233,7 +240,7 @@ SimpleLoader::SimpleLoader(/* FIXME const */ yarp::os::ResourceFinder *options, 
             }
 
             if (!sizes.isNull()) {
-                graph_size = sizes.get(i).asInt();
+                graph_size = sizes.get(i).asInt32();
             } else {
                 graph_size = default_graph_size;
             }

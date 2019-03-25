@@ -1,8 +1,10 @@
 /*
-* Copyright (C) 2017 Istituto Italiano di Tecnologia (IIT)
-* Author: Andrea Ruzzenenti <andrea.ruzzenenti@iit.it>
-* CopyPolicy: Released under the terms of the GPLv2 or later, see GPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #include "fakeDepthCameraDriver.h"
 
@@ -18,24 +20,19 @@ using namespace yarp::os;
 using namespace std;
 
 fakeDepthCameraDriver::fakeDepthCameraDriver() :
-
     rgb_h(480),
     rgb_w(640),
     dep_h(480),
     dep_w(640),
-    accuracy(0.001),
     rgb_Vfov(36),
     rgb_Hfov(50),
     dep_Vfov(36),
     dep_Hfov(50),
-    dep_near(0.4),
     dep_far(6),
     image(nullptr)
 {}
 
-fakeDepthCameraDriver::~fakeDepthCameraDriver()
-{
-}
+fakeDepthCameraDriver::~fakeDepthCameraDriver() = default;
 
 bool fakeDepthCameraDriver::open(Searchable& config)
 {
@@ -47,22 +44,22 @@ bool fakeDepthCameraDriver::open(Searchable& config)
     testgrabber.view(image);
 
     vector<tuple<double*, string, double> > param;
-    param.push_back(make_tuple(&rgb_h,    "rgb_h",    480.0));
-    param.push_back(make_tuple(&rgb_w,    "rgb_w",    640.0));
-    param.push_back(make_tuple(&dep_h,    "rgb_h",    480.0));
-    param.push_back(make_tuple(&dep_w,    "rgb_w",    640.0));
-    param.push_back(make_tuple(&accuracy, "accuracy", 0.001));
-    param.push_back(make_tuple(&rgb_Vfov, "rgb_Vfov", 50.0));
-    param.push_back(make_tuple(&rgb_Hfov, "rgb_Hfov", 36.0));
-    param.push_back(make_tuple(&dep_Vfov, "dep_Vfov", 50.0));
-    param.push_back(make_tuple(&dep_Hfov, "dep_Hfov", 36.0));
-    param.push_back(make_tuple(&dep_near, "dep_near", 0.2));
-    param.push_back(make_tuple(&dep_far,  "dep_far",  6.0));
+    param.emplace_back(&rgb_h,    "rgb_h",    480.0);
+    param.emplace_back(&rgb_w,    "rgb_w",    640.0);
+    param.emplace_back(&dep_h,    "rgb_h",    480.0);
+    param.emplace_back(&dep_w,    "rgb_w",    640.0);
+    param.emplace_back(&accuracy, "accuracy", 0.001);
+    param.emplace_back(&rgb_Vfov, "rgb_Vfov", 50.0);
+    param.emplace_back(&rgb_Hfov, "rgb_Hfov", 36.0);
+    param.emplace_back(&dep_Vfov, "dep_Vfov", 50.0);
+    param.emplace_back(&dep_Hfov, "dep_Hfov", 36.0);
+    param.emplace_back(&dep_near, "dep_near", 0.2);
+    param.emplace_back(&dep_far,  "dep_far",  6.0);
     for (auto p : param)
     {
         if (config.check(get<1>(p)))
         {
-            *get<0>(p) = config.find(get<1>(p)).asDouble();
+            *get<0>(p) = config.find(get<1>(p)).asFloat64();
         }
         else
         {
@@ -255,9 +252,9 @@ bool fakeDepthCameraDriver::getDepthImage(ImageOf<PixelFloat>& depthImage, Stamp
 {
     if (!image->getImage(imageof)) {return false;}
     depthImage.resize(imageof);
-    for (int i = 0; i < imageof.width(); i++)
+    for (size_t i = 0; i < imageof.width(); i++)
     {
-        for (int j = 0; j < imageof.height(); j++)
+        for (size_t j = 0; j < imageof.height(); j++)
         {
             PixelRgb pix = (*(PixelRgb*)imageof.getPixelAddress(i, j));
             *(PixelFloat*)depthImage.getPixelAddress(i, j) = (float(pix.b) / 255.0)/3.0 + (float(pix.g) / 255.0) / 3.0 + (float(pix.r) / 255.0) / 3.0;
@@ -278,7 +275,7 @@ IRGBDSensor::RGBDSensor_status fakeDepthCameraDriver::getSensorStatus()
     return RGBD_SENSOR_OK_IN_USE;
 }
 
-ConstString fakeDepthCameraDriver::getLastErrorMsg(Stamp* timeStamp)
+std::string fakeDepthCameraDriver::getLastErrorMsg(Stamp* timeStamp)
 {
     return "no error";
 }

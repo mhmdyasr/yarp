@@ -1,35 +1,34 @@
 /*
- * Copyright (C) 2013 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick, Daniele E. Domenichelli
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_RESOURCEFINDEROPTIONS_H
 #define YARP_OS_RESOURCEFINDEROPTIONS_H
 
 #include <yarp/os/api.h>
-#include <yarp/os/ConstString.h>
+
+#include <string>
 
 namespace yarp {
-    namespace os {
-        class ResourceFinderOptions;
-    }
-}
+namespace os {
 
 /**
- *
  * These options are loosely based on
  *   http://wiki.icub.org/wiki/YARP_ResourceFinder
  *
  * For a User search location:
  *   YARP_CONFIG_HOME is only checked if the searchFlavor is ConfigLike
  *   YARP_DATA_HOME is only checked if the searchFlavor is DataLike
- *
  */
-class YARP_OS_API yarp::os::ResourceFinderOptions {
+class YARP_OS_API ResourceFinderOptions
+{
 public:
-
-    enum SearchLocations {
+    enum SearchLocations
+    {
         NoLocation     = 0x0000,
         Directory      = 0x0001, // Search current directory
         Context        = 0x0002, // Search current context directory
@@ -44,18 +43,21 @@ public:
         ModuleDefault = Default | Robot | Context | Directory | ClassicContext | NearMainConfig
     };
 
-    enum DuplicateFilesPolicy {
+    enum DuplicateFilesPolicy
+    {
         First,      // Keep only the first file found
         All         // Keep all the files
     };
 
-    enum SearchFlavor {
+    enum SearchFlavor
+    {
         ConfigLike  = 0x0001,
         DataLike    = 0x0002,
         ConfigAndDataLike = ConfigLike | DataLike
     };
 
-    enum MessageFilter {
+    enum MessageFilter
+    {
         ShowNone = 0x0000,
         ShowDirectories = 0x0001,
         ShowErrors = 0x0002,
@@ -66,22 +68,27 @@ public:
     SearchLocations searchLocations;
     DuplicateFilesPolicy duplicateFilesPolicy;
     SearchFlavor searchFlavor;
-    ConstString resourceType;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) resourceType;
     MessageFilter messageFilter;
 
     ResourceFinderOptions(SearchLocations searchLocations = ModuleDefault,
                           DuplicateFilesPolicy duplicateFilesPolicy = First,
                           SearchFlavor searchFlavor = ConfigAndDataLike,
-                          const ConstString& resourceType = "",
+                          const std::string& resourceType = "",
                           MessageFilter messageFilter = ShowFromFlags);
 
-    static ResourceFinderOptions findFirstMatch() {
+    static ResourceFinderOptions findFirstMatch()
+    {
         return ResourceFinderOptions();
     }
 
-    static ResourceFinderOptions findAllMatch() {
+    static ResourceFinderOptions findAllMatch()
+    {
         return ResourceFinderOptions(ModuleDefault, All);
     }
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_RESOURCEFINDER_H

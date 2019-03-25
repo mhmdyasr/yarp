@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include <fstream>
 #include <QDir>
 #include <QFileDialog>
@@ -38,8 +55,8 @@ PortLoggerDialog::PortLoggerDialog(Graph *graph, QWidget *parent) :
     const pvertex_set& vertices = graph->vertices();
     for(itr = vertices.begin(); itr!=vertices.end(); itr++) {
         const Vertex &v1 = (**itr);
-        for(unsigned int i=0; i<v1.outEdges().size(); i++) {
-            Edge& edge = (Edge&) v1.outEdges()[i];
+        for(const auto& i : v1.outEdges()) {
+            Edge& edge = (Edge&) i;
             const Vertex &v2 = edge.second();
             if(!v1.property.check("hidden") && !v2.property.check("hidden")) {
                 if(edge.property.find("type").asString() == "connection") {
@@ -55,6 +72,7 @@ PortLoggerDialog::PortLoggerDialog(Graph *graph, QWidget *parent) :
                     prop.append(destination.c_str());
                     prop.append(carrier.c_str());
                     item = new QTreeWidgetItem( ui->treeWidgetCons, prop);
+                    YARP_UNUSED(item);
                 }
             }
         }
@@ -91,7 +109,7 @@ void PortLoggerDialog::openCons()
     unsigned int count = 0;
     while(getline(file, line)) {
         count++;
-        Bottle sample(line.c_str());
+        Bottle sample(line);
         if(sample.size() == 3) {
             //data.addList() = sample;
             //yInfo()<<sample.toString();
@@ -102,7 +120,7 @@ void PortLoggerDialog::openCons()
             prop.append(sample.get(1).asString().c_str());
             prop.append(sample.get(2).asString().c_str());
             item = new QTreeWidgetItem( ui->treeWidgetCons, prop);
-
+            YARP_UNUSED(item);
         }
         else
             yWarning()<<"Wrong connection data at line"<<count;
@@ -122,6 +140,7 @@ void PortLoggerDialog::addConnections() {
         prop.append(item->text(2));
         newitem = new QTreeWidgetItem( ui->treeWidgetSelectedCons, prop);
         delete item;
+        YARP_UNUSED(newitem);
     }
     ui->pushButtonStart->setEnabled(ui->treeWidgetSelectedCons->topLevelItemCount() > 0);
     ui->pushButtonAdd->setEnabled(ui->treeWidgetCons->topLevelItemCount() > 0);
@@ -140,6 +159,7 @@ void PortLoggerDialog::removeConnections() {
         prop.append(item->text(2));
         newitem = new QTreeWidgetItem( ui->treeWidgetCons, prop);
         delete item;
+        YARP_UNUSED(newitem);
     }
     ui->pushButtonStart->setEnabled(ui->treeWidgetSelectedCons->topLevelItemCount() > 0);
     ui->pushButtonAdd->setEnabled(ui->treeWidgetCons->topLevelItemCount() > 0);
@@ -175,7 +195,7 @@ void PortLoggerDialog::startStopLoggers() {
         {
             // something went wrong
             QMessageBox messageBox;
-            messageBox.critical(nullptr,"Error","An error has occured while starting the portrate plugin for some ports ! \n Please check if the LUA portmonitor carrier is enabled in YARP and portrate plugin can be found by the portmonitor.");
+            messageBox.critical(nullptr,"Error","An error has occurred while starting the portrate plugin for some ports ! \n Please check if the LUA portmonitor carrier is enabled in YARP and portrate plugin can be found by the portmonitor.");
             messageBox.setFixedSize(500,200);
         }
     }
@@ -251,7 +271,7 @@ bool PortLoggerDialog::saveLog(std::string filename, yarp::os::Bottle* samples) 
         return false;
     }
 
-    for(int k=0; k<samples->size(); k++) {
+    for(size_t k=0; k<samples->size(); k++) {
         Bottle* smp = samples->get(k).asList();
         file<<smp->toString().c_str()<<endl;
     }

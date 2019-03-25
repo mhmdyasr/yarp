@@ -1,9 +1,9 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <cstring>
@@ -91,7 +91,7 @@ Manager::~Manager()
 bool Manager::addApplication(const char* szFileName, char** szAppName_, bool modifyName)
 {
     if(find(listOfXml.begin(), listOfXml.end(),szFileName) == listOfXml.end())
-        listOfXml.push_back(szFileName);
+        listOfXml.emplace_back(szFileName);
     else
         return true;//it means that the app exist already so it is safe to return true
     XmlAppLoader appload(szFileName);
@@ -115,7 +115,7 @@ bool Manager::addApplications(const char* szPath)
     {
         const char* currentFile = application->getXmlFile();
         knowledge.addApplication(application);
-        listOfXml.push_back(currentFile);
+        listOfXml.emplace_back(currentFile);
     }
     return true;
 }
@@ -237,9 +237,9 @@ bool Manager::loadApplication(const char* szAppName)
 
     // set all resources as unavailable
     ResourcePContainer allresources = knowledge.getResources();
-    for(unsigned int i=0; i<allresources.size(); i++)
+    for(auto& allresource : allresources)
     {
-        Computer* comp = dynamic_cast<Computer*>(allresources[i]);
+        auto* comp = dynamic_cast<Computer*>(allresource);
         if(comp)
             comp->setAvailability(false);
     }
@@ -325,7 +325,7 @@ bool Manager::prepare(bool silent)
     {
         Broker* broker = createBroker(*itr);
         broker->setDisplay((*itr)->getDisplay());
-        Executable* exe = new Executable(broker, (MEvent*)this, *itr, bWithWatchDog);
+        auto* exe = new Executable(broker, (MEvent*)this, *itr, bWithWatchDog);
         exe->setID(id++);
         exe->setCommand((*itr)->getName());
         exe->setParam((*itr)->getParam());
@@ -356,9 +356,9 @@ bool Manager::prepare(bool silent)
         /**
          * Adding resources to their owners
          */
-        for(unsigned int i=0; i<resources.size(); i++)
+        for(auto& resource : resources)
         {
-            ResYarpPort* res = dynamic_cast<ResYarpPort*>(resources[i]);
+            auto* res = dynamic_cast<ResYarpPort*>(resource);
             if(res && (res->owner() == (*itr)))
                 exe->addResource(*res);
         }
@@ -538,32 +538,30 @@ bool Manager::updateResources()
     broker.getAllPorts(ports);
 
     ResourcePContainer allresources = knowledge.getResources();
-    for(unsigned int i=0; i<allresources.size(); i++)
+    for(auto& allresource : allresources)
     {
-        Computer* comp = dynamic_cast<Computer*>(allresources[i]);
+        auto* comp = dynamic_cast<Computer*>(allresource);
         if(comp && updateResource(comp))
         {
             //set all as unavailable
             for(int i=0; i<comp->peripheralCount(); i++)
             {
-                ResYarpPort* res =
-                    dynamic_cast<ResYarpPort*>(&comp->getPeripheralAt(i));
+                auto* res = dynamic_cast<ResYarpPort*>(&comp->getPeripheralAt(i));
                 if(res)
                     res->setAvailability(false);
             }
 
             // adding all available yarp ports as peripherals
-            for(unsigned int i=0; i<ports.size(); i++)
+            for(auto& port : ports)
             {
                 ResYarpPort resport;
-                resport.setName(ports[i].c_str());
-                resport.setPort(ports[i].c_str());
+                resport.setName(port.c_str());
+                resport.setPort(port.c_str());
 
                 bool bfound = false;
                 for(int i=0; i<comp->peripheralCount(); i++)
                 {
-                    ResYarpPort* res =
-                        dynamic_cast<ResYarpPort*>(&comp->getPeripheralAt(i));
+                    auto* res = dynamic_cast<ResYarpPort*>(&comp->getPeripheralAt(i));
                     if(res && (string(res->getName()) == string(resport.getName())))
                     {
                         res->setAvailability(true);
@@ -594,7 +592,7 @@ bool Manager::updateResource(GenericResource* resource)
     YarpBroker broker;
     broker.init();
 
-    Computer* comp = dynamic_cast<Computer*>(resource);
+    auto* comp = dynamic_cast<Computer*>(resource);
     if(!comp || !strlen(comp->getName()))
         return false;
 

@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2011 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "MjpegDecompression.h"
@@ -46,9 +47,9 @@ struct net_error_mgr {
     struct jpeg_error_mgr pub;
     jmp_buf setjmp_buffer;
 };
-typedef struct net_error_mgr *net_error_ptr;
+using net_error_ptr = struct net_error_mgr*;
 
-typedef jpeg_source_mgr *net_src_ptr;
+using net_src_ptr = jpeg_source_mgr*;
 
 void init_net_source (j_decompress_ptr cinfo) {
     //net_src_ptr src = (net_src_ptr) cinfo->src;
@@ -60,7 +61,7 @@ boolean fill_net_input_buffer (j_decompress_ptr cinfo)
     // The whole JPEG data is expected to reside in the supplied memory
     // buffer, so any request for more data beyond the given buffer size
     // is treated as an error.
-    JOCTET *mybuffer = (JOCTET *) cinfo->client_data;
+    auto* mybuffer = (JOCTET *) cinfo->client_data;
     fprintf(stderr, "JPEG data unusually large\n");
     // Insert a fake EOI marker
     mybuffer[0] = (JOCTET) 0xFF;
@@ -71,14 +72,14 @@ boolean fill_net_input_buffer (j_decompress_ptr cinfo)
 }
 
 void net_error_exit (j_common_ptr cinfo) {
-    net_error_ptr myerr = (net_error_ptr) cinfo->err;
+    auto myerr = (net_error_ptr) cinfo->err;
     (*cinfo->err->output_message) (cinfo);
     longjmp(myerr->setjmp_buffer, 1);
 }
 
 void skip_net_input_data (j_decompress_ptr cinfo, long num_bytes)
 {
-    net_src_ptr src = (net_src_ptr) cinfo->src;
+    auto src = (net_src_ptr) cinfo->src;
 
     if (num_bytes > 0) {
         while (num_bytes > (long) src->bytes_in_buffer) {
@@ -114,17 +115,14 @@ void jpeg_net_src (j_decompress_ptr cinfo, char *buf, int buflen) {
 
 class MjpegDecompressionHelper {
 public:
-    bool active;
+    bool active{false};
     struct jpeg_decompress_struct cinfo;
     struct net_error_mgr jerr;
     JOCTET error_buffer[4];
-    yarp::os::InputStream::readEnvelopeCallbackType readEnvelopeCallback;
-    void* readEnvelopeCallbackData;
+    yarp::os::InputStream::readEnvelopeCallbackType readEnvelopeCallback{nullptr};
+    void* readEnvelopeCallbackData{nullptr};
 
-    MjpegDecompressionHelper() :
-            active(false),
-            readEnvelopeCallback(nullptr),
-            readEnvelopeCallbackData(nullptr)
+    MjpegDecompressionHelper()
     {
         memset(&cinfo, 0, sizeof(jpeg_decompress_struct));
         memset(&jerr, 0, sizeof(net_error_mgr));
@@ -141,8 +139,7 @@ public:
     void init() {
         jpeg_create_decompress(&cinfo);
     }
-
-    bool decompress(const Bytes& cimg, ImageOf<PixelRgb>& img) {
+    bool decompress(const Bytes& cimg, FlexImage& img) {
         bool debug = false;
 
         if (!active) {
@@ -158,10 +155,19 @@ public:
             return false;
         }
 
-        jpeg_net_src(&cinfo,cimg.get(),cimg.length());
+        jpeg_net_src(&cinfo,(char*)cimg.get(),cimg.length());
         jpeg_save_markers(&cinfo, JPEG_COM, 0xFFFF);
         jpeg_read_header(&cinfo, TRUE);
         jpeg_calc_output_dimensions(&cinfo);
+
+        if(cinfo.jpeg_color_space == JCS_GRAYSCALE) {
+            img.setPixelCode(VOCAB_PIXEL_MONO);
+        }
+        else
+        {
+            img.setPixelCode(VOCAB_PIXEL_RGB);
+        }
+
         if (debug) printf("Got image %dx%d\n", cinfo.output_width, cinfo.output_height);
         img.resize(cinfo.output_width,cinfo.output_height);
         jpeg_start_decompress(&cinfo);
@@ -170,7 +176,7 @@ public:
         int at = 0;
         while (cinfo.output_scanline < cinfo.output_height) {
             JSAMPLE *lines[1];
-            lines[0] = (JSAMPLE*)(&img.pixel(0,at));
+            lines[0] = (JSAMPLE*)(img.getPixelAddress(0,at));
             jpeg_read_scanlines(&cinfo, lines, 1);
             at++;
         }
@@ -211,7 +217,7 @@ MjpegDecompression::~MjpegDecompression() {
 
 
 bool MjpegDecompression::decompress(const yarp::os::Bytes& data,
-                                    yarp::sig::ImageOf<yarp::sig::PixelRgb>& image) {
+                                    FlexImage &image) {
     MjpegDecompressionHelper& helper = HELPER(system_resource);
     return helper.decompress(data, image);
 }

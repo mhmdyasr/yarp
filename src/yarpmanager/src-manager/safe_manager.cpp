@@ -1,10 +1,19 @@
 /*
- *  YARP Modules Manager
- *  Copyright: (C) 2014 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "safe_manager.h"
@@ -23,7 +32,7 @@ SafeManager::SafeManager() :
     busyAction(false)
 {}
 
-SafeManager::~SafeManager() { }
+SafeManager::~SafeManager() = default;
 
 void SafeManager::close() {
     yarp::os::Thread::stop();
@@ -58,16 +67,16 @@ bool SafeManager::prepare(Manager* lazy,
     KnowledgeBase* lazy_kb = lazy->getKnowledgeBase();
 
     ModulePContainer mods =  lazy_kb->getModules();
-    for(ModulePIterator itr=mods.begin(); itr!=mods.end(); itr++)
-        getKnowledgeBase()->addModule((*itr));
+    for(auto& mod : mods)
+        getKnowledgeBase()->addModule(mod);
 
     ResourcePContainer res =  lazy_kb->getResources();
-    for(ResourcePIterator itr=res.begin(); itr!=res.end(); itr++)
-        getKnowledgeBase()->addResource((*itr));
+    for(auto& re : res)
+        getKnowledgeBase()->addResource(re);
 
     ApplicaitonPContainer apps =  lazy_kb->getApplications();
-    for(ApplicationPIterator itr=apps.begin(); itr!=apps.end(); itr++)
-        getKnowledgeBase()->addApplication((*itr));
+    for(auto& app : apps)
+        getKnowledgeBase()->addApplication(app);
 
     return true;
 }
@@ -102,23 +111,23 @@ void SafeManager::run()
     switch(local_action){
     case MRUN:{
             std::vector<double> waitVec;
-            for (unsigned int i=0; i<local_modIds.size(); i++)
+            for (int local_modId : local_modIds)
             {
-                Executable * exec = Manager::getExecutableById(local_modIds[i]);
+                Executable * exec = Manager::getExecutableById(local_modId);
                 if (exec)
                 {
                     waitVec.push_back(exec->getPostExecWait());
                 }
             }
             double minWait=*std::min_element(waitVec.begin(), waitVec.end());
-            for (unsigned int i=0; i<local_modIds.size(); i++)
+            for (int local_modId : local_modIds)
             {
-                Executable * exec = Manager::getExecutableById(local_modIds[i]);
+                Executable * exec = Manager::getExecutableById(local_modId);
                 if (exec)
                 {
                     exec->setPostExecWait(exec->getPostExecWait() - minWait);
                 }
-                Manager::run(local_modIds[i], true);
+                Manager::run(local_modId, true);
             }
 
             /*
@@ -152,23 +161,23 @@ void SafeManager::run()
         }
     case MSTOP:{
             std::vector<double> waitVec;
-            for (unsigned int i=0; i<local_modIds.size(); i++)
+            for (int local_modId : local_modIds)
             {
-                Executable * exec = Manager::getExecutableById(local_modIds[i]);
+                Executable * exec = Manager::getExecutableById(local_modId);
                 if (exec)
                 {
                     waitVec.push_back(exec->getPostStopWait());
                 }
             }
             double minWait=*std::min_element(waitVec.begin(), waitVec.end());
-            for (unsigned int i=0; i<local_modIds.size(); i++)
+            for (int local_modId : local_modIds)
             {
-                Executable * exec = Manager::getExecutableById(local_modIds[i]);
+                Executable * exec = Manager::getExecutableById(local_modId);
                 if (exec)
                 {
                     exec->setPostStopWait(exec->getPostStopWait() - minWait);
                 }
-                Manager::stop(local_modIds[i], true);
+                Manager::stop(local_modId, true);
             }
             /*for(unsigned int i=0; i<local_modIds.size(); i++)
                 Manager::waitingModuleStop(local_modIds[i]);
@@ -199,8 +208,8 @@ void SafeManager::run()
             break;
         }
     case MKILL:{
-            for(unsigned int i=0; i<local_modIds.size(); i++)
-                Manager::kill(local_modIds[i], true);
+            for(int local_modId : local_modIds)
+                Manager::kill(local_modId, true);
             /*for(unsigned int i=0; i<local_modIds.size(); i++)
                 Manager::waitingModuleKill(local_modIds[i]);
 
@@ -230,32 +239,32 @@ void SafeManager::run()
             break;
         }
     case MCONNECT:{
-            for(unsigned int i=0; i<local_conIds.size(); i++)
+            for(int local_conId : local_conIds)
             {
-                if(Manager::connect(local_conIds[i]))
+                if(Manager::connect(local_conId))
                 {
-                    if(eventReceiver) eventReceiver->onConConnect(local_conIds[i]);
+                    if(eventReceiver) eventReceiver->onConConnect(local_conId);
                 }
                 else
                 {
-                    if(eventReceiver) eventReceiver->onConDisconnect(local_conIds[i]);
+                    if(eventReceiver) eventReceiver->onConDisconnect(local_conId);
                 }
-                refreshPortStatus(local_conIds[i]);
+                refreshPortStatus(local_conId);
             }
             break;
         }
     case MDISCONNECT:{
-            for(unsigned int i=0; i<local_conIds.size(); i++)
+            for(int local_conId : local_conIds)
             {
-                if(Manager::disconnect(local_conIds[i]))
+                if(Manager::disconnect(local_conId))
                 {
-                    if(eventReceiver) eventReceiver->onConDisconnect(local_conIds[i]);
+                    if(eventReceiver) eventReceiver->onConDisconnect(local_conId);
                 }
                 else
                 {
-                    if(eventReceiver) eventReceiver->onConConnect(local_conIds[i]);
+                    if(eventReceiver) eventReceiver->onConConnect(local_conId);
                 }
-                refreshPortStatus(local_conIds[i]);
+                refreshPortStatus(local_conId);
             }
             break;
         }
@@ -263,40 +272,40 @@ void SafeManager::run()
     case MREFRESH:{
             busyAction = true;
 
-            for(unsigned int i=0; i<local_modIds.size(); i++)
+            for(int local_modId : local_modIds)
             {
-                if(Manager::running(local_modIds[i]))
+                if(Manager::running(local_modId))
                 {
-                    if(eventReceiver) eventReceiver->onModStart(local_modIds[i]);
+                    if(eventReceiver) eventReceiver->onModStart(local_modId);
                 }
                 else //if(Manager::suspended(local_modIds[i]))
                 {
-                    if(eventReceiver) eventReceiver->onModStop(local_modIds[i]);
+                    if(eventReceiver) eventReceiver->onModStop(local_modId);
                 }
             }
 
-            for(unsigned int i=0; i<local_conIds.size(); i++)
+            for(int local_conId : local_conIds)
             {
-                if(Manager::connected(local_conIds[i]))
+                if(Manager::connected(local_conId))
                 {
-                    if(eventReceiver) eventReceiver->onConConnect(local_conIds[i]);
+                    if(eventReceiver) eventReceiver->onConConnect(local_conId);
                 }
                 else
                 {
-                    if(eventReceiver) eventReceiver->onConDisconnect(local_conIds[i]);
+                    if(eventReceiver) eventReceiver->onConDisconnect(local_conId);
                 }
-                refreshPortStatus(local_conIds[i]);
+                refreshPortStatus(local_conId);
             }
 
-            for(unsigned int i=0; i<local_resIds.size(); i++)
+            for(int local_resId : local_resIds)
             {
-                if(Manager::exist(local_resIds[i]))
+                if(Manager::exist(local_resId))
                 {
-                    if(eventReceiver) eventReceiver->onResAvailable(local_resIds[i]);
+                    if(eventReceiver) eventReceiver->onResAvailable(local_resId);
                 }
                 else
                 {
-                    if(eventReceiver) eventReceiver->onResUnAvailable(local_resIds[i]);
+                    if(eventReceiver) eventReceiver->onResUnAvailable(local_resId);
                 }
             }
             busyAction = false;
@@ -304,30 +313,30 @@ void SafeManager::run()
         }
 
     case MREFRESH_CNN:{
-            for(unsigned int i=0; i<local_conIds.size(); i++)
+            for(int local_conId : local_conIds)
             {
-                if(Manager::connected(local_conIds[i]))
+                if(Manager::connected(local_conId))
                 {
-                    if(eventReceiver) eventReceiver->onConConnect(local_conIds[i]);
+                    if(eventReceiver) eventReceiver->onConConnect(local_conId);
                 }
                 else
                 {
-                    if(eventReceiver) eventReceiver->onConDisconnect(local_conIds[i]);
+                    if(eventReceiver) eventReceiver->onConDisconnect(local_conId);
                 }
-                refreshPortStatus(local_conIds[i]);
+                refreshPortStatus(local_conId);
             }
             break;
         }
 
     case MATTACHSTDOUT:{
-            for(unsigned int i=0; i<local_modIds.size(); i++)
-                Manager::attachStdout(local_modIds[i]);
+            for(int local_modId : local_modIds)
+                Manager::attachStdout(local_modId);
             break;
         }
 
     case MDETACHSTDOUT:{
-            for(unsigned int i=0; i<local_modIds.size(); i++)
-                Manager::detachStdout(local_modIds[i]);
+            for(int local_modId : local_modIds)
+                Manager::detachStdout(local_modId);
             break;
         }
 
@@ -472,7 +481,7 @@ void SafeManager::safeLoadBalance()
 void SafeManager::onExecutableStart(void* which)
 {
     WAIT_SEMAPHOR();
-    Executable* exe = static_cast<Executable*>(which);
+    auto* exe = static_cast<Executable*>(which);
     if(eventReceiver && exe)
         eventReceiver->onModStart(exe->getID());
     POST_SEMAPHOR();
@@ -481,7 +490,7 @@ void SafeManager::onExecutableStart(void* which)
 void SafeManager::onExecutableStop(void* which)
 {
     WAIT_SEMAPHOR();
-    Executable* exe = static_cast<Executable*>(which);
+    auto* exe = static_cast<Executable*>(which);
     if(eventReceiver && exe)
         eventReceiver->onModStop(exe->getID());
     POST_SEMAPHOR();
@@ -506,7 +515,7 @@ void SafeManager::onExecutableStop(void* which)
 void SafeManager::onExecutableDied(void* which)
 {
     WAIT_SEMAPHOR();
-    Executable* exe = static_cast<Executable*>(which);
+    auto* exe = static_cast<Executable*>(which);
     if(eventReceiver && exe)
         eventReceiver->onModStop(exe->getID());
     POST_SEMAPHOR();
@@ -517,7 +526,7 @@ void SafeManager::onExecutableFailed(void* which)
 {
     WAIT_SEMAPHOR();
     ErrorLogger* logger  = ErrorLogger::Instance();
-    Executable* exe = static_cast<Executable*>(which);
+    auto* exe = static_cast<Executable*>(which);
     if(exe)
     {
         if(m_pConfig->find("module_failure").asString() == "prompt")
@@ -559,7 +568,7 @@ void SafeManager::onCnnFailed(void* which)
 {
     WAIT_SEMAPHOR();
     ErrorLogger* logger  = ErrorLogger::Instance();
-    Connection* cnn = static_cast<Connection*>(which);
+    auto* cnn = static_cast<Connection*>(which);
     if(cnn)
     {
         if( m_pConfig->find("connection_failure").asString() == "prompt")
@@ -587,7 +596,7 @@ void SafeManager::onCnnFailed(void* which)
 void SafeManager::onExecutableStdout(void* which, const char* msg)
 {
     WAIT_SEMAPHOR();
-    Executable* exe = static_cast<Executable*>(which);
+    auto* exe = static_cast<Executable*>(which);
     if(eventReceiver)
         eventReceiver->onModStdout(exe->getID(), msg);
     POST_SEMAPHOR();

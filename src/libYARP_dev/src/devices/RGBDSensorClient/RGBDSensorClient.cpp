@@ -1,13 +1,16 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Author: Alberto Cardellino <alberto.cardellino@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "RGBDSensorClient.h"
 #include "RGBDSensorClient_StreamingMsgParser.h"
 #include <yarp/os/Portable.h>
 #include <yarp/os/LogStream.h>
+#include <yarp/dev/GenericVocabs.h>
 
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -25,7 +28,7 @@ yarp::dev::DriverCreator *createRGBDSensorClient()
         "yarp::dev::RGBDSensorClient");
 }
 
-RGBDSensorClient::RGBDSensorClient() : FrameGrabberControls2_Sender(rpcPort)
+RGBDSensorClient::RGBDSensorClient() : FrameGrabberControls_Sender(rpcPort)
 {
     sensor_p       = nullptr;
     use_ROS        = false;
@@ -51,7 +54,7 @@ bool RGBDSensorClient::open(yarp::os::Searchable& config)
 
     if(!fromConfig(config))
     {
-        yError() << "Device RGBDSensorClient failed to open, check previous log for error messsages.";
+        yError() << "Device RGBDSensorClient failed to open, check previous log for error messages.";
         return false;
     }
 
@@ -78,7 +81,7 @@ bool RGBDSensorClient::fromConfig(yarp::os::Searchable &config)
     if(rosGroup.isNull())
     {
         if(verbose >= 3)
-            yInfo() << "RGBDSensorClient: ROS configuration paramters are not set, skipping ROS topic initialization.";
+            yInfo() << "RGBDSensorClient: ROS configuration parameters are not set, skipping ROS topic initialization.";
         use_ROS  = false;
     }
     else
@@ -100,7 +103,7 @@ bool RGBDSensorClient::fromConfig(yarp::os::Searchable &config)
         }
         else
         {
-            local_colorFrame_StreamingPort_name  = config.find("localImagePort").asString().c_str();
+            local_colorFrame_StreamingPort_name  = config.find("localImagePort").asString();
         }
 
         if (!config.check("localDepthPort", "full name of the port for streaming depth image"))
@@ -111,7 +114,7 @@ bool RGBDSensorClient::fromConfig(yarp::os::Searchable &config)
         }
         else
         {
-            local_depthFrame_StreamingPort_name  = config.find("localDepthPort").asString().c_str();
+            local_depthFrame_StreamingPort_name  = config.find("localDepthPort").asString();
         }
 
         // Parse REMOTE port names
@@ -123,7 +126,7 @@ bool RGBDSensorClient::fromConfig(yarp::os::Searchable &config)
         }
         else
         {
-            remote_colorFrame_StreamingPort_name  = config.find("remoteImagePort").asString().c_str();
+            remote_colorFrame_StreamingPort_name  = config.find("remoteImagePort").asString();
         }
 
         if (!config.check("remoteDepthPort", "full name of the port for streaming depth image"))
@@ -134,7 +137,7 @@ bool RGBDSensorClient::fromConfig(yarp::os::Searchable &config)
         }
         else
         {
-            remote_depthFrame_StreamingPort_name  = config.find("remoteDepthPort").asString().c_str();
+            remote_depthFrame_StreamingPort_name  = config.find("remoteDepthPort").asString();
         }
 
         // Single RPC port
@@ -146,7 +149,7 @@ bool RGBDSensorClient::fromConfig(yarp::os::Searchable &config)
         }
         else
         {
-            local_rpcPort_name  = config.find("localRpcPort").asString().c_str();
+            local_rpcPort_name  = config.find("localRpcPort").asString();
         }
 
         if (!config.check("remoteRpcPort", "full name of the port for streaming depth image"))
@@ -157,7 +160,7 @@ bool RGBDSensorClient::fromConfig(yarp::os::Searchable &config)
         }
         else
         {
-            remote_rpcPort_name  = config.find("remoteRpcPort").asString().c_str();
+            remote_rpcPort_name  = config.find("remoteRpcPort").asString();
         }
 
 
@@ -193,8 +196,8 @@ bool RGBDSensorClient::initialize_YARP(yarp::os::Searchable &config)
     bool ret;
 
     // Opening Streaming ports
-    ret  = colorFrame_StreamingPort.open(local_colorFrame_StreamingPort_name.c_str());
-    ret &= depthFrame_StreamingPort.open(local_depthFrame_StreamingPort_name.c_str());
+    ret  = colorFrame_StreamingPort.open(local_colorFrame_StreamingPort_name);
+    ret &= depthFrame_StreamingPort.open(local_depthFrame_StreamingPort_name);
 
     if(!ret)
     {
@@ -227,7 +230,7 @@ bool RGBDSensorClient::initialize_YARP(yarp::os::Searchable &config)
         rpcPort.close();
     }
 
-    if(! rpcPort.addOutput(remote_rpcPort_name.c_str()) )
+    if(! rpcPort.addOutput(remote_rpcPort_name) )
     {
         yError() << sensorId << " cannot connect to port " << remote_rpcPort_name;
         colorFrame_StreamingPort.close();
@@ -242,8 +245,8 @@ bool RGBDSensorClient::initialize_YARP(yarp::os::Searchable &config)
     cmd.addVocab(VOCAB_GET);
     cmd.addVocab(VOCAB_RGBD_PROTOCOL_VERSION);
     rpcPort.write(cmd, response);
-    int major = response.get(3).asInt();
-    int minor = response.get(4).asInt();
+    int major = response.get(3).asInt32();
+    int minor = response.get(4).asInt32();
 
     if(major != RGBD_INTERFACE_PROTOCOL_VERSION_MAJOR)
     {
@@ -349,11 +352,11 @@ IRGBDSensor::RGBDSensor_status RGBDSensorClient::getSensorStatus()
     cmd.addVocab(VOCAB_GET);
     cmd.addVocab(VOCAB_STATUS);
     rpcPort.write(cmd, response);
-    return (IRGBDSensor::RGBDSensor_status) response.get(3).asInt();
+    return (IRGBDSensor::RGBDSensor_status) response.get(3).asInt32();
 }
 
 
-yarp::os::ConstString RGBDSensorClient::getLastErrorMsg(yarp::os::Stamp *timeStamp)
+std::string RGBDSensorClient::getLastErrorMsg(yarp::os::Stamp *timeStamp)
 {
     yarp::os::Bottle cmd, response;
     cmd.addVocab(VOCAB_RGBD_SENSOR);
@@ -392,7 +395,7 @@ bool RGBDSensorClient::getImages(FlexImage &rgbImage, ImageOf<PixelFloat> &depth
 }
 
 //
-// IFrame Grabber Control 2 inteface is implemented by FrameGrabberControls2_Sender
+// IFrame Grabber Control 2 interface is implemented by FrameGrabberControls2_Sender
 //
 
 //

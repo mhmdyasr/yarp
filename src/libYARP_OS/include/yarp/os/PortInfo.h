@@ -1,29 +1,32 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_PORTINFO_H
 #define YARP_OS_PORTINFO_H
 
-#include <yarp/os/ConstString.h>
+#include <yarp/os/api.h>
+
 #include <yarp/os/Vocab.h>
+
+#include <string>
 
 
 namespace yarp {
-    namespace os {
-        class PortInfo;
-    }
-}
-
+namespace os {
 
 /**
  * \ingroup comm_class
  *
  * Information about a port connection or event.
  */
-class YARP_OS_API yarp::os::PortInfo {
+class YARP_OS_API PortInfo
+{
 public:
     /**
      * Constructor
@@ -31,16 +34,16 @@ public:
     explicit PortInfo();
 
     /// Possible tag values
-    enum {
+    enum
+    {
         /// No information.
         PORTINFO_NULL = 0,
 
         /// Information about an incoming or outgoing connection.
-        /// SWIG currently has bug if 'c' used in this macro!
-        PORTINFO_CONNECTION = VOCAB4(99/*c*/, 'o', 'n', 'n'),
+        PORTINFO_CONNECTION = yarp::os::createVocab('c', 'o', 'n', 'n'),
 
         /// Unspecified information.
-        PORTINFO_MISC = VOCAB4('m', 'i', 's', 'c')
+        PORTINFO_MISC = yarp::os::createVocab('m', 'i', 's', 'c')
     };
 
     /// Type of information. PORTINFO_CONNECTION for information
@@ -54,20 +57,22 @@ public:
     bool created;
 
     /// Name of port.
-    ConstString portName;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) portName;
 
     /// Name of connection source, if any.
-    ConstString sourceName;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) sourceName;
 
     /// Name of connection target, if any.
-    ConstString targetName;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) targetName;
 
     /// Name of protocol type, if releveant.
-    ConstString carrierName;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) carrierName;
 
     /// A human-readable description of contents.
-    ConstString message;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) message;
 };
 
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_PORTINFO_H

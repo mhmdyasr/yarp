@@ -1,8 +1,19 @@
 /*
- * Copyright (C) 2012, 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "Robot.h"
@@ -54,10 +65,10 @@ public:
     // return the device with the given name or <fatal error> if not found
     Device* findDevice(const std::string &name);
 
-    // open all the devices and return true if all the open calls were succesful
+    // open all the devices and return true if all the open calls were successful
     bool openDevices();
 
-    // close all the devices and return true if all the close calls were succesful
+    // close all the devices and return true if all the close calls were successful
     bool closeDevices();
 
     // return a vector of levels that have actions in the requested phase
@@ -99,8 +110,8 @@ public:
 
 bool RobotInterface::Robot::Private::hasDevice(const std::string &name) const
 {
-    for (DeviceList::const_iterator it = devices.begin(); it != devices.end(); ++it) {
-        if (!name.compare(it->name())) {
+    for (const auto& device : devices) {
+        if (name == device.name()) {
             return true;
         }
     }
@@ -109,9 +120,9 @@ bool RobotInterface::Robot::Private::hasDevice(const std::string &name) const
 
 RobotInterface::Device* RobotInterface::Robot::Private::findDevice(const std::string &name)
 {
-    for (DeviceList::iterator it = devices.begin(); it != devices.end(); ++it) {
-        if (!name.compare(it->name())) {
-            return &(*it);
+    for (auto& device : devices) {
+        if (name == device.name()) {
+            return &device;
         }
     }
     yFatal() << "Cannot find device" << name;
@@ -121,9 +132,7 @@ RobotInterface::Device* RobotInterface::Robot::Private::findDevice(const std::st
 bool RobotInterface::Robot::Private::openDevices()
 {
     bool ret = true;
-    for (RobotInterface::DeviceList::iterator it = devices.begin(); it != devices.end(); ++it) {
-        RobotInterface::Device &device = *it;
-
+    for (auto& device : devices) {
         // yDebug() << device;
 
         if (!device.open()) {
@@ -144,7 +153,7 @@ bool RobotInterface::Robot::Private::openDevices()
 bool RobotInterface::Robot::Private::closeDevices()
 {
     bool ret = true;
-    for (RobotInterface::DeviceList::reverse_iterator it = devices.rbegin(); it != devices.rend(); ++it) {
+    for (auto it = devices.rbegin(); it != devices.rend(); ++it) {
         RobotInterface::Device &device = *it;
 
         // yDebug() << device;
@@ -167,14 +176,12 @@ bool RobotInterface::Robot::Private::closeDevices()
 std::vector<unsigned int> RobotInterface::Robot::Private::getLevels(RobotInterface::ActionPhase phase) const
 {
     std::vector<unsigned int> levels;
-    for (DeviceList::const_iterator dit = devices.begin(); dit != devices.end(); ++dit) {
-        const Device &device = *dit;
+    for (const auto& device : devices) {
         if (device.actions().empty()) {
             continue;
         }
 
-        for (ActionList::const_iterator ait = device.actions().begin(); ait != device.actions().end(); ++ait) {
-            const Action &action = *ait;
+        for (const auto& action : device.actions()) {
             if (action.phase() == phase) {
                 levels.push_back(action.level());
             }
@@ -182,7 +189,7 @@ std::vector<unsigned int> RobotInterface::Robot::Private::getLevels(RobotInterfa
     }
 
     std::sort(levels.begin(), levels.end());
-    std::vector<unsigned int>::iterator it = std::unique(levels.begin(), levels.end());
+    auto it = std::unique(levels.begin(), levels.end());
     levels.resize(it - levels.begin());
 
     return levels;
@@ -192,16 +199,14 @@ std::vector<unsigned int> RobotInterface::Robot::Private::getLevels(RobotInterfa
 std::vector<std::pair<RobotInterface::Device, RobotInterface::Action> > RobotInterface::Robot::Private::getActions(RobotInterface::ActionPhase phase, unsigned int level) const
 {
     std::vector<std::pair<RobotInterface::Device, RobotInterface::Action> > actions;
-    for (DeviceList::const_iterator dit = devices.begin(); dit != devices.end(); ++dit) {
-        const Device &device = *dit;
+    for (const auto& device : devices) {
         if (device.actions().empty()) {
             continue;
         }
 
-        for (ActionList::const_iterator ait = device.actions().begin(); ait != device.actions().end(); ++ait) {
-            const Action &action = *ait;
+        for (const auto& action : device.actions()) {
             if (action.phase() == phase && action.level() == level) {
-                actions.push_back(std::make_pair(device, action));
+                actions.emplace_back(device, action);
             }
         }
     }
@@ -218,7 +223,7 @@ bool RobotInterface::Robot::Private::configure(const RobotInterface::Device &dev
 bool RobotInterface::Robot::Private::calibrate(const RobotInterface::Device &device, const RobotInterface::ParamList &params)
 {
     if (!RobotInterface::hasParam(params, "target")) {
-        yError() << "Action \"" << ActionTypeToString(ActionTypeCalibrate) << "\" requires \"target\" parameter";
+        yError() << "Action \"" << ActionTypeToString(ActionTypeCalibrate) << R"(" requires "target" parameter)";
         return false;
     }
     std::string targetDeviceName = RobotInterface::findParam(params, "target");
@@ -241,7 +246,7 @@ bool RobotInterface::Robot::Private::attach(const RobotInterface::Device &device
 
     if (check>1)
     {
-        yError() << "Action \"" << ActionTypeToString(ActionTypeAttach) << "\" : you can have only one option: \"network\" , \"networks\" or \"all\" ";
+        yError() << "Action \"" << ActionTypeToString(ActionTypeAttach) << R"(" : you can have only one option: "network" , "networks" or "all" )";
         return false;
     }
 
@@ -251,7 +256,7 @@ bool RobotInterface::Robot::Private::attach(const RobotInterface::Device &device
         std::string targetNetwork = RobotInterface::findParam(params, "network");
 
         if (!RobotInterface::hasParam(params, "device")) {
-            yError() << "Action \"" << ActionTypeToString(ActionTypeAttach) << "\" requires \"device\" parameter";
+            yError() << "Action \"" << ActionTypeToString(ActionTypeAttach) << R"(" requires "device" parameter)";
             return false;
         }
         std::string targetDeviceName = RobotInterface::findParam(params, "device");
@@ -268,9 +273,9 @@ bool RobotInterface::Robot::Private::attach(const RobotInterface::Device &device
     }
     else if (RobotInterface::hasParam(params, "all"))
     {
-        for (DeviceList::iterator it = devices.begin(); it != devices.end(); ++it)
+        for (auto& device : devices)
         {
-            drivers.push(it->driver(),"all");
+            drivers.push(device.driver(), "all");
         }
     }
     else if (RobotInterface::hasParam(params, "networks")) {
@@ -278,8 +283,8 @@ bool RobotInterface::Robot::Private::attach(const RobotInterface::Device &device
         v.fromString(RobotInterface::findParam(params, "networks").c_str());
         yarp::os::Bottle &targetNetworks = *(v.asList());
 
-        for (int i = 0; i < targetNetworks.size(); ++i) {
-            std::string targetNetwork = targetNetworks.get(i).toString().c_str();
+        for (size_t i = 0; i < targetNetworks.size(); ++i) {
+            std::string targetNetwork = targetNetworks.get(i).toString();
 
             if (!RobotInterface::hasParam(params, targetNetwork)) {
                 yError() << "Action \"" << ActionTypeToString(ActionTypeAttach) << "\" requires one parameter per network. \"" << targetNetwork << "\" parameter is missing.";
@@ -298,7 +303,7 @@ bool RobotInterface::Robot::Private::attach(const RobotInterface::Device &device
     }
     else
     {
-        yError() << "Action \"" << ActionTypeToString(ActionTypeAttach) << "\" requires either \"network\" or \"networks\" parameter";
+        yError() << "Action \"" << ActionTypeToString(ActionTypeAttach) << R"(" requires either "network" or "networks" parameter)";
         return false;
     }
 
@@ -330,7 +335,7 @@ bool RobotInterface::Robot::Private::detach(const RobotInterface::Device &device
 bool RobotInterface::Robot::Private::park(const RobotInterface::Device &device, const RobotInterface::ParamList &params)
 {
     if (!RobotInterface::hasParam(params, "target")) {
-        yError() << "Action \"" << ActionTypeToString(ActionTypePark) << "\" requires \"target\" parameter";
+        yError() << "Action \"" << ActionTypeToString(ActionTypePark) << R"(" requires "target" parameter)";
         return false;
     }
     std::string targetDeviceName = RobotInterface::findParam(params, "target");
@@ -424,8 +429,7 @@ std::string& RobotInterface::Robot::portprefix()
 
 void RobotInterface::Robot::setVerbose(bool verbose)
 {
-    for (DeviceList::iterator dit = devices().begin(); dit != devices().end(); ++dit) {
-        Device &device = *dit;
+    for (auto& device : devices()) {
         ParamList &params = device.params();
         // Do not override "verbose" param if explicitly set in the xml
         if(verbose && !RobotInterface::hasParam(params, "verbose")) {
@@ -436,8 +440,7 @@ void RobotInterface::Robot::setVerbose(bool verbose)
 
 void RobotInterface::Robot::setAllowDeprecatedDevices(bool allowDeprecatedDevices)
 {
-    for (DeviceList::iterator dit = devices().begin(); dit != devices().end(); ++dit) {
-        Device &device = *dit;
+    for (auto& device : devices()) {
         ParamList &params = device.params();
         // Do not override "allow-deprecated-devices" param if explicitly set in the xml
         if(allowDeprecatedDevices && !RobotInterface::hasParam(params, "allow-deprecated-devices")) {
@@ -497,8 +500,7 @@ void RobotInterface::Robot::interrupt()
 
     // If we received an interrupt we send a stop signal to all threads
     // from previous phases
-    for (DeviceList::iterator dit = devices().begin(); dit != devices().end(); ++dit) {
-        Device &device = *dit;
+    for (auto& device : devices()) {
         device.stopThreads();
     }
 }
@@ -536,8 +538,7 @@ bool RobotInterface::Robot::enterPhase(RobotInterface::ActionPhase phase)
     // return. Therefore, since we want to start the abort actions we
     // skip this check.
     if (phase != ActionPhaseInterrupt2 && phase != ActionPhaseInterrupt3) {
-        for (DeviceList::iterator dit = devices().begin(); dit != devices().end(); ++dit) {
-            Device &device = *dit;
+        for (auto& device : devices()) {
             device.joinThreads();
         }
     }
@@ -561,10 +562,10 @@ bool RobotInterface::Robot::enterPhase(RobotInterface::ActionPhase phase)
 
         std::vector<std::pair<Device, Action> > actions = mPriv->getActions(phase, level);
 
-        for (std::vector<std::pair<Device, Action> >::iterator ait = actions.begin(); ait != actions.end(); ++ait) {
+        for (auto& ait : actions) {
             // for each action in that level
-            Device &device = ait->first;
-            Action &action = ait->second;
+            Device &device = ait.first;
+            Action &action = ait.second;
 
             // If current phase was changed by some other thread, we should
             // exit the loop and avoid starting further actions.
@@ -626,8 +627,7 @@ bool RobotInterface::Robot::enterPhase(RobotInterface::ActionPhase phase)
         yInfo() << "All actions for action level" << level << "of" << ActionPhaseToString(phase) << "phase started. Waiting for unfinished actions.";
 
         // Join parallel threads
-        for (DeviceList::iterator dit = devices().begin(); dit != devices().end(); ++dit) {
-            Device &device = *dit;
+        for (auto& device : devices()) {
             device.joinThreads();
             // yDebug() << "All actions for device" << device.name() << "at level()" << level << "finished";
         }

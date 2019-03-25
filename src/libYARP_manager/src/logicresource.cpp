@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/logicresource.h>
 
@@ -36,7 +35,7 @@ Platform::Platform(const Platform &resource) : GenericResource(resource)
 
 Node* Platform::clone()
 {
-    Platform* resource = new Platform(*this);
+    auto* resource = new Platform(*this);
     return resource;
 }
 
@@ -45,7 +44,7 @@ bool Platform::satisfy(GenericResource* resource)
     if(!getAvailability() || getDisable())
         return false;
 
-    Platform* os = dynamic_cast<Platform*>(resource);
+    auto* os = dynamic_cast<Platform*>(resource);
     if(os)
         return satisfy_platform(os);
 
@@ -60,7 +59,7 @@ bool Platform::satisfy_platform(Platform* os)
     return ret;
 }
 
-Platform::~Platform() { }
+Platform::~Platform() = default;
 
 
 
@@ -89,7 +88,7 @@ ResYarpPort::ResYarpPort(const ResYarpPort &resource) : GenericResource(resource
 
 Node* ResYarpPort::clone()
 {
-    ResYarpPort* resource = new ResYarpPort(*this);
+    auto* resource = new ResYarpPort(*this);
     return resource;
 }
 
@@ -98,11 +97,11 @@ bool ResYarpPort::satisfy(GenericResource* resource)
     if(!getAvailability() || getDisable())
         return false;
 
-    ResYarpPort* resport = dynamic_cast<ResYarpPort*>(resource);
+    auto* resport = dynamic_cast<ResYarpPort*>(resource);
     if(!resport)
         return false;
     return (strPort == string(resport->getPort()) ||
             strPort == string(resport->getName()) );
 }
 
-ResYarpPort::~ResYarpPort() { }
+ResYarpPort::~ResYarpPort() = default;

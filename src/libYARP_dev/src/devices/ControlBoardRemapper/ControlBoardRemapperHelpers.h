@@ -1,8 +1,10 @@
 /*
-* Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
-* Author: Lorenzo Natale, Silvio Traversaro
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #ifndef YARP_DEV_CONTROLBOARDREMAPPER_CONTROLBOARDREMAPPERHELPERS_H
 #define YARP_DEV_CONTROLBOARDREMAPPER_CONTROLBOARDREMAPPERHELPERS_H
@@ -52,19 +54,18 @@ public:
 
     yarp::dev::PolyDriver            *subdevice;
     yarp::dev::IPidControl           *pid;
-    yarp::dev::IPositionControl2     *pos2;
-    yarp::dev::IVelocityControl2     *vel2;
+    yarp::dev::IPositionControl      *pos;
+    yarp::dev::IVelocityControl      *vel;
     yarp::dev::IEncodersTimed        *iJntEnc;
     yarp::dev::IMotorEncoders        *iMotEnc;
     yarp::dev::IAmplifierControl     *amp;
-    yarp::dev::IControlLimits2       *lim2;
+    yarp::dev::IControlLimits        *lim;
     yarp::dev::IControlCalibration   *calib;
-    yarp::dev::IControlCalibration2  *calib2;
     yarp::dev::IRemoteCalibrator     *remcalib;
     yarp::dev::IPreciselyTimed       *iTimed;
     yarp::dev::ITorqueControl        *iTorque;
     yarp::dev::IImpedanceControl     *iImpedance;
-    yarp::dev::IControlMode2         *iMode2;
+    yarp::dev::IControlMode          *iMode;
     yarp::dev::IAxisInfo             *info;
     yarp::dev::IPositionDirect       *posDir;
     yarp::dev::IInteractionMode      *iInteract;
@@ -238,7 +239,7 @@ public:
 };
 
 /**
- * Class storing the decomposition of a subset ot the total
+ * Class storing the decomposition of a subset of the total
  * remapped axes of the remapped controlboard in the
  * corresponding subsets of the axes of the SubControlBoard.
  *
@@ -250,7 +251,7 @@ class ControlBoardArbitraryAxesDecomposition
 {
     /**
      * Fill the buffer containing the structure of the decomposition between the
-     * desired list of joints and and their mapping in the subControlboards.
+     * desired list of joints and their mapping in the subControlboards.
      */
     void createListOfJointsDecomposition(const int n_joints, const int *joints, const RemappedControlBoards & remappedControlBoards);
 

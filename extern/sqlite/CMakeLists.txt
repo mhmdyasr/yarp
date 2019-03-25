@@ -1,7 +1,8 @@
-# Copyright (C) 2012 Istituto Italiano di Tecnologia (IIT)
-# Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 # SQLite
 project(YARP_priv_sqlite)
@@ -35,10 +36,13 @@ set(SQLite_LIBRARIES YARP_priv_sqlite PARENT_SCOPE)
 set(SQLite_DEFINITIONS "" PARENT_SCOPE)
 
 install(TARGETS YARP_priv_sqlite
-        EXPORT YARP
-        COMPONENT runtime
+        EXPORT YARP_priv_sqlite
+        COMPONENT YARP_priv_sqlite
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
-set_property(GLOBAL APPEND PROPERTY YARP_LIBS YARP_priv_sqlite)
+if(NOT CREATE_SHARED_LIBS)
+  include(YarpInstallBasicPackageFiles)
+  yarp_install_basic_package_files(YARP_priv_sqlite)
+endif()

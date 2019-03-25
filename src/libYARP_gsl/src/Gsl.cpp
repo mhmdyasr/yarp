@@ -1,8 +1,20 @@
 /*
-* Author: Lorenzo Natale.
-* Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
-* CopyPolicy: Released under the terms of the GPL 2.0 license or later.
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
 
 /*
  * This library provides functions for compatibility with GSL.
@@ -19,8 +31,8 @@ using namespace yarp::sig;
 
 GslMatrix::GslMatrix(const Matrix &v)
 {
-    gsl_matrix *mat = new gsl_matrix;
-    gsl_block *bl = new gsl_block;
+    auto* mat = new gsl_matrix;
+    auto* bl = new gsl_block;
 
     mat->block = bl;
 
@@ -29,7 +41,7 @@ GslMatrix::GslMatrix(const Matrix &v)
 
     gslData = mat;
 
-    gsl_matrix *tmp = static_cast<gsl_matrix *>(gslData);
+    auto* tmp = static_cast<gsl_matrix *>(gslData);
     tmp->block->data = const_cast<double *>(v.data());
     tmp->data = tmp->block->data;
     tmp->block->size = v.rows()*v.cols();
@@ -41,7 +53,7 @@ GslMatrix::GslMatrix(const Matrix &v)
 
 GslMatrix::~GslMatrix()
 {
-    gsl_matrix *tmp = (gsl_matrix *)(gslData);
+    auto* tmp = (gsl_matrix *)(gslData);
 
     if (tmp != nullptr)
     {
@@ -66,8 +78,8 @@ const void *GslMatrix::getGslMatrix() const
 
 GslVector::GslVector(const Vector &v)
 {
-    gsl_vector *vect = new gsl_vector;
-    gsl_block *bl = new gsl_block;
+    auto* vect = new gsl_vector;
+    auto* bl = new gsl_block;
 
     vect->block = bl;
 
@@ -77,7 +89,7 @@ GslVector::GslVector(const Vector &v)
 
     gslData = vect;
 
-    gsl_vector *tmp = static_cast<gsl_vector *>(gslData);
+    auto* tmp = static_cast<gsl_vector *>(gslData);
     tmp->block->data = const_cast<double * > (v.data());
     tmp->data = tmp->block->data;
     tmp->block->size = v.size();
@@ -88,7 +100,7 @@ GslVector::GslVector(const Vector &v)
 
 GslVector::~GslVector()
 {
-    gsl_vector *tmp = (gsl_vector *)(gslData);
+    auto* tmp = (gsl_vector *)(gslData);
 
     if (tmp != nullptr)
     {

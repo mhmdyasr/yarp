@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2009 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/serversql/yarpserversql.h>
@@ -17,9 +19,9 @@
 #include <yarp/serversql/impl/ParseName.h>
 
 #include <yarp/conf/system.h>
-#include <yarp/os/all.h>
 #include <yarp/os/Os.h>
 #include <yarp/os/RosNameSpace.h>
+#include <yarp/os/Carriers.h>
 
 #include <yarp/name/NameServerManager.h>
 #include <yarp/name/BootstrapServer.h>
@@ -96,25 +98,25 @@ public:
     void preregister(const Contact& c)
     {
         Network::registerContact(c);
-        subscriber.welcome(c.getName().c_str(),1);
+        subscriber.welcome(c.getName(),1);
     }
 
     bool open(Searchable& options)
     {
-        ConstString dbDefault = ":memory:";
-        ConstString subdbDefault = ":memory:";
+        std::string dbDefault = ":memory:";
+        std::string subdbDefault = ":memory:";
 
         if (options.check("memory")) {
             fprintf(stderr,"The --memory option was given, but that is now a default. Continuing.\n");
         }
 
-        ConstString dbFilename = options.check("portdb",
+        std::string dbFilename = options.check("portdb",
                                                Value(dbDefault)).asString();
-        ConstString subdbFilename = options.check("subdb",
+        std::string subdbFilename = options.check("subdb",
                                                   Value(subdbDefault)).asString();
 
-        ConstString ip = options.check("ip",Value("...")).asString();
-        int sock = options.check("socket",Value(Network::getDefaultPortRange())).asInt();
+        std::string ip = options.check("ip",Value("...")).asString();
+        int sock = options.check("socket",Value(Network::getDefaultPortRange())).asInt32();
         bool cautious = options.check("cautious");
         bool verbose = options.check("verbose");
 
@@ -146,7 +148,7 @@ public:
             pmem->setVerbose(1);
         }
 
-        if (!subscriber.open(subdbFilename.c_str())) {
+        if (!subscriber.open(subdbFilename)) {
             fprintf(stderr,"Aborting, subscription database failed to open.\n");
             return false;
         }
@@ -166,8 +168,19 @@ public:
         }
 
         if (options.check("ros") || NetworkBase::getEnvironment("YARP_USE_ROS")!="") {
-            ConstString addr = NetworkBase::getEnvironment("ROS_MASTER_URI");
-            Contact c = Contact::fromString(addr.c_str());
+            yarp::os::Bottle lst = yarp::os::Carriers::listCarriers();
+            std::string lstStr(lst.toString());
+            if (lstStr.find("rossrv") == std::string::npos ||
+                lstStr.find("tcpros") == std::string::npos ||
+                lstStr.find("xmlrpc") == std::string::npos) {
+                fprintf(stderr,"Missing one or more required carriers ");
+                fprintf(stderr,"for yarpserver --ros (rossrv, tcpros, xmlrpc).\n");
+                fprintf(stderr,"Run 'yarp connect --list-carriers' to see carriers on your machine\n");
+                fprintf(stderr,"Aborting.\n");
+                return false;
+            }
+            std::string addr = NetworkBase::getEnvironment("ROS_MASTER_URI");
+            Contact c = Contact::fromString(addr);
             if (c.isValid()) {
                 c.setCarrier("xmlrpc");
                 c.setName("/ros");
@@ -239,6 +252,10 @@ int yarp::serversql::Server::run(int argc, char** argv)
 
     NameServerContainer nc;
     if (!nc.open(options)) {
+        if (silent) {
+            fclose(out);
+            delete out;
+        }
         return 1;
     }
 
@@ -260,6 +277,10 @@ int yarp::serversql::Server::run(int argc, char** argv)
     ok = server.open(nc.where(),false);
     if (!ok) {
         fprintf(stderr, "Name server failed to open\n");
+        if (silent) {
+            fclose(out);
+            delete out;
+        }
         return 1;
     }
 
@@ -303,16 +324,17 @@ int yarp::serversql::Server::run(int argc, char** argv)
     }
 
     fprintf(out, "closing yarp server\n");
+    server.close();
     if (silent) {
         fclose(out);
+        delete out;
     }
-    server.close();
     return 0;
 }
 
 yarp::os::NameStore *yarpserver_create(yarp::os::Searchable& options)
 {
-    NameServerContainer *nc = new NameServerContainer;
+    auto* nc = new NameServerContainer;
     if (!nc) {
         return nullptr;
     }

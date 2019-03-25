@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "XmlRpcStream.h"
@@ -29,7 +30,7 @@ Value toValue(XmlRpcValue& v, bool outer)
         {
             string s = (string)v;
             if (s.length()==0 || s[0]!='[') {
-                return Value(s.c_str());
+                return Value(s);
             } else {
                 Value v;
                 v.fromString(s.c_str());
@@ -46,7 +47,7 @@ Value toValue(XmlRpcValue& v, bool outer)
                 if (v2.getType()!=XmlRpcValue::TypeInvalid) {
                     Value v = toValue(v2,false);
                     if (i==0) {
-                        ConstString tag = v.asString();
+                        std::string tag = v.asString();
                         if (tag=="list"||tag=="dict") {
                             if (!outer) {
                                 bot->addString("list");
@@ -65,12 +66,10 @@ Value toValue(XmlRpcValue& v, bool outer)
             Bottle *bot = vbot.asList();
             XmlRpcValue::ValueStruct& vals = v;
             bot->addString("dict");
-            for (XmlRpcValue::ValueStruct::iterator it = vals.begin();
-                 it!= vals.end();
-                 it++) {
-                XmlRpcValue& v2 = it->second;
+            for (auto& val : vals) {
+                XmlRpcValue& v2 = val.second;
                 Bottle& sub = bot->addList();
-                sub.addString(it->first.c_str());
+                sub.addString(val.first.c_str());
                 if (v2.getType()!=XmlRpcValue::TypeInvalid) {
                     sub.add(toValue(v2,false));
                 }
@@ -86,10 +85,10 @@ Value toValue(XmlRpcValue& v, bool outer)
     return Value("(type not supported yet out of laziness)");
 }
 
-YARP_SSIZE_T XmlRpcStream::read(const Bytes& b)
+yarp::conf::ssize_t XmlRpcStream::read(Bytes& b)
 {
     //printf("XMLRPC READ\n");
-    YARP_SSIZE_T result = sis.read(b);
+    yarp::conf::ssize_t result = sis.read(b);
     if (result>0) {
         //printf("RETURNING %d bytes\n", result);
         return result;
@@ -128,8 +127,8 @@ YARP_SSIZE_T XmlRpcStream::read(const Bytes& b)
             if (ok) {
                 //printf("got a block!\n");
                 XmlRpcValue xresult;
-                std::string prefix = "";
-                std::string cprefix = "";
+                std::string prefix;
+                std::string cprefix;
                 if (sender) {
                     client.parseResponse(xresult);
                 } else {
@@ -156,9 +155,9 @@ YARP_SSIZE_T XmlRpcStream::read(const Bytes& b)
                 //printf("xmlrpc block is %s\n", xresult.toXml().c_str());
                 Value v = toValue(xresult,true);
                 if (!v.isNull()) {
-                    sis.reset((prefix + v.toString().c_str() + "\n").c_str());
+                    sis.reset(prefix + v.toString() + "\n");
                 } else {
-                    sis.reset((prefix + "\n").c_str());
+                    sis.reset(prefix + "\n");
                 }
                 //printf("String version is %s\n", sis.toString().c_str());
                 result = sis.read(b);

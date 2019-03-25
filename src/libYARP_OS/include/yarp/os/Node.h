@@ -1,44 +1,89 @@
 /*
- * Copyright (C) 2013 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_NODE_H
 #define YARP_OS_NODE_H
 
-#include <yarp/os/Contactables.h>
 #include <yarp/conf/compiler.h>
 
+#include <yarp/os/Contactables.h>
+
 namespace yarp {
-    namespace os {
-        class Node;
-    }
-}
+namespace os {
 
-
-class YARP_OS_API yarp::os::Node : public Contactables
+/**
+ * @brief The Node class
+ *
+ * A simple entity containing information about multiple contacts. Holds a port
+ * representing the Node itself and a list of other contactables that represent
+ * Publishers and Subscribers nested within the Node.
+ */
+class YARP_OS_API Node : public Contactables
 {
 public:
     Node();
-    Node(const ConstString& name);
+    Node(const std::string& name);
     virtual ~Node();
 
-    virtual void add(Contactable& contactable) override;
-    virtual void update(Contactable& contactable);
-    virtual void remove(Contactable& contactable) override;
+    /**
+     * add a contactable to this node. If this node still has no defined name,
+     * takes the name from the node specified in the contactable.
+     * @param contactable to be adde
+     */
+    void add(Contactable& contactable) override;
 
-    virtual Contact query(const ConstString& name,
-                          const ConstString& category = "") override;
+    /**
+     * remove specified contactable from the list of contactables associated
+     * with this Node.
+     * @param contactable to be removed
+     */
+    void remove(Contactable& contactable) override;
 
-    virtual Contact where();
+    /**
+     * query the Node to obtain Contact information about a nested port
+     * associated with this Node.
+     * @param name the nestedName to query (see NestedContact.nestedName)
+     * @param category of the contact to be queried (see NestedContact.category)
+     * @return Contact with information about required port if found, empty
+     *         Contact otherwise
+     */
+    virtual Contact query(const std::string& name,
+                          const std::string& category = "") override;
 
+    /**
+     * update should update the contactable with new information.
+     * @param contactable to be updated
+     */
+    void update(Contactable& contactable);
+
+    /**
+     * prepare if it is not already been done, opens the port of the Node.
+     * @param name of the Node port to be opened
+     */
+    void prepare(const std::string& name);
+
+    /**
+     * interrupt delegates the call to the Node port interrupt.
+     */
     void interrupt();
 
-    virtual void prepare(const ConstString& name);
+    /**
+     * where getter fot information about the port of the Node.
+     * @return a Contact with network information about this Node
+     */
+    Contact where();
+
 private:
     class Helper;
-    Helper * const mPriv;
+    Helper* const mPriv;
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_NODE_H

@@ -1,15 +1,14 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2012 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Elena Ceseracciu <elena.ceseracciu@iit.it>
- *           Ali Paikan <ali.paikan@iit.it>
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/xmlappsaver.h>
 #include <yarp/manager/utility.h>
-#include <yarp/manager/ymm-dir.h>
+#include <dirent.h>
 
 #include <algorithm>
 #include <cctype>
@@ -36,7 +35,7 @@ bool XmlAppSaver::save(Application* application)
     return serialXml(application, strFileName.c_str());
 }
 
-XmlAppSaver::~XmlAppSaver(){}
+XmlAppSaver::~XmlAppSaver() = default;
 
 bool XmlAppSaver::serialXml(Application* app, const char* szFile)
 {
@@ -47,23 +46,23 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
     ErrorLogger* logger  = ErrorLogger::Instance();
 
     TiXmlDocument doc; //(szFile);
-    TiXmlElement * root = new TiXmlElement("application");
+    auto* root = new TiXmlElement("application");
     doc.LinkEndChild( root );
-    TiXmlElement * appName = new TiXmlElement("name");  //are all these NEW ok?
+    auto* appName = new TiXmlElement("name");  //are all these NEW ok?
     appName->LinkEndChild(new TiXmlText(app->getName()));
     root->LinkEndChild(appName);
 
 
-    if (strcmp(app->getDescription(), ""))
+    if (strcmp(app->getDescription(), "") != 0)
     {
-        TiXmlElement * desc= new TiXmlElement( "description");
+        auto* desc= new TiXmlElement( "description");
         desc->LinkEndChild(new TiXmlText( app->getDescription()));
         root->LinkEndChild(desc);
     }
 
-    if(strcmp (app->getVersion(), ""))
+    if(strcmp (app->getVersion(), "") != 0)
     {
-        TiXmlElement * vers= new TiXmlElement( "version");
+        auto* vers= new TiXmlElement( "version");
         vers->LinkEndChild(new TiXmlText( app->getVersion()));
         root->LinkEndChild(vers);
 
@@ -85,11 +84,11 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
 
     if(app->authorCount()>0)
     {
-        TiXmlElement *auths=new TiXmlElement("authors");
+        auto* auths=new TiXmlElement("authors");
         for (int i=0; i<app->authorCount(); i++)
         {
             //app->getAuthorAt(i);
-            TiXmlElement *auth=new TiXmlElement("author");
+            auto* auth=new TiXmlElement("author");
             auth->SetAttribute("email", app->getAuthorAt(i).getEmail());
             auth->LinkEndChild(new TiXmlText(app->getAuthorAt(i).getName()));
             auths->LinkEndChild(auth);
@@ -102,43 +101,43 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
         int nModules=app->imoduleCount();
         for (int modCt=0; modCt<nModules; ++modCt)
         {
-            TiXmlElement * newMod = new TiXmlElement("module");
+            auto* newMod = new TiXmlElement("module");
             root->LinkEndChild(newMod); //add module element
             ModuleInterface curMod=app->getImoduleAt(modCt);
 
-            TiXmlElement *name = new TiXmlElement("name");
+            auto* name = new TiXmlElement("name");
             name->LinkEndChild(new TiXmlText(curMod.getName()));
             newMod->LinkEndChild(name);
 
-            TiXmlElement *parameters=new TiXmlElement("parameters");
+            auto* parameters=new TiXmlElement("parameters");
             parameters->LinkEndChild(new TiXmlText(curMod.getParam()));
             newMod->LinkEndChild(parameters);
 
-            TiXmlElement *node = new TiXmlElement("node");
+            auto* node = new TiXmlElement("node");
             node->LinkEndChild(new TiXmlText(curMod.getHost())); //is host the same as node?
             newMod->LinkEndChild(node);
 
-            TiXmlElement *prefix=new TiXmlElement("prefix");
+            auto* prefix=new TiXmlElement("prefix");
             prefix->LinkEndChild(new TiXmlText(curMod.getPrefix()));
             newMod->LinkEndChild(prefix);
 
-            if(strcmp(curMod.getStdio(), ""))
+            if(strcmp(curMod.getStdio(), "") != 0)
             {
-                TiXmlElement *stdio=new TiXmlElement("stdio");
+                auto* stdio=new TiXmlElement("stdio");
                 stdio->LinkEndChild(new TiXmlText(curMod.getStdio()));
                 newMod->LinkEndChild(stdio);
             }
 
-            if(strcmp(curMod.getWorkDir(), ""))
+            if(strcmp(curMod.getWorkDir(), "") != 0)
             {
-                TiXmlElement *workdir=new TiXmlElement("workdir");
+                auto* workdir=new TiXmlElement("workdir");
                 workdir->LinkEndChild(new TiXmlText(curMod.getWorkDir()));
                 newMod->LinkEndChild(workdir);
             }
 
-            if(strcmp(curMod.getBroker(), ""))
+            if(strcmp(curMod.getBroker(), "") != 0)
             {
-                TiXmlElement *broker=new TiXmlElement("deployer");
+                auto* broker=new TiXmlElement("deployer");
                 broker->LinkEndChild(new TiXmlText(curMod.getBroker()));
                 newMod->LinkEndChild(broker);
             }
@@ -158,7 +157,7 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
             if(model.points.size()>0)
             {
                 txt<<"(Pos (x "<<model.points[0].x<<") "<<"(y "<<model.points[0].y<<"))";
-                TiXmlElement *geometry=new TiXmlElement("geometry");
+                auto* geometry=new TiXmlElement("geometry");
                 geometry->LinkEndChild(new TiXmlText(txt.str().c_str()));
                 newMod->LinkEndChild(geometry);
             }
@@ -171,16 +170,16 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
         int nApps=app->iapplicationCount();
         for (int appCt=0; appCt<nApps; ++appCt)
         {
-            TiXmlElement *newApp  = new TiXmlElement("application");
+            auto* newApp  = new TiXmlElement("application");
             root->LinkEndChild(newApp); //add application element
             ApplicationInterface curApp=app->getIapplicationAt(appCt);
 
-            TiXmlElement *name = new TiXmlElement("name");
+            auto* name = new TiXmlElement("name");
             name->LinkEndChild(new TiXmlText(curApp.getName()));
             newApp->LinkEndChild(name);
 
 
-            TiXmlElement *prefix=new TiXmlElement("prefix");
+            auto* prefix=new TiXmlElement("prefix");
             prefix->LinkEndChild(new TiXmlText(curApp.getPrefix()));
             newApp->LinkEndChild(prefix);
 
@@ -189,7 +188,7 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
             if(model.points.size()>0)
             {
                 txt<<"(Pos (x "<<model.points[0].x<<") "<<"(y "<<model.points[0].y<<"))";
-                TiXmlElement *geometry=new TiXmlElement("geometry");
+                auto* geometry=new TiXmlElement("geometry");
                 geometry->LinkEndChild(new TiXmlText(txt.str().c_str()));
                 newApp->LinkEndChild(geometry);
             }
@@ -202,7 +201,7 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
         int nConns=app->connectionCount();
         for (int connCt=0; connCt<nConns; ++connCt)
         {
-            TiXmlElement *newConn=new TiXmlElement("connection");
+            auto* newConn=new TiXmlElement("connection");
             Connection curConn=app->getConnectionAt(connCt);
 
             if(strlen(curConn.getId()))
@@ -211,19 +210,19 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
             if(curConn.isPersistent())
                 newConn->SetAttribute("persist", "true");
 
-            TiXmlElement *from = new TiXmlElement("from");
+            auto* from = new TiXmlElement("from");
             if (curConn.isExternalFrom())
                 from->SetAttribute("external", "true");
             from->LinkEndChild(new TiXmlText(curConn.from()));
             newConn->LinkEndChild(from);
 
-            TiXmlElement *to = new TiXmlElement("to");
+            auto* to = new TiXmlElement("to");
             if (curConn.isExternalTo())
                 to->SetAttribute("external", "true");
             to->LinkEndChild(new TiXmlText(curConn.to()));
             newConn->LinkEndChild(to);
 
-            TiXmlElement *protocol = new TiXmlElement("protocol");
+            auto* protocol = new TiXmlElement("protocol");
             protocol->LinkEndChild(new TiXmlText(curConn.carrier()));
             newConn->LinkEndChild(protocol);
 
@@ -232,10 +231,10 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
             if(model.points.size()>0)
             {
                 txt<<"(Pos ";
-                for(unsigned int i=0; i<model.points.size(); i++)
-                    txt<<"((x "<<model.points[i].x<<") "<<"(y "<<model.points[i].y<<")) ";
+                for(auto& point : model.points)
+                    txt<<"((x "<<point.x<<") "<<"(y "<<point.y<<")) ";
                 txt<<" )";
-                TiXmlElement *geometry=new TiXmlElement("geometry");
+                auto* geometry=new TiXmlElement("geometry");
                 geometry->LinkEndChild(new TiXmlText(txt.str().c_str()));
                 newConn->LinkEndChild(geometry);
             }
@@ -249,18 +248,18 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
         for(int i=0; i<app->arbitratorCount(); i++)
         {
             Arbitrator& arb = app->getArbitratorAt(i);
-            TiXmlElement *newArb = new TiXmlElement("arbitrator");
+            auto* newArb = new TiXmlElement("arbitrator");
 
-            TiXmlElement *port = new TiXmlElement("port");
+            auto* port = new TiXmlElement("port");
             port->LinkEndChild(new TiXmlText(arb.getPort()));
             newArb->LinkEndChild(port);
 
             std::map<string, string> &rules = arb.getRuleMap();
-            for(std::map<string, string>::iterator it=rules.begin(); it!=rules.end(); ++it)
+            for(auto& it : rules)
             {
-                TiXmlElement *rule = new TiXmlElement("rule");
-                rule->SetAttribute("connection", it->first.c_str());
-                rule->LinkEndChild(new TiXmlText(it->second.c_str()));
+                auto* rule = new TiXmlElement("rule");
+                rule->SetAttribute("connection", it.first.c_str());
+                rule->LinkEndChild(new TiXmlText(it.second.c_str()));
                 newArb->LinkEndChild(rule);
             }
 
@@ -269,10 +268,10 @@ bool XmlAppSaver::serialXml(Application* app, const char* szFile)
             if(model.points.size()>0)
             {
                 txt<<"(Pos ";
-                for(unsigned int i=0; i<model.points.size(); i++)
-                    txt<<"((x "<<model.points[i].x<<") "<<"(y "<<model.points[i].y<<")) ";
+                for(auto& point : model.points)
+                    txt<<"((x "<<point.x<<") "<<"(y "<<point.y<<")) ";
                 txt<<" )";
-                TiXmlElement *geometry=new TiXmlElement("geometry");
+                auto* geometry=new TiXmlElement("geometry");
                 geometry->LinkEndChild(new TiXmlText(txt.str().c_str()));
                 newArb->LinkEndChild(geometry);
             }

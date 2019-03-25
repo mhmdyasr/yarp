@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo <marco.randazzo@iit.it>
- *         Francesco Nori <francesco.nori@iit.it>
- *         Davide Perrone <dperrone@aitek.it>
- * CopyPolicy: Released under the terms of the GPLv2 or later, see GPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -95,11 +104,11 @@ MainWindow::MainWindow(QWidget *parent) :
     yarp::os::ResourceFinder &finder = yarp::os::ResourceFinder::getResourceFinderSingleton();
     //Positions have the following form: "customPosition_{NAME_OF_CUSTOM_POSITION}"
     //To iterate on all groups, transform the finder into Bottle
-    yarp::os::Bottle ini(finder.toString().c_str());
+    yarp::os::Bottle ini(finder.toString());
 
     std::map<std::string, yarp::os::Bottle> customPositions;
 
-    for (int index = 0; index < ini.size(); ++index) {
+    for (size_t index = 0; index < ini.size(); ++index) {
         //Look for groups starting with "customPosition_"
         yarp::os::Value item = ini.get(index);
         if (!item.isList()) continue;
@@ -246,7 +255,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QAction *viewGlobalToolbar = windows->addAction("Global Commands Toolbar");
     QAction *viewPartToolbar = windows->addAction("Part Commands Toolbar");
     QAction *viewSpeedValues = windows->addAction("View Speed Values");
+    QAction *viewCurrentValues = windows->addAction("View Current Values");
     QAction *viewMotorPosition = windows->addAction("View Motor Position");
+    QAction *viewDutyCycles = windows->addAction("View Duty Cycles");
     QAction *viewPositionTarget = windows->addAction("View Position Target");
     QAction *enableControlVelocity = windows->addAction("Enable Velocity Control");
     QAction *enableControlMixed = windows->addAction("Enable Mixed Control");
@@ -258,7 +269,9 @@ MainWindow::MainWindow(QWidget *parent) :
     viewGlobalToolbar->setCheckable(true);
     viewPartToolbar->setCheckable(true);
     viewSpeedValues->setCheckable(true);
+    viewCurrentValues->setCheckable(true);
     viewMotorPosition->setCheckable(true);
+    viewDutyCycles->setCheckable(true);
     enableControlVelocity->setCheckable(true);
     enableControlMixed->setCheckable(true);
     enableControlPositionDirect->setCheckable(true);
@@ -272,11 +285,15 @@ MainWindow::MainWindow(QWidget *parent) :
     bool bSpeedValues = settings.value("SpeedValuesVisible",false).toBool();
     bool bViewPositionTarget = settings.value("ViewPositionTarget", true).toBool();
     bool bviewMotorPosition = settings.value("MotorPositionVisible", false).toBool();
+    bool bviewDutyCycles = settings.value("DutyCycleVisible", false).toBool();
+    bool bCurrentValues = settings.value("CurrentsVisible", false).toBool();
 
     viewGlobalToolbar->setChecked(bViewGlobalToolbar);
     viewPartToolbar->setChecked(bViewPartToolbar);
     viewSpeedValues->setChecked(bSpeedValues);
+    viewCurrentValues->setChecked(bCurrentValues);
     viewMotorPosition->setChecked(bviewMotorPosition);
+    viewDutyCycles->setChecked(bviewDutyCycles);
     viewPositionTarget->setChecked(bViewPositionTarget);
     enableControlVelocity->setChecked(false);
     enableControlMixed->setChecked(false);
@@ -290,7 +307,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(viewGlobalToolbar,SIGNAL(triggered(bool)),this,SLOT(onViewGlobalToolbar(bool)));
     connect(viewPartToolbar,SIGNAL(triggered(bool)),this,SLOT(onViewPartToolbar(bool)));
     connect(viewSpeedValues,SIGNAL(triggered(bool)),this,SLOT(onViewSpeeds(bool)));
+    connect(viewCurrentValues, SIGNAL(triggered(bool)), this, SLOT(onViewCurrents(bool)));
     connect(viewMotorPosition, SIGNAL(triggered(bool)), this, SLOT(onViewMotorPositions(bool)));
+    connect(viewDutyCycles, SIGNAL(triggered(bool)), this, SLOT(onViewDutyCycles(bool)));
     connect(viewPositionTarget, SIGNAL(triggered(bool)), this, SLOT(onViewPositionTarget(bool)));
     connect(enableControlVelocity, SIGNAL(triggered(bool)), this, SLOT(onEnableControlVelocity(bool)));
     connect(enableControlMixed, SIGNAL(triggered(bool)), this, SLOT(onEnableControlMixed(bool)));
@@ -442,12 +461,28 @@ void MainWindow::onViewSpeeds(bool val)
     emit sig_viewSpeedValues(val);
 }
 
+void MainWindow::onViewCurrents(bool val)
+{
+    QSettings settings("YARP", "yarpmotorgui");
+    settings.setValue("CurrentValuesVisible", val);
+
+    emit sig_viewCurrentValues(val);
+}
+
 void MainWindow::onViewMotorPositions(bool val)
 {
     QSettings settings("YARP", "yarpmotorgui");
     settings.setValue("MotorPositionVisible", val);
 
     emit sig_viewMotorPositions(val);
+}
+
+void MainWindow::onViewDutyCycles(bool val)
+{
+    QSettings settings("YARP", "yarpmotorgui");
+    settings.setValue("DutyCyclesVisible", val);
+
+    emit sig_viewDutyCycles(val);
 }
 
 void MainWindow::onViewPositionTarget(bool val)
@@ -567,16 +602,16 @@ bool MainWindow::init(QStringList enabledParts,
         parts[ss.substr(b2)] = p;
     }
 
-    for (auto i_robot = robots.begin(); i_robot != robots.end(); i_robot++)
+    for (auto& robot : robots)
     {
-        QTreeWidgetItem *robot_top = new QTreeWidgetItem();
-        robot_top->setText(0, i_robot->first.c_str());
+        auto* robot_top = new QTreeWidgetItem();
+        robot_top->setText(0, robot.first.c_str());
         m_ui->treeWidgetMode->addTopLevelItem(robot_top);
         robot_top->setExpanded(true);
-        i_robot->second.tree_pointer = robot_top;
+        robot.second.tree_pointer = robot_top;
     }
 
-    for (auto i_parts = parts.begin(); i_parts != parts.end(); i_parts++)
+    for (auto& i_parts : parts)
     {
         //JointItem *item = new JointItem();
         //layout->addWidget(item);
@@ -584,19 +619,21 @@ bool MainWindow::init(QStringList enabledParts,
         scroll->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
         scroll->setWidgetResizable(true);
-        std::string part_name = i_parts->first;
-        std::string robot_name = i_parts->second.robot_name;
-        std::string robot_name_without_slash = i_parts->second.robot_name_without_slash;
-        std::string part_name_without_slash = i_parts->second.part_name_without_slash;
-        int         part_id = i_parts->second.partindex;
+        std::string part_name = i_parts.first;
+        std::string robot_name = i_parts.second.robot_name;
+        std::string robot_name_without_slash = i_parts.second.robot_name_without_slash;
+        std::string part_name_without_slash = i_parts.second.part_name_without_slash;
+        int         part_id = i_parts.second.partindex;
         part = new PartItem(robot_name_without_slash.c_str(), part_id, part_name_without_slash.c_str(), finder, debug_param_enabled, speedview_param_enabled, enable_calib_all, scroll);
 
-        if(!part->getInterfaceError())
+        if(part && !part->getInterfaceError())
         {
             connect(part,SIGNAL(sequenceActivated()),this,SLOT(onSequenceActivated()));
             connect(part,SIGNAL(sequenceStopped()),this,SLOT(onSequenceStopped()));
             connect(this,SIGNAL(sig_viewSpeedValues(bool)),part,SLOT(onViewSpeedValues(bool)));
+            connect(this, SIGNAL(sig_viewCurrentValues(bool)), part, SLOT(onViewCurrentValues(bool)));
             connect(this, SIGNAL(sig_viewMotorPositions(bool)), part, SLOT(onViewMotorPositions(bool)));
+            connect(this, SIGNAL(sig_viewDutyCycles(bool)), part, SLOT(onViewDutyCycles(bool)));
             connect(this, SIGNAL(sig_setPosSliderOptionMW(int, double)), part, SLOT(onSetPosSliderOptionPI(int, double)));
             connect(this, SIGNAL(sig_setVelSliderOptionMW(int, double)), part, SLOT(onSetVelSliderOptionPI(int, double)));
             connect(this, SIGNAL(sig_setTrqSliderOptionMW(int, double)), part, SLOT(onSetTrqSliderOptionPI(int, double)));
@@ -617,9 +654,9 @@ bool MainWindow::init(QStringList enabledParts,
                 this->m_partName->setText(QString("%1 Commands ").arg(auxName));
             }
 
-            QTreeWidgetItem *mode = new QTreeWidgetItem();
+            auto* mode = new QTreeWidgetItem();
             mode->setText(0, part_name.c_str());
-            QTreeWidgetItem *tp = robots[i_parts->second.robot_name].tree_pointer;
+            QTreeWidgetItem *tp = robots[i_parts.second.robot_name].tree_pointer;
             tp->addChild(mode);
             mode->setExpanded(false);
             part->setTreeWidgetModeNode(mode);
@@ -645,7 +682,7 @@ bool MainWindow::init(QStringList enabledParts,
         return false;
     }
 
-    QHBoxLayout *lay = new QHBoxLayout();
+    auto* lay = new QHBoxLayout();
     lay->setMargin(0);
     lay->setSpacing(0);
     m_ui->mainContainer->setLayout(lay);
@@ -655,9 +692,13 @@ bool MainWindow::init(QStringList enabledParts,
     QSettings settings("YARP","yarpmotorgui");
     bool speedVisible = settings.value("SpeedValuesVisible",false).toBool();
     bool motorPosVisible = settings.value("MotorPositionVisible", false).toBool();
+    bool currentVisible = settings.value("CurrentsVisible", false).toBool();
+    bool dutyVisible = settings.value("DutyCyclesVisible", false).toBool();
 
     onViewSpeeds(speedVisible);
+    onViewCurrents(currentVisible);
     onViewMotorPositions(motorPosVisible);
+    onViewDutyCycles(dutyVisible);
     return true;
 }
 
@@ -674,8 +715,8 @@ void MainWindow::onCurrentPartChanged(int index)
     m_currentPartMenu->setTitle(QString("%1 Commands").arg(auxName));
     this->m_partName->setText(QString("%1 Commands").arg(auxName));
 
-    QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(index);
-    PartItem *part = (PartItem*)scroll->widget();
+    auto* scroll = (QScrollArea *)m_tabPanel->widget(index);
+    auto* part = (PartItem*)scroll->widget();
     if(!part){
         return;
     }
@@ -690,8 +731,8 @@ void MainWindow::onCalibSinglePart()
         return;
     }
 
-    QScrollArea *scroll = (QScrollArea *)m_tabPanel->currentWidget();
-    PartItem *part = (PartItem*)scroll->widget();
+    auto* scroll = (QScrollArea *)m_tabPanel->currentWidget();
+    auto* part = (PartItem*)scroll->widget();
     if(!part){
         return;
     }
@@ -772,8 +813,8 @@ void MainWindow::onHomeSinglePart()
         return;
     }
 
-    QScrollArea *scroll = (QScrollArea *)m_tabPanel->currentWidget();
-    PartItem *part = (PartItem*)scroll->widget();
+    auto* scroll = (QScrollArea *)m_tabPanel->currentWidget();
+    auto* part = (PartItem*)scroll->widget();
     if (!part){
         return;
     }
@@ -793,8 +834,8 @@ void MainWindow::onHomeAllParts()
 
     for (int i = 0; i<m_tabPanel->count(); i++)
     {
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if (!part)
         {
             continue;
@@ -816,8 +857,8 @@ void MainWindow::onHomeAllPartsToCustomPosition(const yarp::os::Bottle& position
 
     for (int i = 0; i<m_tabPanel->count(); i++)
     {
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part)
         {
             continue;
@@ -836,8 +877,8 @@ void MainWindow::onHomeSinglePartToCustomPosition(const yarp::os::Bottle& positi
         return;
     }
 
-    QScrollArea *scroll = (QScrollArea *)m_tabPanel->currentWidget();
-    PartItem *part = (PartItem*)scroll->widget();
+    auto* scroll = (QScrollArea *)m_tabPanel->currentWidget();
+    auto* part = (PartItem*)scroll->widget();
     if(!part){
         return;
     }
@@ -851,8 +892,8 @@ void MainWindow::onIdleSinglePart()
         return;
     }
 
-    QScrollArea *scroll = (QScrollArea *)m_tabPanel->currentWidget();
-    PartItem *part = (PartItem*)scroll->widget();
+    auto* scroll = (QScrollArea *)m_tabPanel->currentWidget();
+    auto* part = (PartItem*)scroll->widget();
     if(!part){
         return;
     }
@@ -869,8 +910,8 @@ void MainWindow::onCycleTimeAllSeq()
     QString notSelectedParts;
 
     for (int i = 0; i<m_tabPanel->count(); i++){
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part){
             continue;
         }
@@ -894,8 +935,8 @@ void MainWindow::onCycleAllSeq()
     QString notSelectedParts;
 
     for (int i = 0; i<m_tabPanel->count(); i++){
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part){
             continue;
         }
@@ -919,8 +960,8 @@ void MainWindow::onRunAllSeq()
     QString notSelectedParts;
 
     for (int i = 0; i<m_tabPanel->count(); i++){
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part){
             continue;
         }
@@ -945,8 +986,8 @@ void MainWindow::onRunTimeAllSeq()
     QString notSelectedParts;
 
     for (int i = 0; i<m_tabPanel->count(); i++){
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part){
             continue;
         }
@@ -969,8 +1010,8 @@ void MainWindow::onLoadAllSeq()
 
 
     for (int i = 0; i<m_tabPanel->count(); i++){
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part){
             continue;
         }
@@ -990,8 +1031,8 @@ void MainWindow::onSaveAllSeq()
 
     for (int i = 0; i<m_tabPanel->count(); i++)
     {
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part)
         {
             continue;
@@ -1009,8 +1050,8 @@ void MainWindow::onStopAllSeq()
 
 
     for (int i = 0; i<m_tabPanel->count(); i++){
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part){
             continue;
         }
@@ -1030,8 +1071,8 @@ void MainWindow::onGoAll()
     QString notSelectedParts;
 
     for (int i = 0; i<m_tabPanel->count(); i++){
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part){
             continue;
         }
@@ -1060,8 +1101,8 @@ void MainWindow::onIdleAllParts()
 
     for (int i = 0; i<m_tabPanel->count(); i++)
     {
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if (!part){
             continue;
         }
@@ -1077,8 +1118,8 @@ void MainWindow::onRunAllParts()
     }
 
     for (int i = 0; i<m_tabPanel->count(); i++){
-        QScrollArea *scroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *part = (PartItem*)scroll->widget();
+        auto* scroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* part = (PartItem*)scroll->widget();
         if(!part){
             continue;
         }
@@ -1093,8 +1134,8 @@ void MainWindow::onRunSinglePart()
         return;
     }
 
-    QScrollArea *scroll = (QScrollArea *)m_tabPanel->currentWidget();
-    PartItem *part = (PartItem*)scroll->widget();
+    auto* scroll = (QScrollArea *)m_tabPanel->currentWidget();
+    auto* part = (PartItem*)scroll->widget();
     if(!part){
         return;
     }
@@ -1108,8 +1149,8 @@ void MainWindow::onOpenSequenceTab()
         return;
     }
 
-    QScrollArea *scroll = (QScrollArea *)m_tabPanel->currentWidget();
-    PartItem *part = (PartItem*)scroll->widget();
+    auto* scroll = (QScrollArea *)m_tabPanel->currentWidget();
+    auto* part = (PartItem*)scroll->widget();
     if(!part){
         return;
     }
@@ -1125,20 +1166,20 @@ void MainWindow::onUpdate()
     }
     m_mutex.lock();
 
-    QScrollArea *scroll = (QScrollArea *)m_tabPanel->currentWidget();
+    auto* scroll = (QScrollArea *)m_tabPanel->currentWidget();
     if(!scroll){
         m_mutex.unlock();
         return;
     }
-    PartItem *currentPart = (PartItem*)scroll->widget();
+    auto* currentPart = (PartItem*)scroll->widget();
     if(!currentPart){
         m_mutex.unlock();
         return;
     }
     for (int i = 0; i<m_tabPanel->count(); i++)
     {
-        QScrollArea *tabScroll = (QScrollArea *)m_tabPanel->widget(i);
-        PartItem *item = (PartItem*)tabScroll->widget();
+        auto* tabScroll = (QScrollArea *)m_tabPanel->widget(i);
+        auto* item = (PartItem*)tabScroll->widget();
         item->updateControlMode();
         updateModesTree(item);
         if(item == currentPart)
@@ -1296,7 +1337,7 @@ void MainWindow::updateModesTree(PartItem *part)
         for(int i=0; i<modes.count(); i++){
             QString mode;
             mode = getStringMode(modes.at(i));
-            QTreeWidgetItem *jointNode = new QTreeWidgetItem(parentNode);
+            auto* jointNode = new QTreeWidgetItem(parentNode);
             jointNode->setText(0,QString("Joint %1").arg(i));
             jointNode->setText(1,mode);
             QColor c = getColorMode(modes.at(i));

@@ -1,6 +1,10 @@
 /*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2008 Giacomo Spigler
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/dev/ControlBoardInterfaces.h>
@@ -68,8 +72,16 @@ public:
     bool getRefAccelerations(double *accs) override;
     bool stop(int j) override;
     bool stop() override;
+    bool positionMove(const int n_joint, const int *joints, const double *refs) override;
+    bool relativeMove(const int n_joint, const int *joints, const double *deltas) override;
+    bool checkMotionDone(const int n_joint, const int *joints, bool *flags) override;
+    bool setRefSpeeds(const int n_joint, const int *joints, const double *spds) override;
+    bool setRefAccelerations(const int n_joint, const int *joints, const double *accs) override;
+    bool getRefSpeeds(const int n_joint, const int *joints, double *spds) override;
+    bool getRefAccelerations(const int n_joint, const int *joints, double *accs) override;
+    bool stop(const int n_joint, const int *joints) override;
 
-    virtual bool open(Searchable& config) override {
+    bool open(Searchable& config) override {
         if(config.check("help")==true) {
           printf("SerialServoBoard Available Options:\n");
           printf(" -board NAME, where name is one of ssc32, minissc, pontech_sv203x, mondotronic_smi, parallax, pololu_usb_16servo, picopic\n");
@@ -111,7 +123,7 @@ public:
 
         strcpy(comport, config.check("comport", yarp::os::Value("/dev/ttyS0")).asString().c_str());
 
-        int baudrate = config.check("baudrate", yarp::os::Value(38400)).asInt();
+        int baudrate = config.check("baudrate", yarp::os::Value(38400)).asInt32();
 
         Property conf;
         // no arguments, use a default
@@ -141,7 +153,7 @@ public:
         return true;
     }
 
-    virtual bool close() override {
+    bool close() override {
         dd.close();
 
         free(positions);

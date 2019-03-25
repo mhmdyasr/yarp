@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2016 iCub Facility, Istituto Italiano di Tecnologia
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_MAPGRID2D_H
@@ -45,7 +47,7 @@ namespace yarp
                 double m_free_thresh;
                 size_t m_width;
                 size_t m_height;
-                std::string m_map_name;
+                YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) m_map_name;
 
                 struct
                 {
@@ -267,13 +269,13 @@ namespace yarp
                 * Read vector from a connection.
                 * return true iff a vector was read correctly
                 */
-                virtual bool read(yarp::os::ConnectionReader& connection) override;
+                bool read(yarp::os::ConnectionReader& connection) override;
 
                 /**
                 * Write vector to a connection.
                 * return true iff a vector was written correctly
                 */
-                virtual bool write(yarp::os::ConnectionWriter& connection) override;
+                bool write(yarp::os::ConnectionWriter& connection) const override;
         };
     }
 }

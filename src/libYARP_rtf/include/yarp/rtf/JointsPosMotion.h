@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Valentina Gaggero <valentina.gaggero@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_RTF_JOINTSPOSMOVE_H
@@ -58,7 +60,7 @@ public:
      * @brief Sets speed of each joint used in position control.
      *
      * @param vector of speed. The vector must have size equal to @jlist in
-     *               costructor.
+     *               constructor.
      */
     void setSpeed(yarp::sig::Vector &speedlist);
 
@@ -88,7 +90,7 @@ public:
                     double *reached_pos = nullptr);
 
     /**
-     * @brief Moves joints in corrisponding positions specified by
+     * @brief Moves joints in corresponding positions specified by
      * @a positions and checks if all joints reach its target within tolerance
      * range in maximun timeout seconds.
      *

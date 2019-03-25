@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2011 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_MULTINAMESPACE_H
@@ -11,12 +13,10 @@
 #include <yarp/os/NameStore.h>
 
 namespace yarp {
-    namespace os {
-        class MultiNameSpace;
-    }
-}
+namespace os {
 
-class YARP_OS_API yarp::os::MultiNameSpace : public NameSpace {
+class YARP_OS_API MultiNameSpace : public NameSpace
+{
 public:
     MultiNameSpace();
 
@@ -26,22 +26,23 @@ public:
 
     bool activate(bool force = false);
 
-    virtual Contact getNameServerContact() const override;
+    Contact getNameServerContact() const override;
 
-    virtual Contact queryName(const ConstString& name) override;
+    Contact queryName(const std::string& name) override;
 
-    virtual Contact registerName(const ConstString& name) override;
+    Contact registerName(const std::string& name) override;
 
-    virtual Contact registerContact(const Contact& contact) override;
+    Contact registerContact(const Contact& contact) override;
 
-    virtual Contact unregisterName(const ConstString& name) override;
+    Contact unregisterName(const std::string& name) override;
 
-    virtual Contact unregisterContact(const Contact& contact) override;
+    Contact unregisterContact(const Contact& contact) override;
 
-    virtual bool setProperty(const ConstString& name, const ConstString& key,
+    virtual bool setProperty(const std::string& name,
+                             const std::string& key,
                              const Value& value) override;
 
-    virtual Value *getProperty(const ConstString& name, const ConstString& key) override;
+    Value* getProperty(const std::string& name, const std::string& key) override;
 
     virtual bool connectPortToTopic(const Contact& src,
                                     const Contact& dest,
@@ -67,13 +68,13 @@ public:
                                                   const Contact& dest,
                                                   ContactStyle style) override;
 
-    virtual bool localOnly() const override;
+    bool localOnly() const override;
 
-    virtual bool usesCentralServer() const override;
+    bool usesCentralServer() const override;
 
-    virtual bool serverAllocatesPortNumbers() const override;
+    bool serverAllocatesPortNumbers() const override;
 
-    virtual bool connectionHasNameOfEndpoints() const override;
+    bool connectionHasNameOfEndpoints() const override;
 
     /**
      *
@@ -82,7 +83,7 @@ public:
      * YARP, so you don't end up with a loop.
      *
      */
-    virtual void queryBypass(NameStore *store);
+    virtual void queryBypass(NameStore* store);
 
     /**
      *
@@ -90,7 +91,7 @@ public:
      * was set by queryBypass()
      *
      */
-    virtual NameStore *getQueryBypass();
+    virtual NameStore* getQueryBypass();
 
     virtual Contact detectNameServer(bool useDetectedServer,
                                      bool& scanNeeded,
@@ -101,8 +102,11 @@ public:
                                    const ContactStyle& style) override;
 
 private:
-    void *system_resource;
-    NameStore *altStore;
+    void* system_resource;
+    NameStore* altStore;
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_MULTINAMESPACE_H

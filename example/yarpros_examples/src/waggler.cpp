@@ -1,7 +1,10 @@
 /*
- * Copyright: (C) 2010 RobotCub Consortium
- * Author: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <ros/ros.h>
@@ -9,11 +12,11 @@
 #include <stdio.h>
 
 // A few YARP defines
-#define BOTTLE_TAG_INT 1
+#define BOTTLE_TAG_INT32 1
 #define BOTTLE_TAG_VOCAB (1+8)
-#define BOTTLE_TAG_DOUBLE (2+8)
+#define BOTTLE_TAG_FLOAT64 (2+8)
 #define BOTTLE_TAG_LIST 256
-#define VOCAB(a,b,c,d) ((((int)(d))<<24)+(((int)(c))<<16)+(((int)(b))<<8)+((int)(a)))
+#define yarp::os::createVocab(a,b,c,d) ((((int)(d))<<24)+(((int)(c))<<16)+(((int)(b))<<8)+((int)(a)))
 // YARP defines over
 
 int main(int argc, char** argv) {
@@ -35,10 +38,10 @@ int main(int argc, char** argv) {
     msg.list_tag = BOTTLE_TAG_LIST;
     msg.list_len = 3;
     msg.vocab1_tag = BOTTLE_TAG_VOCAB;
-    msg.vocab1_val = VOCAB('s','e','t',0);
+    msg.vocab1_val = yarp::os::createVocab('s','e','t',0);
     msg.vocab2_tag = BOTTLE_TAG_VOCAB;
-    msg.vocab2_val = VOCAB('p','o','s','s');
-    msg.setpoints_tag = BOTTLE_TAG_LIST+BOTTLE_TAG_DOUBLE;
+    msg.vocab2_val = yarp::os::createVocab('p','o','s','s');
+    msg.setpoints_tag = BOTTLE_TAG_LIST+BOTTLE_TAG_FLOAT64;
     msg.setpoints.resize(joint_count);
     for (int i=0; i<joint_count; i++) {
       msg.setpoints[i] = 0;

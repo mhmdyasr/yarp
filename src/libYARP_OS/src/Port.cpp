@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick <paulfitz@alum.mit.edu>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/Port.h>
@@ -17,7 +19,6 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/impl/PortCoreAdapter.h>
-#include <yarp/os/impl/SemaphoreImpl.h>
 #include <yarp/os/impl/NameClient.h>
 #include <yarp/os/impl/NameConfig.h>
 
@@ -70,12 +71,12 @@ bool Port::sharedOpen(Port& port)
     return true;
 }
 
-bool Port::openFake(const ConstString& name)
+bool Port::openFake(const std::string& name)
 {
     return open(Contact(name), false, name.c_str());
 }
 
-bool Port::open(const ConstString& name)
+bool Port::open(const std::string& name)
 {
     return open(Contact(name));
 }
@@ -95,11 +96,11 @@ bool Port::open(const Contact& contact, bool registerName,
         return false;
     }
 
-    ConstString n = contact2.getName();
+    std::string n = contact2.getName();
 
     NameConfig conf;
-    ConstString nenv = ConstString("YARP_RENAME") + conf.getSafeString(n);
-    ConstString rename = NetworkBase::getEnvironment(nenv.c_str());
+    std::string nenv = std::string("YARP_RENAME") + conf.getSafeString(n);
+    std::string rename = NetworkBase::getEnvironment(nenv.c_str());
     if (rename!="") {
         n = rename;
         contact2.setName(n);
@@ -117,7 +118,7 @@ bool Port::open(const Contact& contact, bool registerName,
         if (nc.getNodeName() == "") {
             Nodes& nodes = NameClient::getNameClient().getNodes();
             nodes.requireActiveName();
-            ConstString node_name = nodes.getActiveName();
+            std::string node_name = nodes.getActiveName();
             if (node_name!="") {
                 n = n + node_name;
             }
@@ -130,7 +131,7 @@ bool Port::open(const Contact& contact, bool registerName,
         if (n!="" && (n[0]!='/'||currentCore->includeNode) && n[0]!='=' && n!="..." && n.substr(0, 3)!="...") {
             if (fakeName==nullptr) {
                 Nodes& nodes = NameClient::getNameClient().getNodes();
-                ConstString node_name = nodes.getActiveName();
+                std::string node_name = nodes.getActiveName();
                 if (node_name!="") {
                     n = (n[0]=='/'?"":"/") + n + "@" + node_name;
                 }
@@ -147,7 +148,7 @@ bool Port::open(const Contact& contact, bool registerName,
     }
     if (n!="" && n!="..." && n[0]!='=' && n.substr(0, 3)!="...") {
         if (fakeName==nullptr) {
-            ConstString prefix = NetworkBase::getEnvironment("YARP_PORT_PREFIX");
+            std::string prefix = NetworkBase::getEnvironment("YARP_PORT_PREFIX");
             if (prefix!="") {
                 n = prefix + n;
                 contact2.setName(n);
@@ -160,7 +161,7 @@ bool Port::open(const Contact& contact, bool registerName,
         if (nc.getNestedName()!="") {
             if (nc.getCategory()=="") {
                 // we need to add in a category
-                ConstString cat = "";
+                std::string cat;
                 if (currentCore->commitToRead) {
                     cat = "-";
                 } else if (currentCore->commitToWrite) {
@@ -199,7 +200,7 @@ bool Port::open(const Contact& contact, bool registerName,
 
     // Allow for open() to be called safely many times on the same Port
     if (currentCore && currentCore->isOpened()) {
-        PortCoreAdapter *newCore = new PortCoreAdapter(*this);
+        auto* newCore = new PortCoreAdapter(*this);
         yAssert(newCore != nullptr);
         // copy state that should survive in a new open()
         if (currentCore->checkPortReader() != nullptr) {
@@ -246,7 +247,7 @@ bool Port::open(const Contact& contact, bool registerName,
         registerName = false;
     }
 
-    ConstString ntyp = getType().getNameOnWire();
+    std::string ntyp = getType().getNameOnWire();
     if (ntyp=="") {
         NestedContact nc;
         nc.fromString(n);
@@ -275,7 +276,7 @@ bool Port::open(const Contact& contact, bool registerName,
     if (success) {
         // create a node if needed
         Nodes& nodes = NameClient::getNameClient().getNodes();
-        nodes.prepare(address.getRegName().c_str());
+        nodes.prepare(address.getRegName());
     }
 
     // If we are a service client, go ahead and connect
@@ -289,7 +290,7 @@ bool Port::open(const Contact& contact, bool registerName,
         }
     }
 
-    ConstString blame = "invalid address";
+    std::string blame = "invalid address";
     if (success) {
         success = core.listen(address, registerName);
         blame = "address conflict";
@@ -304,7 +305,7 @@ bool Port::open(const Contact& contact, bool registerName,
             contact2.setSocket(address.getCarrier(),
                                address.getHost(),
                                address.getPort());
-            contact2.setName(address.getRegName().c_str());
+            contact2.setName(address.getRegName());
             Contact newName = NetworkBase::registerContact(contact2);
             core.resetPortName(newName.getName());
             address = core.getAddress();
@@ -316,11 +317,11 @@ bool Port::open(const Contact& contact, bool registerName,
         if (core.getVerbosity()>=1) {
             if (address.getRegName()=="") {
                 YARP_INFO(Logger::get(),
-                          ConstString("Anonymous port active at ") +
+                          std::string("Anonymous port active at ") +
                           address.toURI());
             } else {
                 YARP_INFO(Logger::get(),
-                          ConstString("Port ") +
+                          std::string("Port ") +
                           address.getRegName() +
                           " active at " +
                           address.toURI());
@@ -335,13 +336,13 @@ bool Port::open(const Contact& contact, bool registerName,
 
     if (!success) {
         YARP_ERROR(Logger::get(),
-                   ConstString("Port ") +
+                   std::string("Port ") +
                    (address.isValid()?(address.getRegName().c_str()):(contact2.getName().c_str())) +
                    " failed to activate" +
                    (address.isValid()?" at ":"") +
-                   (address.isValid()?address.toURI():ConstString("")) +
+                   (address.isValid()?address.toURI():std::string("")) +
                    " (" +
-                   blame.c_str() +
+                   blame +
                    ")");
     }
 
@@ -355,23 +356,24 @@ bool Port::open(const Contact& contact, bool registerName,
     return success;
 }
 
-bool Port::addOutput(const ConstString& name)
+bool Port::addOutput(const std::string& name)
 {
     return addOutput(Contact(name));
 }
 
-bool Port::addOutput(const ConstString& name, const ConstString& carrier)
+bool Port::addOutput(const std::string& name, const std::string& carrier)
 {
     return addOutput(Contact(name, carrier));
 }
 
 void Port::close()
 {
-    if (!owned) return;
-    if (!NameClient::isClosed()) {
-        Nodes& nodes = NameClient::getNameClient().getNodes();
-        nodes.remove(*this);
+    if (!owned) {
+        return;
     }
+
+    Nodes& nodes = NameClient::getNameClient().getNodes();
+    nodes.remove(*this);
 
     PortCoreAdapter& core = IMPL();
     core.finishReading();
@@ -396,6 +398,10 @@ void Port::interrupt()
 void Port::resume()
 {
     PortCoreAdapter& core = IMPL();
+    if(!core.isInterrupted()) {
+        // prevent resuming when the port is not interrupted
+        return;
+    }
     core.resumeFull();
     Nodes& nodes = NameClient::getNameClient().getNodes();
     nodes.add(*this);
@@ -417,22 +423,21 @@ bool Port::addOutput(const Contact& contact)
     if (core.commitToRead) return false;
     if (core.isInterrupted()) return false;
     core.alertOnWrite();
-    ConstString name;
+    std::string name;
     if (contact.getPort()<=0) {
         name = contact.toString();
     } else {
         name = contact.toURI();
     }
     if (!core.isListening()) {
-        return core.addOutput(name.c_str(), nullptr, nullptr, true);
+        return core.addOutput(name, nullptr, nullptr, true);
     }
     Contact me = where();
-    return NetworkBase::connect(me.getName().c_str(),
-                                name.c_str());
+    return NetworkBase::connect(me.getName(), name);
 }
 
 
-bool Port::write(PortWriter& writer, PortWriter *callback) const
+bool Port::write(const PortWriter& writer, const PortWriter *callback) const
 {
     PortCoreAdapter& core = IMPL();
     if (core.isInterrupted()) return false;
@@ -453,9 +458,9 @@ bool Port::write(PortWriter& writer, PortWriter *callback) const
     return result;
 }
 
-bool Port::write(PortWriter& writer,
+bool Port::write(const PortWriter& writer,
                  PortReader& reader,
-                 PortWriter *callback) const
+                 const PortWriter *callback) const
 {
     PortCoreAdapter& core = IMPL();
     if (core.isInterrupted()) return false;

@@ -1,12 +1,15 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IROBOTDESCRIPTION_H
 #define YARP_DEV_IROBOTDESCRIPTION_H
 
+#include <yarp/dev/api.h>
 #include <yarp/os/Vocab.h>
 #include <yarp/os/Log.h>
 #include <vector>
@@ -20,7 +23,10 @@ namespace yarp {
         {
             std::string  device_name;
             std::string  device_type;
-            bool operator ==(DeviceDescription const& b) { return this->device_name == b.device_name && this->device_type == b.device_type; }
+            bool operator ==(DeviceDescription const& b) const
+            {
+                return this->device_name == b.device_name && this->device_type == b.device_type;
+            }
         };
       }
 }
@@ -31,7 +37,7 @@ namespace yarp {
  * This interface allows users to retrieve a list which contains the names and the types of the currently running devices.
  * This list is stored in a RobotDescriptionsServer class. The user can access to the data opening a RobotDescriptionsClient in its own module.
  */
-class yarp::dev::IRobotDescription
+class YARP_dev_API yarp::dev::IRobotDescription
 {
 public:
     /**
@@ -60,12 +66,12 @@ public:
     virtual bool unregisterDevice(const std::string& device_name) = 0;
 };
 
-#define VOCAB_IROBOT_DESCRIPTION            VOCAB4('i','r','o','b')
-#define VOCAB_IROBOT_GET                    VOCAB3('g','e','t')
-#define VOCAB_IROBOT_SET                    VOCAB3('s','e','t')
-#define VOCAB_IROBOT_DELETE                 VOCAB3('d','e','l')
-#define VOCAB_IROBOT_ALL                    VOCAB3('a','l','l')
-#define VOCAB_IROBOT_DEVICE                 VOCAB3('d','e','v')
-#define VOCAB_IROBOT_BY_TYPE                VOCAB4('t','y','p','e')
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_DESCRIPTION            = yarp::os::createVocab('i','r','o','b');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_GET                    = yarp::os::createVocab('g','e','t');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_SET                    = yarp::os::createVocab('s','e','t');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_DELETE                 = yarp::os::createVocab('d','e','l');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_ALL                    = yarp::os::createVocab('a','l','l');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_DEVICE                 = yarp::os::createVocab('d','e','v');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_BY_TYPE                = yarp::os::createVocab('t','y','p','e');
 
 #endif // YARP_DEV_IROBOTDESCRIPTION_H

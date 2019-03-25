@@ -1,13 +1,18 @@
 /*
- * Copyright (C) 2016 The RobotCub Consortium
- * Author: Marco Randazzo.
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/dev/MapGrid2D.h>
+
 #include <yarp/os/Bottle.h>
-#include <yarp/sig/ImageFile.h>
+#include <yarp/os/ConnectionReader.h>
+#include <yarp/os/ConnectionWriter.h>
 #include <yarp/os/LogStream.h>
+#include <yarp/sig/ImageFile.h>
 #include <algorithm>
 #include <fstream>
 #include <cmath>
@@ -22,9 +27,9 @@ using namespace std;
 string extractPathFromFile(string full_filename)
 {
     size_t found;
-    found = full_filename.find_last_of("/");
+    found = full_filename.find_last_of('/');
     if (found != string::npos) return full_filename.substr(0, found)+"/";
-    found = full_filename.find_last_of("\\");
+    found = full_filename.find_last_of('\\');
     if (found != string::npos) return full_filename.substr(0, found)+"\\";
     return full_filename;
 }
@@ -76,10 +81,7 @@ MapGrid2D::MapGrid2D()
     }
 }
 
-MapGrid2D::~MapGrid2D()
-{
-
-}
+MapGrid2D::~MapGrid2D() = default;
 
 bool MapGrid2D::isNotFree(MapGrid2D::XYCell cell) const
 {
@@ -153,8 +155,8 @@ bool MapGrid2D::getMapImage(yarp::sig::ImageOf<PixelRgb>& image) const
 
 bool MapGrid2D::setMapImage(yarp::sig::ImageOf<PixelRgb>& image)
 {
-    if (image.width() != (int)(m_width) ||
-        image.height() != (int)(m_height))
+    if (image.width() != m_width ||
+        image.height() != m_height)
     {
         yError() << "The size of given iamge does not correspond to the current map. Use method setSize() first.";
         return false;
@@ -185,7 +187,7 @@ bool MapGrid2D::enlargeObstacles(double size)
         }
         return true;
     }
-    size_t repeat_num = (size_t)(std::ceil(size/m_resolution));
+    auto repeat_num = (size_t)(std::ceil(size/m_resolution));
     for (size_t repeat = 0; repeat < repeat_num; repeat++)
     {
         //contains the cells to be enlarged;
@@ -201,15 +203,15 @@ bool MapGrid2D::enlargeObstacles(double size)
                     this->m_map_flags.safePixel(x, y) == MAP_CELL_UNKNOWN ||
                     this->m_map_flags.safePixel(x, y) == MAP_CELL_TEMPORARY_OBSTACLE)
                 {
-                    list_of_cells.push_back(XYCell(x, y));
+                    list_of_cells.emplace_back(x, y);
                 }
             }
         }
 
         //process each cell of the list and enlarges it
-        for (auto it = list_of_cells.begin(); it != list_of_cells.end(); it++)
+        for (auto& list_of_cell : list_of_cells)
         {
-            enlargeCell(*it);
+            enlargeCell(list_of_cell);
         }
     }
     return true;
@@ -273,22 +275,22 @@ bool MapGrid2D::loadROSParams(string ros_yaml_filename, string& pgm_occ_filename
     //ppm_flg_filename = (pgm_occ_filename.substr(0, pgm_occ_filename.size()-4))+"_yarpflags"+".ppm";
 
     if (bbb.check("resolution:") == false) { yError() << "missing resolution"; ret = false; }
-    resolution = bbb.find("resolution:").asDouble();
+    resolution = bbb.find("resolution:").asFloat64();
 
     if (bbb.check("origin:") == false) { yError() << "missing origin"; ret = false; }
     Bottle* b = bbb.find("origin:").asList();
     if (b)
     {
-        orig_x = b->get(0).asDouble();
-        orig_y = b->get(1).asDouble();
-        orig_t = b->get(2).asDouble();
+        orig_x = b->get(0).asFloat64();
+        orig_y = b->get(1).asFloat64();
+        orig_t = b->get(2).asFloat64();
     }
 
     if (bbb.check("occupied_thresh:"))
-    {m_occupied_thresh = bbb.find("occupied_thresh:").asDouble();}
+    {m_occupied_thresh = bbb.find("occupied_thresh:").asFloat64();}
 
     if (bbb.check("free_thresh:"))
-    {m_free_thresh = bbb.find("free_thresh:").asDouble();}
+    {m_free_thresh = bbb.find("free_thresh:").asFloat64();}
 
     return ret;
 }
@@ -356,7 +358,7 @@ bool MapGrid2D::loadMapYarpAndRos(string yarp_filename, string ros_yaml_filename
                 else
                 {
                     int color_avg = (pix_occ.r + pix_occ.g + pix_occ.b) / 3;
-                    unsigned char occ = (unsigned char)((254 - color_avg) / 254.0);
+                    auto occ = (unsigned char)((254 - color_avg) / 254.0);
                     m_map_occupancy.safePixel(x, y) = occ * 100;
                 }
             }
@@ -416,7 +418,7 @@ bool MapGrid2D::loadMapROSOnly(string ros_yaml_filename)
             else
             {
                 int color_avg = (pix_occ.r + pix_occ.g + pix_occ.b) / 3;
-                unsigned char occ = (unsigned char)((254 - color_avg) / 254.0);
+                auto occ = (unsigned char)((254 - color_avg) / 254.0);
                 m_map_occupancy.safePixel(x, y) = occ * 100;
             }
         }
@@ -642,8 +644,6 @@ bool  MapGrid2D::crop (int left, int top, int right, int bottom)
     if (top    > (int)this->height()) return false;
     if (bottom > (int)this->height()) return false;
 
-    int i=0; int x =0;
-    int j=0; int y=0;
     yarp::sig::ImageOf<CellData> new_map_occupancy;
     yarp::sig::ImageOf<CellData> new_map_flags;
 
@@ -725,8 +725,8 @@ bool  MapGrid2D::saveToFile(std::string map_file_with_path) const
     //std::string ppm_flg_filename = (pgm_occ_filename.substr(0, pgm_occ_filename.size() - 4)) + "_yarpflags" + ".ppm";
     std::string ppm_flg_filename = yarp_filename;
     bool ret = true;
-    ret &= yarp::sig::file::write(img_occ, pgm_occ_filename.c_str());
-    ret &= yarp::sig::file::write(img_flg, ppm_flg_filename.c_str());
+    ret &= yarp::sig::file::write(img_occ, pgm_occ_filename);
+    ret &= yarp::sig::file::write(img_flg, ppm_flg_filename);
     return ret;
 }
 
@@ -735,23 +735,23 @@ bool MapGrid2D::read(yarp::os::ConnectionReader& connection)
     // auto-convert text mode interaction
     connection.convertTextMode();
 
-    connection.expectInt();
-    connection.expectInt();
+    connection.expectInt32();
+    connection.expectInt32();
 
-    connection.expectInt();
-    m_width = connection.expectInt();
-    connection.expectInt();
-    m_height = connection.expectInt();
-    connection.expectInt();
-    m_origin.x = connection.expectDouble();
-    connection.expectInt();
-    m_origin.y = connection.expectDouble();
-    connection.expectInt();
-    m_origin.theta = connection.expectDouble();
-    connection.expectInt();
-    m_resolution = connection.expectDouble();
-    connection.expectInt();
-    int siz = connection.expectInt();
+    connection.expectInt32();
+    m_width = connection.expectInt32();
+    connection.expectInt32();
+    m_height = connection.expectInt32();
+    connection.expectInt32();
+    m_origin.x = connection.expectFloat64();
+    connection.expectInt32();
+    m_origin.y = connection.expectFloat64();
+    connection.expectInt32();
+    m_origin.theta = connection.expectFloat64();
+    connection.expectInt32();
+    m_resolution = connection.expectFloat64();
+    connection.expectInt32();
+    int siz = connection.expectInt32();
     char buff[255]; memset(buff, 0, 255);
     connection.expectBlock((char*)buff, siz);
     m_map_name = buff;
@@ -759,14 +759,14 @@ bool MapGrid2D::read(yarp::os::ConnectionReader& connection)
     m_map_flags.resize(m_width, m_height);
     bool ok = true;
     unsigned char *mem = nullptr;
-    int            memsize = 0;
-    connection.expectInt();
-    memsize = connection.expectInt();
+    size_t memsize = 0;
+    connection.expectInt32();
+    memsize = connection.expectInt32();
     if (memsize != m_map_occupancy.getRawImageSize()) { return false; }
     mem = m_map_occupancy.getRawImage();
     ok &= connection.expectBlock((char*)mem, memsize);
-    connection.expectInt();
-    memsize = connection.expectInt();
+    connection.expectInt32();
+    memsize = connection.expectInt32();
     if (memsize != m_map_flags.getRawImageSize()) { return false; }
     mem = m_map_flags.getRawImage();
     ok &= connection.expectBlock((char*)mem, memsize);
@@ -776,36 +776,36 @@ bool MapGrid2D::read(yarp::os::ConnectionReader& connection)
         return true;
 }
 
-bool MapGrid2D::write(yarp::os::ConnectionWriter& connection)
+bool MapGrid2D::write(yarp::os::ConnectionWriter& connection) const
 {
-    connection.appendInt(BOTTLE_TAG_LIST);
-    connection.appendInt(9);
-    connection.appendInt(BOTTLE_TAG_INT);
-    connection.appendInt(m_width);
-    connection.appendInt(BOTTLE_TAG_INT);
-    connection.appendInt(m_height);
-    connection.appendInt(BOTTLE_TAG_DOUBLE);
-    connection.appendDouble(m_origin.x);
-    connection.appendInt(BOTTLE_TAG_DOUBLE);
-    connection.appendDouble(m_origin.y);
-    connection.appendInt(BOTTLE_TAG_DOUBLE);
-    connection.appendDouble(m_origin.theta);
-    connection.appendInt(BOTTLE_TAG_DOUBLE);
-    connection.appendDouble(m_resolution);
-    connection.appendInt(BOTTLE_TAG_STRING);
-    connection.appendRawString(m_map_name.c_str());
+    connection.appendInt32(BOTTLE_TAG_LIST);
+    connection.appendInt32(9);
+    connection.appendInt32(BOTTLE_TAG_INT32);
+    connection.appendInt32(m_width);
+    connection.appendInt32(BOTTLE_TAG_INT32);
+    connection.appendInt32(m_height);
+    connection.appendInt32(BOTTLE_TAG_FLOAT64);
+    connection.appendFloat64(m_origin.x);
+    connection.appendInt32(BOTTLE_TAG_FLOAT64);
+    connection.appendFloat64(m_origin.y);
+    connection.appendInt32(BOTTLE_TAG_FLOAT64);
+    connection.appendFloat64(m_origin.theta);
+    connection.appendInt32(BOTTLE_TAG_FLOAT64);
+    connection.appendFloat64(m_resolution);
+    connection.appendInt32(BOTTLE_TAG_STRING);
+    connection.appendRawString(m_map_name);
 
     unsigned char *mem = nullptr;
     int            memsize = 0;
     mem     = m_map_occupancy.getRawImage();
     memsize = m_map_occupancy.getRawImageSize();
-    connection.appendInt(BOTTLE_TAG_BLOB);
-    connection.appendInt(memsize);
+    connection.appendInt32(BOTTLE_TAG_BLOB);
+    connection.appendInt32(memsize);
     connection.appendExternalBlock((char*)mem, memsize);
     mem     = m_map_flags.getRawImage();
     memsize = m_map_flags.getRawImageSize();
-    connection.appendInt(BOTTLE_TAG_BLOB);
-    connection.appendInt(memsize);
+    connection.appendInt32(BOTTLE_TAG_BLOB);
+    connection.appendInt32(memsize);
     connection.appendExternalBlock((char*)mem, memsize);
 
     connection.convertTextMode();
@@ -932,8 +932,8 @@ bool MapGrid2D::setSize_in_meters(double x, double y)
         yError() << "MapGrid2D::setSize() invalid map resolution.";
         return false;
     }
-    size_t w = (size_t)(x/m_resolution);
-    size_t h = (size_t)(y/m_resolution);
+    auto w = (size_t)(x/m_resolution);
+    auto h = (size_t)(y/m_resolution);
     setSize_in_cells(w,h);
     return true;
 }
@@ -1019,8 +1019,8 @@ bool MapGrid2D::getOccupancyData(XYCell cell, double& occupancy) const
 
 bool MapGrid2D::setOccupancyGrid(yarp::sig::ImageOf<yarp::sig::PixelMono>& image)
 {
-    if (image.width() != m_width ||
-        image.height() != m_height)
+    if ((size_t) image.width() != m_width ||
+        (size_t) image.height() != m_height)
     {
         yError() << "The size of given occupancy grid does not correspond to the current map. Use method setSize() first.";
         return false;

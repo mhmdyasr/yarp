@@ -1,6 +1,10 @@
 /*
- * Copyright (C) 2010 Daniel Krieg
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2010 Daniel Krieg <krieg@fias.uni-frankfurt.de>
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/impl/AuthHMAC.h>
@@ -10,9 +14,11 @@
 #include <cstdio>
 #include <ctime>
 #include <random>
-#include <yarp/os/ConstString.h>
+#include <string>
+#include <yarp/os/Bytes.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/Network.h>
+#include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/impl/NameClient.h>
 
@@ -36,16 +42,16 @@ using namespace yarp::os;
 AuthHMAC::AuthHMAC() :
         authentication_enabled(false)
 {
-    static int auth_warning_shown = false;
+    memset(&context, 0, sizeof(HMAC_CONTEXT));
+    static bool auth_warning_shown = false;
     if (auth_warning_shown) {
         // If the warning was already shown, we have nothing to do.
         // return as soon as possible
         return;
     }
-    memset(&context, 0, sizeof(HMAC_CONTEXT));
-    ConstString key;
-    ResourceFinder& rf = NameClient::getNameClient().getResourceFinder();
-    ConstString fname;
+    std::string key;
+    ResourceFinder& rf = ResourceFinder::getResourceFinderSingleton();
+    std::string fname;
     Network::lock();
     ResourceFinderOptions opt;
     opt.messageFilter = ResourceFinderOptions::ShowNone;
@@ -60,7 +66,7 @@ AuthHMAC::AuthHMAC() :
     }
 
     Property config;
-    config.fromConfigFile(fname.c_str());
+    config.fromConfigFile(fname);
     Bottle group = config.findGroup("AUTH");
 
     if (group.isNull()) {
@@ -77,7 +83,7 @@ AuthHMAC::AuthHMAC() :
     }
 
     size_t key_len = key.length();
-    unsigned char * tmp = new unsigned char[key_len];
+    auto* tmp = new unsigned char[key_len];
     strcpy((char*) tmp, key.c_str());
     HMAC_INIT(&context, tmp, (unsigned int)key_len);
     delete[] tmp;

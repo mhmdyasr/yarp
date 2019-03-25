@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IFRAMETRANSFORM_H
@@ -36,7 +38,7 @@ public:
     /**
      * Destructor.
      */
-    virtual ~IFrameTransform() {}
+    virtual ~IFrameTransform();
 
     /**
     Creates a debug string containing the list of all registered frames.
@@ -159,9 +161,9 @@ public:
     virtual bool     waitForTransform(const std::string &target_frame_id, const std::string &source_frame_id, const double &timeout) = 0;
 };
 
-#define VOCAB_ITRANSFORM              VOCAB4('i','t','r','f')
-#define VOCAB_TRANSFORM_SET           VOCAB4('t','f','s','t')
-#define VOCAB_TRANSFORM_DELETE        VOCAB4('t','f','d','l')
-#define VOCAB_TRANSFORM_DELETE_ALL    VOCAB4('t','f','d','a')
+constexpr yarp::conf::vocab32_t VOCAB_ITRANSFORM              = yarp::os::createVocab('i','t','r','f');
+constexpr yarp::conf::vocab32_t VOCAB_TRANSFORM_SET           = yarp::os::createVocab('t','f','s','t');
+constexpr yarp::conf::vocab32_t VOCAB_TRANSFORM_DELETE        = yarp::os::createVocab('t','f','d','l');
+constexpr yarp::conf::vocab32_t VOCAB_TRANSFORM_DELETE_ALL    = yarp::os::createVocab('t','f','d','a');
 
 #endif // YARP_DEV_IFRAMETRANSFORM_H

@@ -1,8 +1,18 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <fstream>
@@ -183,13 +193,13 @@ void MainWindow::drawGraph(Graph &graph)
                     sgraph->setAttribute("label", prop.find("hostname").toString().c_str());
                     string host = prop.find("os").asString();
                     if(host == "Linux")
-                        sgraph->setIcon(QImage(":/icons/resources/Linux-icon.png"));
+                        sgraph->setIcon(QImage(":/icons/resources/os-linux.png"));
                     else if(host == "Windows")
-                        sgraph->setIcon(QImage(":/icons/resources/Windows-icon.png"));
+                        sgraph->setIcon(QImage(":/icons/resources/os-windows.png"));
                     else if(host == "Mac")
-                        sgraph->setIcon(QImage(":/icons/resources/Mac-icon.png"));
+                        sgraph->setIcon(QImage(":/icons/resources/os-macos.png"));
                     else
-                        sgraph->setIcon(QImage(":/icons/resources/Gnome-System-Run-64.png"));
+                        sgraph->setIcon(QImage(":/icons/resources/system-run.png"));
                     std::string endNodeName = key.str() + ".end";
                     QGVNode * node = sgraph->addNode(endNodeName.c_str());
                     node->setAttribute("shape", "circle");
@@ -219,7 +229,7 @@ void MainWindow::drawGraph(Graph &graph)
             stringstream hexStream;
             hexStream<<std::hex<< randNum;
             string hexRandNum ="#" + hexStream.str();
-            string name =  std::string(prop.find("name").asString().c_str()) + std::to_string(countChild);
+            string name =  std::string(prop.find("name").asString()) + std::to_string(countChild);
             if(layoutSubgraph)
             {
                 std::stringstream key;
@@ -239,7 +249,7 @@ void MainWindow::drawGraph(Graph &graph)
 
             std::stringstream label;
             label << "   " << prop.find("name").asString().c_str()
-                  << " (" << prop.find("pid").asInt() << ")   ";
+                  << " (" << prop.find("pid").asInt32() << ")   ";
             sgraph->setAttribute("shape", "box");
             sgraph->setAttribute("label", label.str().c_str());
             if(prop.check("color")) {
@@ -254,7 +264,7 @@ void MainWindow::drawGraph(Graph &graph)
             dynamic_cast<GraphicVertex*>(*itr)->setGraphicItem(sgraph);
             sgraph->setVertex(*itr);
             std::stringstream keyProcess;
-            keyProcess<<prop.find("hostname").asString()<<prop.find("pid").asInt();
+            keyProcess<<prop.find("hostname").asString()<<prop.find("pid").asInt32();
             std::string endNodeName = keyProcess.str() + ".end";
             QGVNode * node = sgraph->addNode(endNodeName.c_str());
             node->setAttribute("shape", "circle");
@@ -279,8 +289,8 @@ void MainWindow::drawGraph(Graph &graph)
         const Property& prop = (*itr)->property;
         string portName = prop.find("name").asString();
         if(dynamic_cast<PortVertex*>(*itr)) {
-            PortVertex* pv = dynamic_cast<PortVertex*>(*itr);
-            ProcessVertex* v = (ProcessVertex*) pv->getOwner();
+            auto* pv = dynamic_cast<PortVertex*>(*itr);
+            auto* v = (ProcessVertex*) pv->getOwner();
             if(ui->actionHideDisconnectedPorts->isChecked() && pv->property.find("orphan").asBool())
                 continue;
             if(!ui->actionDebugMode->isChecked() && (portName.find("/log") != string::npos || portName.find("/yarplogger") != string::npos ))
@@ -297,7 +307,7 @@ void MainWindow::drawGraph(Graph &graph)
             QGVNode *node;
             QString colorProcess;
             if(layoutSubgraph) {
-                key<<v->property.find("hostname").asString()<<v->property.find("pid").asInt();
+                key<<v->property.find("hostname").asString()<<v->property.find("pid").asInt32();
                 QGVSubGraph *sgraph = sceneSubGraphMap[key.str()];
                 if(sgraph)
                 {
@@ -344,8 +354,7 @@ void MainWindow::drawGraph(Graph &graph)
 
     for(itr = vertices.begin(); itr!=vertices.end(); itr++) {
         const Vertex &v1 = (**itr);
-        for(size_t i=0; i<v1.outEdges().size(); i++) {
-            const Edge& edge = v1.outEdges()[i];
+        for(const auto& edge : v1.outEdges()) {
             const Vertex &v2 = edge.second();
             string targetName = v2.property.find("name").asString();
             if(!ui->actionDebugMode->isChecked() && targetName.find("/yarplogger") != string::npos)
@@ -361,14 +370,14 @@ void MainWindow::drawGraph(Graph &graph)
                 if(edge.property.find("type").asString() == "connection") {                    
                     //QGVEdge* gve = scene->addEdge(nodeSet[&v1], nodeSet[&v2],
                     //                               edge.property.find("carrier").asString().c_str());
-                    string lable="";
+                    string lable;
                     if(!ui->actionHideConnectionsLable->isChecked())
                         lable = edge.property.find("carrier").asString();
                     QGVEdge* gve = scene->addEdge((QGVNode*)((GraphicVertex*)&v1)->getGraphicItem(),
                                                   (QGVNode*)((GraphicVertex*)&v2)->getGraphicItem(),
                                                    lable.c_str());
                     QosStyle::PacketPriorityLevel level=
-                            (QosStyle::PacketPriorityLevel)edge.property.find("FromPacketPriority").asInt();
+                            (QosStyle::PacketPriorityLevel)edge.property.find("FromPacketPriority").asInt32();
                     switch (level) {
                     case QosStyle::PacketPriorityNormal:
                         gve->setAttribute("color", "white");
@@ -410,7 +419,7 @@ void MainWindow::edgeContextMenu(QGVEdge* edge) {
         return;
 
     //yInfo()<<"edge clicked!";
-    //Context menu exemple
+    //Context menu example
     QMenu menu(edge->label());
     menu.addSeparator();
     menu.addAction(tr("Information..."));
@@ -434,7 +443,7 @@ void MainWindow::edgeContextMenu(QGVEdge* edge) {
 
 void MainWindow::nodeContextMenu(QGVNode *node)
 {
-    GraphicVertex* v = (GraphicVertex*) node->getVertex();
+    auto* v = (GraphicVertex*) node->getVertex();
     yAssert(v != nullptr);
     if(v->property.find("type").asString() == "port")
         onNodeContextMenuPort(node, v);
@@ -472,11 +481,11 @@ void MainWindow::onSubGraphContextMenuProcess(QGVSubGraph *sgraph) {
 
 void MainWindow::onAbout() {
     QMessageBox::about(this, "yarpviz (version 2.0.0)",
-                       "A graphical tool for a graphical tool for profiling and visualizing Yarp network!\n\nAuthors:\n\t-Ali Paikan <ali.paikan@iit.it>\n\t-Nicolò Genesio <nicolo.genesio@iit.it>");
+                       "A graphical tool for a graphical tool for profiling and visualizing Yarp network!");
 }
 
 void MainWindow::onNodeContextMenuPort(QGVNode *node, GraphicVertex* vertex) {
-    //Context menu exemple
+    //Context menu example
     QMenu menu(node->label());
     menu.addSeparator();
     menu.addAction(tr("Information..."));
@@ -548,7 +557,7 @@ void MainWindow::onProfileYarpNetwork() {
     for(size_t i=0; i<ports.size(); i++) {
         NetworkProfiler::PortDetails info;
         std::string portname = ports[i].find("name").asString();
-        std::string msg = string("Cheking ") + portname + "...";
+        std::string msg = string("Checking ") + portname + "...";
         messages.append(QString(msg.c_str()));
         if(NetworkProfiler::getPortDetails(portname, info))
             portsInfo.push_back(info);
@@ -602,11 +611,10 @@ void MainWindow::onHighlightLoops() {
         std::uniform_int_distribution<int> udistH(128, 255);
         std::uniform_int_distribution<int> udistL(0, 128);
 
-        for(size_t i=0; i<scc.size(); i++) {
-            pvertex_set &vset = scc[i];
+        for(auto& vset : scc) {
             QColor color(udistH(randengine), udistL(randengine), udistH(randengine));
-            for(size_t j=0; j<vset.size(); j++)
-                vset[j]->property.put("color", color.name().toStdString().c_str());
+            for(auto& j : vset)
+                j->property.put("color", color.name().toStdString());
         }
     }
     else {
@@ -664,7 +672,7 @@ void MainWindow::populateTreeWidget(){
             {
                 continue;
             }
-            NodeWidgetItem *moduleItem =  new NodeWidgetItem(moduleParentItem, (*itr), MODULE);
+            auto* moduleItem =  new NodeWidgetItem(moduleParentItem, (*itr), MODULE);
             moduleItem->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable );
             moduleItem->check(true);
         }
@@ -676,12 +684,12 @@ void MainWindow::populateTreeWidget(){
             }
             if(!ui->actionDebugMode->isChecked() && (portName.find("/log") != string::npos || portName.find("/yarplogger") != string::npos ))
                 continue;
-            NodeWidgetItem *portItem =  new NodeWidgetItem(portParentItem, (*itr), PORT);
+            auto* portItem =  new NodeWidgetItem(portParentItem, (*itr), PORT);
             portItem->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable );
             portItem->check(true);
         }
         else if(dynamic_cast<MachineVertex*>(*itr)) {
-            NodeWidgetItem *machineItem =  new NodeWidgetItem(machinesParentItem, (*itr), MACHINE);
+            auto* machineItem =  new NodeWidgetItem(machinesParentItem, (*itr), MACHINE);
             machineItem->setFlags( /*Qt::ItemIsSelectable | */Qt::ItemIsEnabled /*| Qt::ItemIsUserCheckable */);
             machineItem->check(true);
         }
@@ -755,8 +763,8 @@ void MainWindow::onNodesTreeItemClicked(QTreeWidgetItem *item, int column){
     QList<QGraphicsItem *> items = scene->selectedItems();
     foreach( QGraphicsItem *item, items )
         item->setSelected(false);
-    GraphicVertex* yv = (GraphicVertex*)((NodeWidgetItem*)(item))->getVertex();
-    QGraphicsItem* graphicItem = (QGraphicsItem*) yv->getGraphicItem();
+    auto* yv = (GraphicVertex*)((NodeWidgetItem*)(item))->getVertex();
+    auto* graphicItem = (QGraphicsItem*) yv->getGraphicItem();
     if(graphicItem) {
         graphicItem->setSelected(true);
         if(state){
@@ -812,8 +820,8 @@ void MainWindow::onExportConList() {
     const pvertex_set& vertices = currentGraph->vertices();
     for(itr = vertices.begin(); itr!=vertices.end(); itr++) {
         const Vertex &v1 = (**itr);
-        for(size_t i=0; i<v1.outEdges().size(); i++) {
-            Edge& edge = (Edge&) v1.outEdges()[i];
+        for(const auto& i : v1.outEdges()) {
+            Edge& edge = (Edge&) i;
             const Vertex &v2 = edge.second();
             if(!v1.property.find("hidden").asBool() && !v2.property.find("hidden").asBool()) {
                 if(edge.property.find("type").asString() == "connection") {

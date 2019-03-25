@@ -1,10 +1,20 @@
 /*
-* Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
-* Author: Marco Randazzo
-* Date: June 2015
-* email:   marco.randazzo@iit.it
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #ifdef MSVC
     #define _USE_MATH_DEFINES
@@ -27,17 +37,17 @@ MainWindow::~MainWindow()
     if (mainTimer)
     {
         delete mainTimer;
-        mainTimer = 0;
+        mainTimer = nullptr;
     }
     if (ui)
     {
         delete ui;
-        ui = 0;
+        ui = nullptr;
     }
     if (scene)
     {
         delete scene;
-        scene = 0;
+        scene = nullptr;
     }
 }
 
@@ -187,15 +197,15 @@ void MainWindow::updateMain()
     return;
 }
 
-MainWindow::MainWindow(yarp::os::ResourceFinder rf, yarp::dev::IBattery* p_ibat, QWidget *parent) : QMainWindow(parent),
-    ui(new Ui::MainWindow),
+MainWindow::MainWindow(const yarp::os::ResourceFinder& rf, yarp::dev::IBattery* p_ibat, QWidget *parent) : QMainWindow(parent),
     ibat(p_ibat),
     drv(nullptr),
+    ui(new Ui::MainWindow),
     connected(false),
     enable_ask_info(false),
     voltage(0),
-    charge(0),
-    current(0)
+    current(0),
+    charge(0)
 {
     ui->setupUi(this);
     mainTimer = new QTimer(this);

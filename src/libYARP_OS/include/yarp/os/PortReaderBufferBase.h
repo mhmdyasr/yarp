@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006, 2008 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_PORTREADERBUFFERBASE_H
@@ -9,12 +12,12 @@
 
 #include <yarp/os/PortReader.h>
 
-
-// Defined in this file:
-namespace yarp { namespace os { class PortReaderBufferBase; }}
-
-// Other forward declarations:
-namespace yarp { namespace os { class PortReaderBufferBaseCreator; }}
+// Forward declarations:
+namespace yarp {
+namespace os {
+class PortReaderBufferBaseCreator;
+} // namespace os
+} // namespace yarp
 
 
 namespace yarp {
@@ -34,7 +37,7 @@ public:
 
     void setTargetPeriod(double period);
 
-    yarp::os::ConstString getName() const;
+    std::string getName() const;
 
     unsigned int getMaxBuffer();
 
@@ -46,7 +49,7 @@ public:
 
     int check();
 
-    virtual bool read(yarp::os::ConnectionReader& connection) override;
+    bool read(yarp::os::ConnectionReader& connection) override;
 
     yarp::os::PortReader* readBase(bool& missed, bool cleanup);
 
@@ -69,11 +72,6 @@ public:
 
     // user gives back an object
     void release(void* key);
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 2.3.72
-    void YARP_DEPRECATED setAllowReuse(bool flag = true);
-    void YARP_DEPRECATED release(yarp::os::PortReader* completed);
-#endif // YARP_NO_DEPRECATED
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 private:

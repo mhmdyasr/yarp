@@ -1,7 +1,8 @@
-# Copyright: (C) 2017 Istituto Italiano di Tecnologia (IIT)
-# Authors: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
-# Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 project(rtf_fixturemanager_yarpmanager)
 
@@ -20,6 +21,6 @@ target_link_libraries(rtf_fixturemanager_yarpmanager PRIVATE RTF::RTF
                                                              YARP::YARP_manager)
 
 yarp_install(TARGETS rtf_fixturemanager_yarpmanager
-             EXPORT YARP
-             COMPONENT runtime
+             EXPORT YARP_RTF_plugins
+             COMPONENT YARP_RTF_plugins
              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/rtf)

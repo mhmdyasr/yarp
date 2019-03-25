@@ -1,15 +1,20 @@
-/* 
- * Copyright (C) 2009 RobotCub Consortium
- * Author Lorenzo Natale
- * email:   lorenzo.natale@robotcub.org
- * website: www.robotcub.org
+/*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
  *
- * Modified by: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef FPSSTATS
@@ -29,7 +34,7 @@ public:
     unsigned int iterations;
     double t0;
     double prev;
-    
+
     FpsStats(){
         reset();
     }
@@ -65,7 +70,7 @@ public:
         prev=now;
         iterations++;
     }
-    /*! \brief This function returns the Minimun, Maximum and Average values
+    /*! \brief This function returns the Minimum, Maximum and Average values
         \param av the average value
         \param m the minimum value
         \param M the maximum value

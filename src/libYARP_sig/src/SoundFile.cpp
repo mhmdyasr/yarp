@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/sig/SoundFile.h>
@@ -79,10 +82,10 @@ bool PcmWavHeader::parse_from_file(FILE *fp)
     pcmExtraData.allocate(extra_size);
     fread(&pcmExtraData,extra_size,1,fp);
 
-    //extra chuncks
+    //extra chunks
     fread(&dummyHeader,sizeof(dummyHeader),1,fp);
 
-    while (dummyHeader!=VOCAB4('d','a','t','a'))
+    while (dummyHeader!=yarp::os::createVocab('d','a','t','a'))
     {
         fread(&dummyLength,sizeof(dummyLength),1,fp);
         dummyData.clear();
@@ -104,10 +107,10 @@ void PcmWavHeader::setup_to_write(const Sound& src, FILE *fp)
     int bytes = channels*src.getSamples()*2;
     int align = channels*((bitsPerSample+7)/8);
 
-    wavHeader = VOCAB4('R','I','F','F');
+    wavHeader = yarp::os::createVocab('R','I','F','F');
     wavLength = bytes + sizeof(PcmWavHeader) - 2*sizeof(NetInt32);
-    formatHeader1 = VOCAB4('W','A','V','E');
-    formatHeader2 = VOCAB4('f','m','t',' ');
+    formatHeader1 = yarp::os::createVocab('W','A','V','E');
+    formatHeader2 = yarp::os::createVocab('f','m','t',' ');
     formatLength = sizeof(pcm);
 
     pcm.pcmFormatTag = 1; /* PCM! */
@@ -117,7 +120,7 @@ void PcmWavHeader::setup_to_write(const Sound& src, FILE *fp)
     pcm.pcmBlockAlign = align;
     pcm.pcmBitsPerSample = bitsPerSample;
 
-    dataHeader = VOCAB4('d','a','t','a');
+    dataHeader = yarp::os::createVocab('d','a','t','a');
     dataLength = bytes;
 
 
@@ -170,7 +173,7 @@ bool yarp::sig::file::read(Sound& dest, const char *src)
     result = fread(bytes.get(),bytes.length(),1,fp);
     YARP_UNUSED(result);
 
-    NetInt16 *data = reinterpret_cast<NetInt16*>(bytes.get());
+    auto* data = reinterpret_cast<NetInt16*>(bytes.get());
     int ct = 0;
     for (int i=0; i<samples; i++) {
         for (int j=0; j<channels; j++) {
@@ -196,7 +199,7 @@ bool yarp::sig::file::write(const Sound& src, const char *dest)
     header.setup_to_write(src, fp);
 
     ManagedBytes bytes(header.dataLength);
-    NetInt16 *data = reinterpret_cast<NetInt16*>(bytes.get());
+    auto* data = reinterpret_cast<NetInt16*>(bytes.get());
     int ct = 0;
     int samples = src.getSamples();
     int channels = src.getChannels();
@@ -260,21 +263,21 @@ bool yarp::sig::file::soundStreamReader::close()
 
 size_t yarp::sig::file::soundStreamReader::readBlock(Sound& dest, size_t block_size)
 {
-    int expected_bytes = block_size*(soundInfo.bits/8)*soundInfo.channels;
+    int expected_bytes = (int)(block_size*(soundInfo.bits/8)*soundInfo.channels);
 
     //this probably works only if soundInfo.bits=16
     int expected_words=expected_bytes/(soundInfo.bits/8);
-    NetInt16     *data = new NetInt16 [expected_words];
+    auto* data = new NetInt16 [expected_words];
 
-    int bytes_read = fread(data,1,expected_bytes,fp);
-    int samples_read = bytes_read/(soundInfo.bits/8)/soundInfo.channels;
+    size_t bytes_read = fread(data,1,expected_bytes,fp);
+    size_t samples_read = bytes_read/(soundInfo.bits/8)/soundInfo.channels;
 
-    dest.resize(samples_read,soundInfo.channels);
+    dest.resize((int)samples_read,soundInfo.channels);
     dest.setFrequency(soundInfo.freq);
 
     int ct = 0;
-    for (int i=0; i<samples_read; i++) {
-        for (int j=0; j<soundInfo.channels; j++) {
+    for (size_t i=0; i<samples_read; i++) {
+        for (size_t j=0; j< (size_t) soundInfo.channels; j++) {
             dest.set(data[ct],i,j);
             ct++;
         }
@@ -299,7 +302,7 @@ bool  yarp::sig::file::soundStreamReader::rewind(size_t sample_offset)
         return false;
     }
 
-    fseek(fp,this->soundInfo.data_start_offset+(sample_offset*this->soundInfo.channels*this->soundInfo.bits/2),SEEK_SET);
+    fseek(fp,(long int)(this->soundInfo.data_start_offset+(sample_offset*this->soundInfo.channels*this->soundInfo.bits/2)),SEEK_SET);
     index=sample_offset;
 
     return true;

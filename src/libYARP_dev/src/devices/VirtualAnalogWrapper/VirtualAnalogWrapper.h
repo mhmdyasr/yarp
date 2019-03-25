@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2013 RobotCub Consortium
- * Author: Alberto Cardellino
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_VIRTUALANALOGWRAPPER_VIRTUALANALOGWRAPPER_H
@@ -17,12 +19,12 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Network.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Vocab.h>
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/sig/Vector.h>
-#include <yarp/os/Semaphore.h>
+#include <yarp/os/Mutex.h>
 #include <yarp/dev/Wrapper.h>
 
 #include <yarp/dev/IVirtualAnalogSensor.h>
@@ -70,7 +72,7 @@ namespace yarp{
 class yarp::dev::VirtualAnalogWrapper : public yarp::dev::DeviceDriver, public yarp::os::Thread, public yarp::dev::IMultipleWrapper
 {
 public:
-    VirtualAnalogWrapper() : mMutex(1)
+    VirtualAnalogWrapper() : mMutex()
     {
         lastRecv = 0;
         mIsVerbose=false;
@@ -84,17 +86,17 @@ public:
     }
 
     // DeviceDriver //////////////////////////////////////////////////////////
-    virtual bool open(yarp::os::Searchable& config) override;
-    virtual bool close() override;
+    bool open(yarp::os::Searchable& config) override;
+    bool close() override;
     //////////////////////////////////////////////////////////////////////////
 
     // Thread ////////////////////////////////////////////////////////////////
-    virtual void run() override;
+    void run() override;
     //////////////////////////////////////////////////////////////////////////
 
     // IMultipleWrapper //////////////////////////////////////////////////////
-    virtual bool attachAll(const yarp::dev::PolyDriverList &p) override;
-    virtual bool detachAll() override;
+    bool attachAll(const yarp::dev::PolyDriverList &p) override;
+    bool detachAll() override;
     //////////////////////////////////////////////////////////////////////////
 
     // Utility
@@ -102,7 +104,7 @@ public:
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 protected:
-    yarp::os::Semaphore mMutex;
+    yarp::os::Mutex mMutex;
 
     bool mIsVerbose;
 

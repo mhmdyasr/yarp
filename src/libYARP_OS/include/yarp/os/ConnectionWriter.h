@@ -1,35 +1,44 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_CONNECTIONWRITER_H
 #define YARP_OS_CONNECTIONWRITER_H
 
-#include <yarp/os/ConstString.h>
 #include <yarp/conf/numeric.h>
 
+#include <yarp/os/api.h>
+
+#include <string>
+
 namespace yarp {
-    namespace os {
-        class ConnectionWriter;
-        class ConnectionReader;
-        class PortReader;
-        class PortWriter;
-        class Portable;
-        class SizedWriter;
-        class OutputStream;
-    }
-}
+namespace os {
+class ConnectionReader;
+class PortReader;
+class PortWriter;
+class Portable;
+class SizedWriter;
+class OutputStream;
+} // namespace os
+} // namespace yarp
+
+
+namespace yarp {
+namespace os {
 
 /**
  * An interface for writing to a network connection.
  *
  * @see Port, PortWriter, ConnectionReader
  */
-class YARP_OS_API yarp::os::ConnectionWriter {
+class YARP_OS_API ConnectionWriter
+{
 public:
-
     /**
      * Destructor.
      */
@@ -45,44 +54,87 @@ public:
      * @param data the start of the data block
      * @param len  the length of the data block
      */
-    virtual void appendBlock(const char *data, size_t len) = 0;
+    virtual void appendBlock(const char* data, size_t len) = 0;
 
     /**
      * Send a representation of an integer to the network connection.
      * @param data the integer to send
+     * @warning Unsafe, sizeof(int) is platform dependent. Use appendInt32 instead.
      */
-    virtual void appendInt(int data) = 0;
+    YARP_DEPRECATED_INTERNAL_MSG("Use appendInt32 instead") // Since YARP 3.0.0
+    virtual void appendInt(int data) final
+    {
+        appendInt32(static_cast<std::int32_t>(data));
+    }
+
+    /**
+     * Send a representation of a 8-bit integer to the network connection.
+     * @param data the integer to send
+     */
+    virtual void appendInt8(std::int8_t data) = 0;
+
+    /**
+     * Send a representation of a 16-bit integer to the network connection.
+     * @param data the integer to send
+     */
+    virtual void appendInt16(std::int16_t data) = 0;
+
+    /**
+     * Send a representation of a 32-bit integer to the network connection.
+     * @param data the integer to send
+     */
+    virtual void appendInt32(std::int32_t data) = 0;
 
     /**
      * Send a representation of a 64-bit integer to the network connection.
      * @param data the integer to send
      */
-    virtual void appendInt64(const YARP_INT64& data) = 0;
+    virtual void appendInt64(std::int64_t data) = 0;
 
     /**
      * Send a representation of a floating point number to the network
      * connection.
      *
      * @param data the floating point number to send
+     * @warning Unsafe, sizeof(double) is platform dependent. Use appendFloat64 instead.
      */
-    virtual void appendDouble(double data) = 0;
+    YARP_DEPRECATED_INTERNAL_MSG("Use appendFloat64 instead") // Since YARP 3.0.0
+    virtual void appendDouble(double data)
+    {
+        appendFloat64(static_cast<yarp::conf::float64_t>(data));
+    }
+
+    /**
+     * Send a representation of a 32-bit floating point number to the network
+     * connection.
+     *
+     * @param data the floating point number to send
+     */
+    virtual void appendFloat32(yarp::conf::float32_t data) = 0;
+
+    /**
+     * Send a representation of a 64-bit floating point number to the network
+     * connection.
+     *
+     * @param data the floating point number to send
+     */
+    virtual void appendFloat64(yarp::conf::float64_t data) = 0;
 
     /**
      * Send a character sequence to the network connection.
      * @param str the character sequence to send
      * @param terminate the terminating character to use
      */
-    virtual void appendString(const char *str, int terminate = '\n') = 0;
+    virtual void appendString(const char* str, int terminate = '\n') = 0;
 
     /**
      * Send a block of data to the network connection, without making a copy.
      * If you are not confident that the block of data will remain valid
-     * throughout transmission,
-     * then call ConnectionWriter::appendBlock instead.
+     * throughout transmission, call ConnectionWriter::appendBlock instead.
      * @param data the start of the data block
      * @param len  the length of the data block
      */
-    virtual void appendExternalBlock(const char *data, size_t len) = 0;
+    virtual void appendExternalBlock(const char* data, size_t len) = 0;
 
     /**
      * Check if the connection is text mode.  If it is, you are
@@ -90,14 +142,14 @@ public:
      * representation of your data structure.
      * @return true if the connection is text mode (as opposed to binary)
      */
-    virtual bool isTextMode() = 0;
+    virtual bool isTextMode() const = 0;
 
     /**
      * Check if the connection is bare mode.  If it is, you are
      * encouraged to omit type information from your serialization.
      * @return true if the connection is bare
      */
-    virtual bool isBareMode() = 0;
+    virtual bool isBareMode() const = 0;
 
     /**
      * If you can easily determine how many blocks there are in a message,
@@ -106,7 +158,7 @@ public:
      * @param argc Number of blocks
      * @param argv An array of integers, giving the length of each block
      */
-    virtual void declareSizes(int argc, int *argv) = 0;
+    virtual void declareSizes(int argc, int* argv) = 0;
 
     /**
      * This sets a handler to deal with replies to the message.  The
@@ -121,7 +173,7 @@ public:
      * This is useful for local communication, to bypass
      * serialization.
      */
-    virtual void setReference(Portable *obj) = 0;
+    virtual void setReference(Portable* obj) = 0;
 
 
     /**
@@ -139,13 +191,13 @@ public:
      * @return true if the writer is valid.  A writer may be invalid
      * if a connection has closed.
      */
-    virtual bool isValid() = 0;
+    virtual bool isValid() const = 0;
 
     /**
      * @return true if the writer is active.  Writers may become inactive
      * if the connection they are associated with breaks.
      */
-    virtual bool isActive() = 0;
+    virtual bool isActive() const = 0;
 
     /**
      * @return true if the writer encountered an error.  Writers can
@@ -153,7 +205,7 @@ public:
      * protocols like UDP/Multicast, where losses are not unexpected,
      * this error flag will be reset for the next incoming message.
      */
-    virtual bool isError() = 0;
+    virtual bool isError() const = 0;
 
 
     /**
@@ -176,11 +228,12 @@ public:
      * @return a buffer if one is present.
      *
      */
-    virtual SizedWriter *getBuffer() = 0;
+    virtual SizedWriter* getBuffer() const = 0;
 
 
-    virtual void appendRawString(const ConstString& str) {
-        appendInt(str.length());
+    virtual void appendRawString(const std::string& str)
+    {
+        appendInt32(static_cast<std::int32_t>(str.length()));
         appendBlock((char*)str.c_str(), str.length());
     }
 
@@ -190,9 +243,12 @@ public:
      * to a buffer which can be read later using getBuffer()
      *
      */
-    static ConnectionWriter *createBufferedConnectionWriter();
+    static ConnectionWriter* createBufferedConnectionWriter();
 
     static bool writeToStream(PortWriter& portable, OutputStream& os);
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_CONNECTIONWRITER_H

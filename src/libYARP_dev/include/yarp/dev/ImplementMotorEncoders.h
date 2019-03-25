@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IMPLEMENTMOTORENCODERS_H
@@ -20,8 +22,7 @@ class YARP_dev_API yarp::dev::ImplementMotorEncoders: public IMotorEncoders
 protected:
     IMotorEncodersRaw *iMotorEncoders;
     void *helper;
-    double *temp;
-    double *temp2;
+    int nj;
 
 
     /**
@@ -50,22 +51,22 @@ public:
 
     virtual ~ImplementMotorEncoders();
 
-    virtual bool getNumberOfMotorEncoders(int *num) override;
+    bool getNumberOfMotorEncoders(int *num) override;
 
-    virtual bool resetMotorEncoder(int m) override;
-    virtual bool resetMotorEncoders() override;
-    virtual bool setMotorEncoder(int m, const double val) override;
-    virtual bool setMotorEncoders(const double *vals) override;
-    virtual bool setMotorEncoderCountsPerRevolution(int m, const double cpr) override;
-    virtual bool getMotorEncoderCountsPerRevolution(int m, double *cpr) override;
-    virtual bool getMotorEncoder(int m, double *v) override;
-    virtual bool getMotorEncodersTimed(double *encs, double *time) override;
-    virtual bool getMotorEncoderTimed(int m, double *v, double *t) override;
-    virtual bool getMotorEncoders(double *encs) override;
-    virtual bool getMotorEncoderSpeed(int m, double *spds) override;
-    virtual bool getMotorEncoderSpeeds(double *spds) override;
-    virtual bool getMotorEncoderAcceleration(int m, double *spds) override;
-    virtual bool getMotorEncoderAccelerations(double *accs) override;
+    bool resetMotorEncoder(int m) override;
+    bool resetMotorEncoders() override;
+    bool setMotorEncoder(int m, const double val) override;
+    bool setMotorEncoders(const double *vals) override;
+    bool setMotorEncoderCountsPerRevolution(int m, const double cpr) override;
+    bool getMotorEncoderCountsPerRevolution(int m, double *cpr) override;
+    bool getMotorEncoder(int m, double *v) override;
+    bool getMotorEncodersTimed(double *encs, double *time) override;
+    bool getMotorEncoderTimed(int m, double *v, double *t) override;
+    bool getMotorEncoders(double *encs) override;
+    bool getMotorEncoderSpeed(int m, double *spds) override;
+    bool getMotorEncoderSpeeds(double *spds) override;
+    bool getMotorEncoderAcceleration(int m, double *spds) override;
+    bool getMotorEncoderAccelerations(double *accs) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTMOTORENCODERS_H

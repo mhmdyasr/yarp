@@ -1,36 +1,37 @@
 /*
- * Copyright (C) 2011, 2016 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick <paulfitz@alum.mit.edu>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_SHAREDLIBRARY_H
 #define YARP_OS_SHAREDLIBRARY_H
 
 #include <yarp/os/api.h>
-#include <yarp/conf/system.h>
+
+#include <string>
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+namespace yarp {
+namespace os {
+namespace impl {
+class SharedLibraryImpl;
+}
+} // namespace os
+} // namespace yarp
+#endif // DOXYGEN_SHOULD_SKIP_THIS
 
 namespace yarp {
-    namespace os {
-        class SharedLibrary;
-        namespace impl {
-            class SharedLibraryImpl;
-        }
-    }
-}
-
-#ifndef YARP_WRAP_STL_STRING
-# include <string>
-namespace yarp { namespace os { typedef std::string ConstString; }}
-#else
-namespace yarp { namespace os { class ConstString; }}
-#endif
+namespace os {
 
 /**
  * Low-level wrapper for loading shared libraries (DLLs) and accessing
  * symbols within it.
  */
-class YARP_OS_API yarp::os::SharedLibrary {
+class YARP_OS_API SharedLibrary
+{
 public:
     /**
      * Initialize, without opening a shared library yet.
@@ -42,7 +43,10 @@ public:
      *
      * @param filename name of file (see open method)
      */
-    SharedLibrary(const char *filename);
+    SharedLibrary(const char* filename);
+
+    SharedLibrary(const SharedLibrary&) = delete;
+    SharedLibrary& operator=(const SharedLibrary&) = delete;
 
     /**
      * Destructor.  Will close() if needed.
@@ -58,7 +62,7 @@ public:
      * @param filename name of file.
      * @return true on success
      */
-    bool open(const char *filename);
+    bool open(const char* filename);
 
     /**
      * Shared library no longer needed, unload if not in use elsewhere.
@@ -72,12 +76,12 @@ public:
      *
      * @return the most recent error
      */
-    ConstString error();
+    std::string error();
 
     /**
      * Look up a symbol in the shared library.
      */
-    void *getSymbol(const char *symbolName);
+    void* getSymbol(const char* symbolName);
 
     /**
      * Check if the shared library is valid
@@ -86,11 +90,13 @@ public:
      */
     bool isValid() const;
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 private:
     yarp::os::impl::SharedLibraryImpl* const implementation;
-
-    SharedLibrary(const SharedLibrary&); // Not implemented
-    SharedLibrary& operator=(const SharedLibrary&); // Not implemented
+#endif // DOXYGEN_SHOULD_SKIP_THIS
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_SHAREDLIBRARY_H

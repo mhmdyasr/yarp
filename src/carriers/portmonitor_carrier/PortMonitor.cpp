@@ -1,13 +1,18 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/Log.h>
-#include <yarp/os/ConstString.h>
+#include <string>
 #include <yarp/os/ResourceFinder.h>
+#include <yarp/os/ConnectionState.h>
+#include <yarp/os/Route.h>
+#include <yarp/os/Contactable.h>
+#include <yarp/os/Network.h>
 
 #include "PortMonitor.h"
 
@@ -29,7 +34,7 @@ bool PortMonitor::configure(yarp::os::ConnectionState& proto)
     if (!group) return false;
 
     Property options;
-    options.fromString(proto.getSenderSpecifier().c_str());
+    options.fromString(proto.getSenderSpecifier());
     options.put("source", sourceName);
     options.put("destination", portName);
     options.put("sender_side",
@@ -44,30 +49,30 @@ bool PortMonitor::configureFromProperty(yarp::os::Property& options) {
     if(binder) delete binder;
     binder = nullptr;
 
-    ConstString script = options.check("type", Value("lua")).asString();
-    ConstString filename = options.check("file", Value("modifier")).asString();
-    ConstString constraint = options.check("constraint", Value("")).asString();
+    std::string script = options.check("type", Value("lua")).asString();
+    std::string filename = options.check("file", Value("modifier")).asString();
+    std::string constraint = options.check("constraint", Value("")).asString();
     // context is used to find the script files
-    ConstString context = options.check("context", Value("")).asString();
+    std::string context = options.check("context", Value("")).asString();
 
     // check which monitor should be used
     if((binder = MonitorBinding::create(script.c_str())) == nullptr)
     {
-         yError("Currently only \'lua\' script and \'dll\' object is supported by portmonitor");
+         yError(R"(Currently only 'lua' script and 'dll' object is supported by portmonitor)");
          return false;
     }
 
     // set the acceptance constraint
     binder->setAcceptConstraint(constraint.c_str());
 
-    ConstString strFile = filename;
+    std::string strFile = filename;
 
     if(script != "dll")
     {
         yarp::os::ResourceFinder rf;
         rf.setDefaultContext(context.c_str());
         rf.configure(0, nullptr);
-        strFile = rf.findFile(filename.c_str());
+        strFile = rf.findFile(filename);
         if(strFile == "")
             strFile = rf.findFile(filename+".lua");
     }
@@ -80,8 +85,8 @@ bool PortMonitor::configureFromProperty(yarp::os::Property& options) {
     info.put("type", script);
     info.put("source", options.find("source").asString());
     info.put("destination", options.find("destination").asString());
-    info.put("sender_side",  options.find("sender_side").asInt());
-    info.put("receiver_side",options.find("receiver_side").asInt());
+    info.put("sender_side",  options.find("sender_side").asInt32());
+    info.put("receiver_side",options.find("receiver_side").asInt32());
     info.put("carrier", options.find("carrier").asString());
 
     PortMonitor::lock();
@@ -98,7 +103,7 @@ void PortMonitor::setCarrierParams(const yarp::os::Property& params)
     PortMonitor::unlock();
 }
 
-void PortMonitor::getCarrierParams(yarp::os::Property& params)
+void PortMonitor::getCarrierParams(yarp::os::Property& params) const
 {
     if(!bReady) return;
     PortMonitor::lock();
@@ -152,8 +157,8 @@ bool PortMonitor::acceptIncomingData(yarp::os::ConnectionReader& reader)
             return false;
 
         // When data is read here using the reader passed to this functions,
-        // then it wont be available for modifyIncomingData(). Thus, we write
-        // it to a dumy connection and pass it to the modifyOutgoingData() using
+        // then it won't be available for modifyIncomingData(). Thus, we write
+        // it to a dummy connection and pass it to the modifyOutgoingData() using
         // localReader.
         // localReader points to a connection reader which contains
         // either the original or modified data.
@@ -173,7 +178,7 @@ bool PortMonitor::acceptIncomingData(yarp::os::ConnectionReader& reader)
 }
 
 
-yarp::os::PortWriter& PortMonitor::modifyOutgoingData(yarp::os::PortWriter& writer)
+const yarp::os::PortWriter& PortMonitor::modifyOutgoingData(const yarp::os::PortWriter& writer)
 {
     if(!bReady) return writer;
 
@@ -183,13 +188,13 @@ yarp::os::PortWriter& PortMonitor::modifyOutgoingData(yarp::os::PortWriter& writ
 
     PortMonitor::lock();
     thing.reset();
-    thing.setPortWriter(&writer);
+    thing.setPortWriter(const_cast<yarp::os::PortWriter*>(&writer));
     yarp::os::Things& result = binder->updateData(thing);
     PortMonitor::unlock();
     return *result.getPortWriter();
 }
 
-bool PortMonitor::acceptOutgoingData(yarp::os::PortWriter& writer)
+bool PortMonitor::acceptOutgoingData(const yarp::os::PortWriter& writer)
 {
     if(!bReady) return false;
 
@@ -199,7 +204,7 @@ bool PortMonitor::acceptOutgoingData(yarp::os::PortWriter& writer)
 
     PortMonitor::lock();
     yarp::os::Things thing;
-    thing.setPortWriter(&writer);
+    thing.setPortWriter(const_cast<yarp::os::PortWriter*>(&writer));
     bool result = binder->acceptData(thing);
     PortMonitor::unlock();
     return result;
@@ -244,9 +249,9 @@ ElectionOf<PortMonitorGroup>& PortMonitor::getPeers() {
 bool PortMonitorGroup::acceptIncomingData(PortMonitor *source)
 {
     //bool accept = true;
-    for (PeerRecord<PortMonitor>::iterator it = peerSet.begin(); it!=peerSet.end(); it++)
+    for (auto& it : peerSet)
     {
-        PortMonitor *peer = it->first;
+        PortMonitor *peer = it.first;
         if(peer != source)
         {
             peer->lock();

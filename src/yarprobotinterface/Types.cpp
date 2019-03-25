@@ -1,10 +1,20 @@
 /*
- * Copyright (C) 2012 Istituto Italiano di Tecnologia (IIT)
- * Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #include "Types.h"
 #include "Param.h"
@@ -18,9 +28,8 @@
 
 bool RobotInterface::hasParam(const RobotInterface::ParamList &list, const std::string& name)
 {
-    for (RobotInterface::ParamList::const_iterator it = list.begin(); it != list.end(); ++it) {
-        const RobotInterface::Param &param = *it;
-        if (!name.compare(param.name())) {
+    for (const auto& param : list) {
+        if (name == param.name()) {
             return true;
         }
     }
@@ -29,21 +38,19 @@ bool RobotInterface::hasParam(const RobotInterface::ParamList &list, const std::
 
 std::string RobotInterface::findParam(const RobotInterface::ParamList &list, const std::string& name)
 {
-    for (RobotInterface::ParamList::const_iterator it = list.begin(); it != list.end(); ++it) {
-        const RobotInterface::Param &param = *it;
-        if (!name.compare(param.name())) {
+    for (const auto& param : list) {
+        if (name == param.name()) {
             return param.value();
         }
     }
     yError() << "Param" << name << "not found";
-    return std::string();
+    return {};
 }
 
 bool RobotInterface::hasGroup(const RobotInterface::ParamList &list, const std::string& name)
 {
-    for (RobotInterface::ParamList::const_iterator it = list.begin(); it != list.end(); ++it) {
-        const RobotInterface::Param &param = *it;
-        if (param.isGroup() && !name.compare(param.name())) {
+    for (const auto& param : list) {
+        if (param.isGroup() && name == param.name()) {
             return true;
         }
     }
@@ -52,24 +59,23 @@ bool RobotInterface::hasGroup(const RobotInterface::ParamList &list, const std::
 
 std::string RobotInterface::findGroup(const RobotInterface::ParamList &list, const std::string& name)
 {
-    for (RobotInterface::ParamList::const_iterator it = list.begin(); it != list.end(); ++it) {
-        const RobotInterface::Param &param = *it;
-        if (param.isGroup() && !name.compare(param.name())) {
+    for (const auto& param : list) {
+        if (param.isGroup() && name == param.name()) {
             return param.value();
         }
     }
     yError() << "Param" << name << "not found";
-    return std::string();
+    return {};
 }
 
 RobotInterface::ParamList RobotInterface::mergeDuplicateGroups(const RobotInterface::ParamList &list)
 {
     RobotInterface::ParamList params = list;
-    for (RobotInterface::ParamList::iterator it1 = params.begin(); it1 != params.end(); ++it1) {
+    for (auto it1 = params.begin(); it1 != params.end(); ++it1) {
         RobotInterface::Param &param1 = *it1;
-        for (RobotInterface::ParamList::iterator it2 = it1 + 1; it2 != params.end(); ) {
+        for (auto it2 = it1 + 1; it2 != params.end(); ) {
             RobotInterface::Param &param2 = *it2;
-            if (param1.name().compare(param2.name()) == 0) {
+            if (param1.name() == param2.name()) {
                 if (!param1.isGroup() || !param2.isGroup()) {
                     yFatal() << "Duplicate parameter \"" << param1.name() << "\" found and at least one of them is not a group.";
                 }
@@ -86,17 +92,17 @@ RobotInterface::ParamList RobotInterface::mergeDuplicateGroups(const RobotInterf
 
 RobotInterface::ActionPhase RobotInterface::StringToActionPhase(const std::string &phase)
 {
-    if (!phase.compare("startup")) {
+    if (phase == "startup") {
         return RobotInterface::ActionPhaseStartup;
-    } else if (!phase.compare("run")) {
+    } else if (phase == "run") {
         return RobotInterface::ActionPhaseRun;
-    } else if (!phase.compare("interrupt1")) {
+    } else if (phase == "interrupt1") {
         return RobotInterface::ActionPhaseInterrupt1;
-    } else if (!phase.compare("interrupt2")) {
+    } else if (phase == "interrupt2") {
         return RobotInterface::ActionPhaseInterrupt2;
-    } else if (!phase.compare("interrupt3")) {
+    } else if (phase == "interrupt3") {
         return RobotInterface::ActionPhaseInterrupt3;
-    } else if (!phase.compare("shutdown")) {
+    } else if (phase == "shutdown") {
         return RobotInterface::ActionPhaseShutdown;
     }
     return RobotInterface::ActionPhaseReserved;
@@ -119,7 +125,7 @@ std::string RobotInterface::ActionPhaseToString(RobotInterface::ActionPhase acti
         return std::string("shutdown");
     case RobotInterface::ActionPhaseUnknown:
     default:
-        return std::string();
+        return {};
     }
 }
 
@@ -131,19 +137,19 @@ void RobotInterface::operator>>(const std::stringstream &sstream, RobotInterface
 
 RobotInterface::ActionType RobotInterface::StringToActionType(const std::string &type)
 {
-    if (!type.compare("configure")) {
+    if (type == "configure") {
         return RobotInterface::ActionTypeConfigure;
-    } else if (!type.compare("calibrate")) {
+    } else if (type == "calibrate") {
         return RobotInterface::ActionTypeCalibrate;
-    } else if (!type.compare("attach")) {
+    } else if (type == "attach") {
         return RobotInterface::ActionTypeAttach;
-    } else if (!type.compare("abort")) {
+    } else if (type == "abort") {
         return RobotInterface::ActionTypeAbort;
-    } else if (!type.compare("detach")) {
+    } else if (type == "detach") {
         return RobotInterface::ActionTypeDetach;
-    } else if (!type.compare("park")) {
+    } else if (type == "park") {
         return RobotInterface::ActionTypePark;
-    } else if (!type.compare("custom")) {
+    } else if (type == "custom") {
         return RobotInterface::ActionTypeCustom;
     } else {
         return RobotInterface::ActionTypeUnknown;
@@ -169,7 +175,7 @@ std::string RobotInterface::ActionTypeToString(RobotInterface::ActionType action
         return std::string("custom");
     case RobotInterface::ActionTypeUnknown:
     default:
-        return std::string();
+        return {};
     }
 }
 

@@ -1,9 +1,20 @@
 /*
- * Copyright (C) 2015-2017 Istituto Italiano di Tecnologia (IIT)
- * Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #include "InputCallback.h"
 #include "TextureBuffer.h"
@@ -63,7 +74,7 @@ void InputCallback::onRead(ImageType &img)
         if(i % 2) {
             // Check if this is a RED pixel (255,0,0)
             // lossy carriers will change the value, so we look for a
-            // pixel close enought to the one we are looking for
+            // pixel close enough to the one we are looking for
             if (pix[0] <= 5 && pix[1] >= 250 && pix[2] <= 5) {
                 found = i;
                 break;
@@ -131,9 +142,9 @@ void InputCallback::onRead(ImageType &img)
         yarp::os::Bottle b;
         yarp::os::BufferedPort<ImageType>::getEnvelope(b);
         if (b.size() == 3) {
-            roll += OVR::DegreeToRad(static_cast<float>(b.get(0).asDouble()));
-            pitch += OVR::DegreeToRad(static_cast<float>(b.get(1).asDouble()));
-            yaw += OVR::DegreeToRad(static_cast<float>(b.get(2).asDouble()));
+            roll += OVR::DegreeToRad(static_cast<float>(b.get(0).asFloat64()));
+            pitch += OVR::DegreeToRad(static_cast<float>(b.get(1).asFloat64()));
+            yaw += OVR::DegreeToRad(static_cast<float>(b.get(2).asFloat64()));
         }
         //yDebug() << b.toString() << roll << pitch << yaw;
 

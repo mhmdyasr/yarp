@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Authors: Alberto Cardellino
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "DepthImage.h"
@@ -42,7 +44,7 @@ bool DepthImageConverter::getparam(yarp::os::Property& params)
 
 bool DepthImageConverter::accept(yarp::os::Things& thing)
 {
-    Image* img = thing.cast_as< Image >();
+    auto* img = thing.cast_as<Image>();
     if(img == nullptr) {
         printf("DepthImageConverter: expected type FlexImage but got wrong data type!\n");
         return false;
@@ -53,25 +55,25 @@ bool DepthImageConverter::accept(yarp::os::Things& thing)
         return true;
     }
 
-    printf("DepthImageConverter: expected %s, got %s, not doing any convertion!\n", yarp::os::Vocab::decode(VOCAB_PIXEL_MONO_FLOAT).c_str(), yarp::os::Vocab::decode(img->getPixelCode()).c_str() );
+    printf("DepthImageConverter: expected %s, got %s, not doing any conversion!\n", yarp::os::Vocab::decode(VOCAB_PIXEL_MONO_FLOAT).c_str(), yarp::os::Vocab::decode(img->getPixelCode()).c_str() );
     return false;
 }
 
 yarp::os::Things& DepthImageConverter::update(yarp::os::Things& thing)
 {
-    Image* img = thing.cast_as< Image >();
-    inMatrix = (float **) img->getRawImage();
+    auto* img = thing.cast_as<Image>();
+    inMatrix = reinterpret_cast<float **> (img->getRawImage());
 
     outImg.setPixelCode(VOCAB_PIXEL_MONO);
     outImg.setPixelSize(1);
     outImg.resize(img->width(), img->height());
 
     outImg.zero();
-    float *inPixels = (float *)img->getRawImage();
+    auto* inPixels = reinterpret_cast<float *> (img->getRawImage());
     unsigned char *pixels = outImg.getRawImage();
-    for(int h=0; h<img->height(); h++)
+    for(size_t h=0; h<img->height(); h++)
     {
-        for(int w=0; w<img->width(); w++)
+        for(size_t w=0; w<img->width(); w++)
         {
             float inVal = inPixels[w + (h * img->width())];
             if (inVal != inVal /* NaN */ || inVal < min || inVal > max) {

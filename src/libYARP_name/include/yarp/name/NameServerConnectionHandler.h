@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2009 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARPDB_NAMESERVERCONNECTIONHANDLER_INC
@@ -14,13 +16,14 @@
 #include <yarp/os/ConnectionWriter.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Contact.h>
-#include <yarp/os/ConstString.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Value.h>
 
 #include <yarp/name/NameService.h>
 
 #include <cstdio>
+#include <string>
+#include <algorithm>
 
 namespace yarp {
     namespace name {
@@ -42,7 +45,7 @@ public:
         this->service = service;
     }
 
-    virtual bool read(yarp::os::ConnectionReader& reader) override {
+    bool read(yarp::os::ConnectionReader& reader) override {
         return apply(reader,0/*NULL*/);
     }
 
@@ -56,7 +59,7 @@ public:
         remote = reader.getRemoteContact();
         if (lock) service->lock();
         service->apply(cmd,reply,event,remote);
-        for (int i=0; i<event.size(); i++) {
+        for (size_t i=0; i<event.size(); i++) {
             yarp::os::Bottle *e = event.get(i).asList();
             if (e!=0/*NULL*/) {
                 service->onEvent(*e);
@@ -70,25 +73,15 @@ public:
             //printf("sending reply %s\n", reply.toString().c_str());
             if (reply.get(0).toString()=="old") {
                 // support old name server messages
-                for (int i=1; i<reply.size(); i++) {
+                for (size_t i=1; i<reply.size(); i++) {
                     yarp::os::Value& v = reply.get(i);
                     if (v.isList()) {
-                        yarp::os::ConstString si = v.asList()->toString();
-                        char *buf = (char*)si.c_str();
-                        size_t idx = 0;
                         // old name server messages don't have quotes,
                         // so we strip them.
-                        for (size_t i=0; i<si.length(); i++) {
-                            if (si[i]!='\"') {
-                                if (idx!=i) {
-                                    buf[idx] = si[i];
-                                }
-                                idx++;
-                            }
-                        }
-                        yarp::os::ConstString so(si.c_str(),idx);
-                        if (so.length()>0) {
-                            writer->appendString(so.c_str());
+                        std::string si = v.asList()->toString();
+                        si.erase(std::remove(si.begin(), si.end(), '\"'), si.end());
+                        if (si.length()>0) {
+                            writer->appendString(si.c_str());
                         }
                     } else {
                         if (v.isString()) {

@@ -1,17 +1,16 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/graph.h>
 
 using namespace yarp::manager;
 
-Graph::Graph() { }
+Graph::Graph() = default;
 
 Graph::~Graph()
 {
@@ -35,7 +34,7 @@ bool Graph::removeNode(Node* node)
 {
     __CHECK_NULLPTR(node);
 
-    NodePIterator itr = nodes.find(node->getLabel());
+    auto itr = nodes.find(node->getLabel());
     if(itr == nodes.end())
         return true;
     delete (*itr).second;
@@ -46,7 +45,7 @@ bool Graph::removeNode(Node* node)
 
 bool Graph::removeNode(const char* szLabel)
 {
-    NodePIterator itr = nodes.find(szLabel);
+    auto itr = nodes.find(szLabel);
     if(itr == nodes.end())
         return true;
     delete (*itr).second;
@@ -78,7 +77,7 @@ void Graph::setVisited(bool vis)
 
 Node* Graph::getNode( const char* szLabel)
 {
-    NodePIterator itr = nodes.find(szLabel);
+    auto itr = nodes.find(szLabel);
     if(itr != nodes.end())
         return (*itr).second;
     return nullptr;
@@ -132,7 +131,7 @@ bool Graph::hasNode(Node* node)
 {
     __CHECK_NULLPTR(node);
 
-    NodePIterator itr = nodes.find(node->getLabel());
+    auto itr = nodes.find(node->getLabel());
     if(itr == nodes.end())
         return false;
     return true;
@@ -148,7 +147,7 @@ bool Graph::hasNode(const char* szLabel)
 
 Node* Graph::getNodeAt(int index)
 {
-    NodePIterator itr = nodes.begin();
+    auto itr = nodes.begin();
     for(int i=0; i<index; i++)
         itr++;
     return (*itr).second;

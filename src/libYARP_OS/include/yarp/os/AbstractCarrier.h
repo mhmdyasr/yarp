@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_ABSTRACTCARRIER_H
@@ -9,11 +12,6 @@
 
 #include <yarp/os/Carrier.h>
 #include <yarp/os/NetType.h>
-
-
-// Defined in this file:
-namespace yarp { namespace os { class AbstractCarrier; }}
-
 
 namespace yarp {
 namespace os {
@@ -26,86 +24,85 @@ namespace os {
 class YARP_OS_API AbstractCarrier : public Carrier
 {
 public:
-
-/** @{ */
-
-    // Documented in Carrier
-    virtual Carrier *create() override = 0;
+    /** @{ */
 
     // Documented in Carrier
-    virtual ConstString getName() override = 0;
+    Carrier* create() const override = 0;
 
     // Documented in Carrier
-    virtual bool checkHeader(const yarp::os::Bytes& header) override = 0;
+    std::string getName() const override = 0;
 
     // Documented in Carrier
-    virtual void setParameters(const yarp::os::Bytes& header) override;
+    bool checkHeader(const yarp::os::Bytes& header) override = 0;
 
     // Documented in Carrier
-    virtual void getHeader(const yarp::os::Bytes& header) override = 0;
+    void setParameters(const yarp::os::Bytes& header) override;
 
     // Documented in Carrier
-    virtual void setCarrierParams(const yarp::os::Property& params) override;
-    // Documented in Carrier
-    virtual void getCarrierParams(yarp::os::Property& params) override;
-
-/** @} */
-/** @{ */
+    void getHeader(yarp::os::Bytes& header) const override = 0;
 
     // Documented in Carrier
-    virtual bool isConnectionless() override;
+    void setCarrierParams(const yarp::os::Property& params) override;
     // Documented in Carrier
-    virtual bool supportReply() override;
-    // Documented in Carrier
-    virtual bool canAccept() override;
-    // Documented in Carrier
-    virtual bool canOffer() override;
-    // Documented in Carrier
-    virtual bool isTextMode() override;
-    // Documented in Carrier
-    virtual bool requireAck() override;
-    // Documented in Carrier
-    virtual bool canEscape() override;
-    // Documented in Carrier
-    virtual bool isLocal() override;
-    // Documented in Carrier
-    virtual ConstString toString() override;
+    void getCarrierParams(yarp::os::Property& params) const override;
+
+    /** @} */
+    /** @{ */
 
     // Documented in Carrier
-    virtual bool isActive() override;
+    bool isConnectionless() const override;
+    // Documented in Carrier
+    bool supportReply() const override;
+    // Documented in Carrier
+    bool canAccept() const override;
+    // Documented in Carrier
+    bool canOffer() const override;
+    // Documented in Carrier
+    bool isTextMode() const override;
+    // Documented in Carrier
+    bool requireAck() const override;
+    // Documented in Carrier
+    bool canEscape() const override;
+    // Documented in Carrier
+    bool isLocal() const override;
+    // Documented in Carrier
+    std::string toString() const override;
 
-/** @} */
-/** @{ */
+    // Documented in Carrier
+    bool isActive() const override;
+
+    /** @} */
+    /** @{ */
     // Sender methods
 
     // Documented in Carrier
-    virtual bool prepareSend(ConnectionState& proto) override;
+    bool prepareSend(ConnectionState& proto) override;
     // Documented in Carrier
-    virtual bool sendHeader(ConnectionState& proto) override;
+    bool sendHeader(ConnectionState& proto) override;
     // Documented in Carrier
-    virtual bool expectReplyToHeader(ConnectionState& proto) override;
+    bool expectReplyToHeader(ConnectionState& proto) override;
     // Documented in Carrier
     virtual bool sendIndex(ConnectionState& proto, SizedWriter& writer);
 
-/** @} */
-/** @{ */
+    /** @} */
+    /** @{ */
     // Receiver methods
 
     // Documented in Carrier
-    virtual bool expectExtraHeader(ConnectionState& proto) override;
+    bool expectExtraHeader(ConnectionState& proto) override;
     // Documented in Carrier
-    virtual bool respondToHeader(ConnectionState& proto) override = 0; // left abstract, no good default
+    bool respondToHeader(ConnectionState& proto) override = 0; // left abstract, no good default
     // Documented in Carrier
-    virtual bool expectIndex(ConnectionState& proto) override;
+    bool expectIndex(ConnectionState& proto) override;
     // Documented in Carrier
-    virtual bool expectSenderSpecifier(ConnectionState& proto) override;
+    bool expectSenderSpecifier(ConnectionState& proto) override;
     // Documented in Carrier
-    virtual bool sendAck(ConnectionState& proto) override;
+    bool sendAck(ConnectionState& proto) override;
     // Documented in Carrier
-    virtual bool expectAck(ConnectionState& proto) override;
+    bool expectAck(ConnectionState& proto) override;
 
-/** @} */
-/** @{ */
+    /** @} */
+    /** @{ */
     // some default implementations of protocol phases used by
     // certain YARP carriers
 
@@ -144,29 +141,27 @@ public:
      */
     void writeYarpInt(int n, ConnectionState& proto);
 
-/** @} */
+    /** @} */
 
 protected:
+    /** @{ */
 
-/** @{ */
-
-    int getSpecifier(const Bytes& b);
-    void createStandardHeader(int specifier, const yarp::os::Bytes& header);
+    int getSpecifier(const Bytes& b) const;
+    void createStandardHeader(int specifier, yarp::os::Bytes& header) const;
 
     // Documented in Carrier
-    virtual bool write(ConnectionState& proto, SizedWriter& writer) override;
+    bool write(ConnectionState& proto, SizedWriter& writer) override;
 
     bool sendConnectionStateSpecifier(ConnectionState& proto);
     bool sendSenderSpecifier(ConnectionState& proto);
 
-/** @} */
-/** @{ */
+    /** @} */
+    /** @{ */
 
     static int interpretYarpNumber(const yarp::os::Bytes& b);
-    static void createYarpNumber(int x, const yarp::os::Bytes& header);
+    static void createYarpNumber(int x, yarp::os::Bytes& header);
 
-/** @} */
-
+    /** @} */
 };
 
 } // namespace os

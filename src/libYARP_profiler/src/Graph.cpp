@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/Log.h>
@@ -37,7 +38,7 @@ Edge::Edge(const Edge& edge)
     secondVertex = edge.secondVertex;
 }
 
-Edge::~Edge() { }
+Edge::~Edge() = default;
 
 const Vertex& Edge::first() const {
     return *firstVertex;
@@ -61,12 +62,9 @@ bool Edge::operator == (const yarp::profiler::graph::Edge &edge) const {
 Vertex::Vertex(const yarp::os::Property &prop) : property(prop) { }
 
 
-Vertex::Vertex(const Vertex &vertex)
-    : property(vertex.property),
-      outs(vertex.outs),
-      ins(vertex.ins) { }
+Vertex::Vertex(const Vertex &vertex) = default;
 
-Vertex::~Vertex() { }
+Vertex::~Vertex() = default;
 
 void Vertex::insertOuts(const yarp::profiler::graph::Edge& edge) {
     if( find(outs.begin(), outs.end(), edge) != outs.end()) return;
@@ -94,8 +92,7 @@ bool Vertex::operator<(const Vertex &v1) const {
  *
  */
 
-Graph::Graph() {
-}
+Graph::Graph() = default;
 
 /*
 Graph::Graph(yarp::profiler::graph::Graph& graph) {
@@ -104,7 +101,7 @@ Graph::Graph(yarp::profiler::graph::Graph& graph) {
 */
 
 Graph::~Graph() {
-    pvertex_iterator itr = mVertices.begin();
+    auto itr = mVertices.begin();
     for(;itr!=mVertices.end(); itr++) {
         Vertex* v = *itr;
         delete v;
@@ -156,7 +153,7 @@ void Graph::insertEdge(const pvertex_iterator vi1, const pvertex_iterator vi2,
 }
 
 const pvertex_iterator Graph::find(const Vertex &vertex) {
-    pvertex_iterator itr = mVertices.begin();
+    auto itr = mVertices.begin();
     for(;itr!=mVertices.end(); itr++) {
         if(*(*itr) == vertex)
             return itr;
@@ -166,7 +163,7 @@ const pvertex_iterator Graph::find(const Vertex &vertex) {
 }
 
 size_t Graph::size() {
-    pvertex_iterator itr = mVertices.begin();
+    auto itr = mVertices.begin();
     size_t count = 0;
     for(; itr!=mVertices.end(); itr++)
         count += (**itr).degree();
@@ -179,7 +176,7 @@ size_t Graph::nodesCount() {
 
 
 void Graph::clear() {
-    pvertex_iterator itr = mVertices.begin();
+    auto itr = mVertices.begin();
     for(; itr!=mVertices.end(); itr++)
         delete *itr;
     mVertices.clear();
@@ -206,20 +203,20 @@ void strongConnect(Vertex* v,
         if(!w.property.check("index")) {
             // Successor w has not yet been visited; recurse on it
             strongConnect((Vertex*)(&w), scc, S, index);
-            int lowlink = std::min(v->property.find("lowlink").asInt(),
-                                   w.property.find("lowlink").asInt());
+            int lowlink = std::min(v->property.find("lowlink").asInt32(),
+                                   w.property.find("lowlink").asInt32());
             v->property.put("lowlink", lowlink);
 
         } else if (w.property.check("onStack")) {
             // Successor w is in stack S and hence in the current SCC
-            int lowlink = std::min(v->property.find("lowlink").asInt(),
-                                   w.property.find("index").asInt());
+            int lowlink = std::min(v->property.find("lowlink").asInt32(),
+                                   w.property.find("index").asInt32());
             v->property.put("lowlink", lowlink);
         }
     } // end successors
 
     // If v is a root node, pop the stack and generate an SCC
-    if(v->property.find("lowlink").asInt() == v->property.find("index").asInt()) {
+    if(v->property.find("lowlink").asInt32() == v->property.find("index").asInt32()) {
         // start a new strongly connected component
         pvertex_set vset;
         Vertex* w;

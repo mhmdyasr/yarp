@@ -1,9 +1,9 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_MANAGER_LOGICRESOURCE
@@ -26,8 +26,8 @@ public:
     Platform(const char* szName);
     Platform(const Platform &res);
     virtual ~Platform();
-    virtual Node* clone(void) override;
-    virtual bool satisfy(GenericResource* resource) override;
+    Node* clone(void) override;
+    bool satisfy(GenericResource* resource) override;
 
     void setDistribution(const char* str) { if(str) strDistrib = str; }
     void setRelease(const char* str) { if(str) strRelease = str; }
@@ -59,8 +59,8 @@ public:
     const char* getReply(void) { return strReply.c_str(); }
     void setTimeout(double t) { timeout = t; }
     double getTimeout(void) { return timeout; }
-    virtual Node* clone(void) override;
-    virtual bool satisfy(GenericResource* resource) override;
+    Node* clone(void) override;
+    bool satisfy(GenericResource* resource) override;
 
 protected:
 

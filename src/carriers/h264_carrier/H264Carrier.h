@@ -1,7 +1,9 @@
 /*
- * Copyright: (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Author: Valentina Gaggero <valentina.gaggero@iit.it>
- * Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef H264CARRIER_INC
@@ -21,7 +23,7 @@ namespace yarp {
 /**
  *
  * A carrier for receiving frames compressed in h264 over rtp.
- * This carrier uses gstreamer libraries to read rtp packets and to decode the h264 stream.
+ * This carrier uses gstreamer libraries (libgstreamer1.0-dev and libgstreamer-plugins-base1.0-dev) to read rtp packets and to decode the h264 stream.
  *
  * Use this carrier in the following way:
  * - suppose there is a server that streams video frames to IP x.x.x.x and to port p:
@@ -39,84 +41,83 @@ namespace yarp {
 class yarp::os::H264Carrier : public Carrier
 {
 private:
-    bool decoderIsRunning;
-    yarp::os::ConstString envelope;
+    std::string envelope;
     h264Decoder_cfgParamters cfgParams;
 public:
     H264Carrier()
-    {;}
+    {}
 
-    virtual Carrier *create() override
+    Carrier *create() const override
     {
         return new H264Carrier();
     }
 
-    virtual ConstString getName() override;
+    std::string getName() const override;
 
-    virtual bool isConnectionless() override;
+    bool isConnectionless() const override;
 
-    virtual bool canAccept() override;
+    bool canAccept() const override;
 
-    virtual bool canOffer() override;
+    bool canOffer() const override;
 
-    virtual bool isTextMode() override;
+    bool isTextMode() const override;
 
-    virtual bool canEscape() override;
+    bool canEscape() const override;
 
-    virtual void handleEnvelope(const yarp::os::ConstString& envelope) override;
+    void handleEnvelope(const std::string& envelope) override;
 
-    virtual bool requireAck() override;
+    bool requireAck() const override;
 
-    virtual bool supportReply() override;
+    bool supportReply() const override;
 
-    virtual bool isLocal() override;
+    bool isLocal() const override;
 
     // this is important - flips expected flow of messages
-    virtual bool isPush() override;
+    bool isPush() const override;
 
-    virtual ConstString toString() override;
+    std::string toString() const override;
 
-    virtual void getHeader(const Bytes& header) override;
+    void getHeader(Bytes& header) const override;
 
-    virtual bool checkHeader(const Bytes& header) override;
+    bool checkHeader(const Bytes& header) override;
 
-    virtual void setParameters(const Bytes& header) override;
+    void setParameters(const Bytes& header) override;
 
 
     // Now, the initial hand-shaking
 
-    virtual bool prepareSend(ConnectionState& proto) override;
+    bool prepareSend(ConnectionState& proto) override;
 
-    virtual bool sendHeader(ConnectionState& proto) override;
+    bool sendHeader(ConnectionState& proto) override;
 
-    virtual bool expectSenderSpecifier(ConnectionState& proto) override;
+    bool expectSenderSpecifier(ConnectionState& proto) override;
 
-    virtual bool expectExtraHeader(ConnectionState& proto) override;
+    bool expectExtraHeader(ConnectionState& proto) override;
 
     bool respondToHeader(ConnectionState& proto) override;
 
-    virtual bool expectReplyToHeader(ConnectionState& proto) override;
+    bool expectReplyToHeader(ConnectionState& proto) override;
 
-    virtual bool isActive() override;
+    bool isActive() const override;
 
 
     // Payload time!
 
-    virtual bool write(ConnectionState& proto, SizedWriter& writer) override;
+    bool write(ConnectionState& proto, SizedWriter& writer) override;
 
-    virtual bool reply(ConnectionState& proto, SizedWriter& writer) override;
+    bool reply(ConnectionState& proto, SizedWriter& writer) override;
 
     virtual bool sendIndex(ConnectionState& proto, SizedWriter& writer);
 
-    virtual bool expectIndex(ConnectionState& proto) override;
+    bool expectIndex(ConnectionState& proto) override;
 
-    virtual bool sendAck(ConnectionState& proto) override;
+    bool sendAck(ConnectionState& proto) override;
 
-    virtual bool expectAck(ConnectionState& proto) override;
+    bool expectAck(ConnectionState& proto) override;
 
-    virtual ConstString getBootstrapCarrierName() override;
+    std::string getBootstrapCarrierName() const override;
 
-    virtual yarp::os::Face* createFace(void) override;
+    yarp::os::Face* createFace(void) const override;
 
 };
 

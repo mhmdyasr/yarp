@@ -1,160 +1,99 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_PING_H
 #define YARP_OS_PING_H
 
+#include <yarp/os/api.h>
+
 #include <cmath>
-#include <yarp/os/ConstString.h>
+#include <string>
+
 
 namespace yarp {
-    namespace os {
-        class Stat;
-        class ConnectResult;
-        class RateResult;
-        class Ping;
-    }
-}
+namespace os {
 
-class yarp::os::Stat {
+class Stat
+{
 public:
-    Stat() {
-        clear();
-    }
+    Stat();
 
-    void clear() {
-        tot = tot2 = 0;
-        ct = at = 0;
-        mu = 0;
-        sigma = 1e10;
-        // infinity would be better, but methods of getting infinity
-        // require awkward dependencies
-    }
+    void clear();
 
-    void add(double val) {
-        tot += val;
-        tot2 += val*val;
-        ct++;
-    }
+    void add(double val);
+    void add(const Stat& alt);
+    double mean();
+    double deviation();
+    double count();
 
-    void add(const Stat& alt) {
-        tot += alt.tot;
-        tot2 += alt.tot2;
-        ct += alt.ct;
-    }
-
-    double mean() {
-        compute();
-        return mu;
-    }
-
-    double deviation() {
-        compute();
-        return sigma;
-    }
-
-    double count() {
-        return ct;
-    }
-
-    operator double() {
-        return mean();
-    }
+    operator double();
 
 private:
-    void compute() {
-        if (ct!=at) {
-            // ct must be > 0
-            mu = tot/ct;
-            sigma = tot2/ct - mu*mu;
-            if (sigma<0) sigma = 0; // round-off error
-            sigma = sqrt(sigma);
-            at = ct;
-        }
-    }
+    void compute();
 
-    int ct, at;
-    double tot, tot2;
-    double mu, sigma;
+    int ct;
+    int at;
+    double tot;
+    double tot2;
+    double mu;
+    double sigma;
 };
 
-class yarp::os::ConnectResult {
+class ConnectResult
+{
 public:
-    Stat totalTime;  // total includes name server lookups
+    Stat totalTime; // total includes name server lookups
     Stat targetTime; // all time involving the target port
 
-    void clear() {
-        totalTime.clear();
-        targetTime.clear();
-    }
-
-    void add(const ConnectResult& alt) {
-        totalTime.add(alt.totalTime);
-        targetTime.add(alt.targetTime);
-    }
+    void clear();
+    void add(const ConnectResult& alt);
 };
 
-class yarp::os::RateResult {
+class RateResult
+{
 public:
     Stat period;
 
-    void clear() {
-        period.clear();
-    }
-
-    void add(const RateResult& alt) {
-        period.add(alt.period);
-    }
+    void clear();
+    void add(const RateResult& alt);
 };
 
 
 /**
- *
  * Measure performance of a YARP port.  Can also be partially used for
  * non-YARP ports with a compatible protocol.
- *
  */
-class yarp::os::Ping {
+class YARP_OS_API Ping
+{
 public:
-    Ping(const char *target = nullptr) {
-        if (target != nullptr) {
-            setTarget(target);
-        }
-    }
+    Ping(const char* target = nullptr);
 
-    bool setTarget(const char *target) {
-        this->target = target;
-        return true;
-    }
+    bool setTarget(const char* target);
 
     void connect();
 
     void sample();
 
-    void clear() {
-        lastConnect.clear();
-        accumConnect.clear();
-    }
-
-    ConnectResult getLastConnect() {
-        return lastConnect;
-    }
-
-    ConnectResult getAverageConnect() {
-        return accumConnect;
-    }
+    void clear();
+    ConnectResult getLastConnect();
+    ConnectResult getAverageConnect();
 
     void report();
 
-    static ConstString renderTime(double t, int space, int decimal);
+    static std::string renderTime(double t, int space, int decimal);
 
 private:
-    ConstString target;
+    std::string target;
     ConnectResult lastConnect, accumConnect;
 };
 
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_PING_H

@@ -1,10 +1,11 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef FfmpegGrabber_INC
 #define FfmpegGrabber_INC
@@ -12,8 +13,8 @@
 #include "avpreamble.h"
 
 extern "C" {
-#include <avcodec.h>
-#include <avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 }
 
 /*
@@ -71,35 +72,35 @@ public:
         memset(&packet,0,sizeof(packet));
     }
 
-    virtual bool open(yarp::os::Searchable & config) override;
+    bool open(yarp::os::Searchable & config) override;
 
-    virtual bool close() override;
+    bool close() override;
 
-    virtual bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb> & image) override;
+    bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb> & image) override;
 
-    virtual bool getSound(yarp::sig::Sound& sound) override;
+    bool getSound(yarp::sig::Sound& sound) override;
 
-    virtual int height() const override { return m_h; }
+    int height() const override { return m_h; }
 
-    virtual int width() const override { return m_w; }
+    int width() const override { return m_w; }
 
     virtual bool getAudioVisual(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image,
                                 yarp::sig::Sound& sound) override;
 
 
-    virtual bool hasAudio() override {
+    bool hasAudio() override {
         return _hasAudio;
     }
 
-    virtual bool hasVideo() override {
+    bool hasVideo() override {
         return _hasVideo;
     }
 
-    virtual bool startRecording() override {
+    bool startRecording() override {
         return true;
     }
 
-    virtual bool stopRecording() override {
+    bool stopRecording() override {
         return true;
     }
 
@@ -121,7 +122,7 @@ protected:
     bool imageSync;
 
     /** Uri of the images a grabber produces. */
-    yarp::os::ConstString m_uri;
+    std::string m_uri;
 
     /** Width of the images a grabber produces. */
     int m_w;

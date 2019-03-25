@@ -1,14 +1,16 @@
 /*
- * Copyright (C) 2011 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- *          Lorenzo Natale <lorenzo.natale@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IIMPEDANCECONTROL_H
 #define YARP_DEV_IIMPEDANCECONTROL_H
 
 #include <yarp/dev/api.h>
+#include <yarp/os/Vocab.h>
 
 namespace yarp{
     namespace dev {
@@ -112,9 +114,9 @@ public:
 };
 
 //interface
-#define VOCAB_IMPEDANCE VOCAB4('i','i','m','p')
-#define VOCAB_ICONTROLMODE VOCAB4('i','c','m','d')
-#define VOCAB_POSITION VOCAB3('p','o','s')
-#define VOCAB_VELOCITY VOCAB3('v','e','l')
+constexpr yarp::conf::vocab32_t VOCAB_IMPEDANCE    = yarp::os::createVocab('i','i','m','p');
+
+constexpr yarp::conf::vocab32_t VOCAB_POSITION     = yarp::os::createVocab('p','o','s');
+constexpr yarp::conf::vocab32_t VOCAB_VELOCITY     = yarp::os::createVocab('v','e','l');
 
 #endif // YARP_DEV_IIMPEDANCECONTROL_H

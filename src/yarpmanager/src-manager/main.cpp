@@ -1,11 +1,19 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "mainwindow.h"
@@ -16,7 +24,7 @@
 #include <yarp/os/Os.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/ResourceFinder.h>
-#include <yarp/os/ConstString.h>
+#include <string>
 #include <yarp/os/ResourceFinderOptions.h>
 
 
@@ -105,20 +113,20 @@ int main(int argc, char *argv[])
     yarp::os::getcwd(current_dir,cur_dir_max_size);
     config.put("current_dir", current_dir);
 
-    std::string inifile=rf.findFile("from").c_str();
-    std::string inipath="";
-    size_t lastSlash=inifile.rfind("/");
+    std::string inifile=rf.findFile("from");
+    std::string inipath;
+    size_t lastSlash=inifile.rfind('/');
     if (lastSlash!=std::string::npos){
         inipath=inifile.substr(0, lastSlash+1);
     }else{
-        lastSlash=inifile.rfind("\\");
+        lastSlash=inifile.rfind('\\');
         if (lastSlash!=std::string::npos){
             inipath=inifile.substr(0, lastSlash+1);
         }
     }
 
     if(!config.check("ymanagerini_dir")){
-        config.put("ymanagerini_dir", inipath.c_str());
+        config.put("ymanagerini_dir", inipath);
     }
 
     yarp::os::Bottle appPaths;
@@ -132,10 +140,10 @@ int main(int argc, char *argv[])
 //        yarp::os::Bottle appPaths2=rf.findPaths("scripts");
 //        std::cout << "app path : " << appPaths.toString()<< std::endl;
         QString appPathsStr="";
-        for (int ind=0; ind < appPaths.size(); ++ind){
+        for (size_t ind=0; ind < appPaths.size(); ++ind){
             appPathsStr += (appPaths.get(ind).asString() + ";").c_str();
         }
-        for (int ind=0; ind < appPaths2.size(); ++ind){
+        for (size_t ind=0; ind < appPaths2.size(); ++ind){
             appPathsStr += (appPaths2.get(ind).asString() + ";").c_str();
         }
         if (add_curr_dir)
@@ -150,7 +158,7 @@ int main(int argc, char *argv[])
        appPaths=rf.findPaths("modules");
        //std::cout << "mod path : " << appPaths.toString()<< std::endl;
        QString modPathsStr="";
-       for (int ind=0; ind < appPaths.size(); ++ind){
+       for (size_t ind=0; ind < appPaths.size(); ++ind){
            modPathsStr += (appPaths.get(ind).asString() + ";").c_str();
        }
        if (add_curr_dir)
@@ -164,7 +172,7 @@ int main(int argc, char *argv[])
        appPaths=rf.findPaths("resources");
        //std::cout << "res path : " << appPaths.toString()<< std::endl;
        QString resPathsStr="";
-       for (int ind=0; ind < appPaths.size(); ++ind){
+       for (size_t ind=0; ind < appPaths.size(); ++ind){
            resPathsStr += (appPaths.get(ind).asString() + ";").c_str();
        }
        if (add_curr_dir)
@@ -178,7 +186,7 @@ int main(int argc, char *argv[])
        appPaths=rf.findPaths("templates/applications");
       // std::cout << "templ path : " << appPaths.toString()<< std::endl;
        QString templPathsStr="";
-       for (int ind=0; ind < appPaths.size(); ++ind){
+       for (size_t ind=0; ind < appPaths.size(); ++ind){
             templPathsStr += (appPaths.get(ind).asString() + ";").c_str();
        }
        if (add_curr_dir)

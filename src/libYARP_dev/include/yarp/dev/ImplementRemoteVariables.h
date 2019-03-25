@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IMPLEMENTREMOTEVARIABLES_H
@@ -47,11 +49,11 @@ public:
 
     virtual ~ImplementRemoteVariables();
 
-    virtual bool getRemoteVariable(yarp::os::ConstString key, yarp::os::Bottle& val) override;
+    bool getRemoteVariable(std::string key, yarp::os::Bottle& val) override;
 
-    virtual bool setRemoteVariable(yarp::os::ConstString key, const yarp::os::Bottle& val) override;
+    bool setRemoteVariable(std::string key, const yarp::os::Bottle& val) override;
 
-    virtual bool getRemoteVariablesList(yarp::os::Bottle* listOfKeys) override;
+    bool getRemoteVariablesList(yarp::os::Bottle* listOfKeys) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTREMOTEVARIABLES_H

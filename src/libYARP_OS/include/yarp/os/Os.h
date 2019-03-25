@@ -1,8 +1,11 @@
 /*
-* Copyright (C) 2009 RobotCub Consortium
-* Author: Lorenzo Natale
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #ifndef YARP_OS_OS_H
 #define YARP_OS_OS_H
@@ -14,53 +17,13 @@
 
 namespace yarp {
 namespace os {
-#ifndef YARP_NO_DEPRECATED // Since YARP 2.3.70
-enum
-{
-    YARP_SIGTERM,
-    YARP_SIGINT
-};
-
-typedef void (*YarpSignalHandler)(int);
-/**
- * @brief Portable wrapper for the signal() function.
- *
- * Attach a function handler to a signal.
- *
- * @param signum signal number (e.g. SIGTERM/SIGINT) to handle
- * @param sighandler handler function
- * @deprecated Since YARP 2.3.70. Use std::signal().
- */
-YARP_DEPRECATED_MSG("Use std::signal")
-YARP_OS_API YarpSignalHandler signal(int signum, YarpSignalHandler sighandler);
-#endif // YARP_NO_DEPRECATED
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 2.3.70
-/**
- * @brief Portable wrapper for the exit() function.
- *
- * @deprecated Since YARP 2.3.70. Use std::exit().
- */
-YARP_OS_DEPRECATED_API_MSG("Use std::exit()")
-void exit(int exit_code); // FIXME noreturn
-#endif // YARP_NO_DEPRECATED
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 2.3.70
-/**
- * @brief Portable wrapper for the abort() function.
- *
- * @deprecated Since YARP 2.3.70. Use std::abort().
- */
-YARP_OS_DEPRECATED_API_MSG("Use std::abort()")
-void abort(bool verbose = false);
-#endif // YARP_NO_DEPRECATED
 
 /**
  * @brief Portable wrapper for the getenv() function.
  *
  * Get an environment variable.
  *
- * @param[in] var string that containt the environment variable name
+ * @param[in] var string that contains the environment variable name
  * @return the value corresponding to the envarionment variable v
  */
 YARP_OS_API const char* getenv(const char* var);
@@ -73,25 +36,6 @@ YARP_OS_API const char* getenv(const char* var);
  * @return the process id (pid)
  */
 YARP_OS_API int getpid();
-
-/**
- * @brief Portable wrapper for the setprogname() function.
- *
- * Set the program name.
- *
- * @param[in] progname the program name
- */
-YARP_OS_API void setprogname(const char* progname);
-
-/**
- * @brief Portable wrapper for the getprogname() function.
- *
- * Get the program name.
- *
- * @param[out] progname the program name
- * @param size The size of the @c progname array
- */
-YARP_OS_API void getprogname(char* progname, size_t size);
 
 /**
  * @brief Portable wrapper for the gethostname() function.
@@ -171,24 +115,8 @@ YARP_OS_API int stat(const char* path);
  * @param[out] buf The buffer where the path is copied
  * @param size The size of the buffer
  * @return a pointer to @c buf or NULL on failure
- *
- * @since YARP 2.3.70
  */
 YARP_OS_API char* getcwd(char* buf, size_t size);
-
-/**
- * @brief Portable wrapper for the fork() function.
- *
- * Create a child process.
- *
- * @return On success, the PID of the child process is returned in the
- * parent, and 0 is returned in the child. On failure, -1 is returned
- * in the parent, no child process is created, and errno is set
- * appropriately
- *
- * @since YARP 2.3.70
- */
-YARP_OS_API int fork(void);
 
 /**
  * @brief Toggle the OS energy saving feature
@@ -200,9 +128,50 @@ YARP_OS_API int fork(void);
  * feature, which put the process into an idle state.
  *
  * @param enable true if the energy saving mode should be enabled. False otherwise.
- * @since YARP 2.3.72
  */
 YARP_OS_API void setEnergySavingModeState(bool enabled);
+
+
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
+/**
+ * @brief Portable wrapper for the setprogname() function.
+ *
+ * Set the program name.
+ *
+ * @param[in] progname the program name
+ * @deprecated Since YARP 3.0.0.
+ */
+YARP_DEPRECATED
+YARP_OS_API void setprogname(const char* progname);
+
+/**
+ * @brief Portable wrapper for the getprogname() function.
+ *
+ * Get the program name.
+ *
+ * @param[out] progname the program name
+ * @param size The size of the @c progname array
+ * @deprecated Since YARP 3.0.0. Use yarp::os::SystemInfo::getProcessInfo().name.
+ */
+YARP_DEPRECATED_MSG("This method is deprecated. Use yarp::os::SystemInfo::getProcessInfo().name instead")
+YARP_OS_API void getprogname(char* progname, size_t size);
+
+/**
+ * @brief Portable wrapper for the fork() function.
+ *
+ * Create a child process.
+ *
+ * @return On success, the PID of the child process is returned in the
+ * parent, and 0 is returned in the child. On failure, -1 is returned
+ * in the parent, no child process is created, and errno is set
+ * appropriately
+ *
+ * @deprecated since YARP 3.0.0
+ */
+YARP_OS_DEPRECATED_API_MSG("Use native fork()")
+int fork(void);
+#endif // YARP_NO_DEPRECATED
+
 
 } // namespace os
 } // namespace yarp

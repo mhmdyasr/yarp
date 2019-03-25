@@ -1,44 +1,47 @@
 /*
- * Copyright (C) 2013 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_CONNECTIONSTATE_H
 #define YARP_OS_CONNECTIONSTATE_H
 
-#include <yarp/os/Route.h>
-#include <yarp/os/TwoWayStream.h>
-#include <yarp/os/Log.h>
-#include <yarp/os/Contactable.h>
+#include <yarp/os/api.h>
 
 namespace yarp {
-    namespace os {
-        class ConnectionState;
-        class Connection;
-    }
-}
+namespace os {
 
+// Forward declarations
+class Connection;
+class InputStream;
+class OutputStream;
+class Portable;
+class Route;
+class TwoWayStream;
+class Log;
+class Contactable;
 
 /**
  *
  * The basic state of a connection - route, streams in use, etc.
  *
  */
-class YARP_OS_API yarp::os::ConnectionState {
+class YARP_OS_API ConnectionState
+{
 public:
-
     /**
      * Destructor.
      */
-    virtual ~ConnectionState() {
-    }
+    virtual ~ConnectionState() {}
 
     /**
      * Get the route associated with this connection. A route is
      * a triplet of the source port, destination port, and carrier.
      */
-    virtual const Route& getRoute() = 0;
+    virtual const Route& getRoute() const = 0;
 
     /**
      * Set the route associated with this connection.
@@ -70,13 +73,13 @@ public:
     /**
      * Access a connection-specific logging object.
      */
-    virtual Log& getLog() = 0;
+    virtual Log& getLog() const = 0;
 
     /**
      * Extract a name for the sender, if the connection
      * type supports that.
      */
-    virtual ConstString getSenderSpecifier() = 0;
+    virtual std::string getSenderSpecifier() const = 0;
 
     /**
      * Access the streams associated with the connection.
@@ -89,44 +92,46 @@ public:
      * The connection becomes the owner of these streams.
      * Any streams already in use are closed and destroyed.
      */
-    virtual void takeStreams(TwoWayStream *streams) = 0;
+    virtual void takeStreams(TwoWayStream* streams) = 0;
 
     /**
      * Take ownership of the streams associated with
      * the connection.  The connection will never touch
      * them again after this call.
      */
-    virtual TwoWayStream *giveStreams() = 0;
+    virtual TwoWayStream* giveStreams() = 0;
 
     /**
      * Give a direct pointer to an object being sent
      * on the connection.  This allows serialization
      * to be bypassed for local connections.
      */
-    virtual void setReference(yarp::os::Portable *ref) = 0;
+    virtual void setReference(yarp::os::Portable* ref) = 0;
 
     /**
      * Check whether streams are in a good state.
      */
-    virtual bool checkStreams() = 0;
+    virtual bool checkStreams() const = 0;
 
     /**
      * Get the port associated with the connection.
      */
-    virtual Contactable *getContactable() = 0;
+    virtual Contactable* getContactable() const = 0;
 
 
     /**
      * Shorthand for getOutputStream()
      */
-    OutputStream& os() {
+    OutputStream& os()
+    {
         return getOutputStream();
     }
 
     /**
      * Shorthand for getInputStream()
      */
-    InputStream& is() {
+    InputStream& is()
+    {
         return getInputStream();
     }
 
@@ -134,7 +139,11 @@ public:
     /**
      * Read the envelope associated with the current message.
      */
-    virtual const ConstString& getEnvelope() = 0;
+    virtual const std::string& getEnvelope() const = 0;
 };
+
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_CONNECTIONSTATE_H

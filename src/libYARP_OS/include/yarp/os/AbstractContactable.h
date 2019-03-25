@@ -1,19 +1,16 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_ABSTRACTCONTACTABLE_H
 #define YARP_OS_ABSTRACTCONTACTABLE_H
 
-#include <yarp/os/UnbufferedContactable.h>
 #include <yarp/os/Port.h>
-
-
-// Defined in this file:
-namespace yarp { namespace os { class AbstractContactable; }}
-
+#include <yarp/os/UnbufferedContactable.h>
 
 namespace yarp {
 namespace os {
@@ -31,10 +28,6 @@ class YARP_OS_API AbstractContactable : public UnbufferedContactable
 {
 
 public:
-#ifndef YARP_NO_DEPRECATED // since YARP 2.3.72
-    using Contactable::open;
-#endif // YARP_NO_DEPRECATED
-
     /**
      * Get the concrete Port being used for communication.
      */
@@ -46,121 +39,121 @@ public:
     virtual const Port& asPort() const = 0;
 
     // Documented in Contactable
-    virtual bool open(const ConstString& name) override;
+    bool open(const std::string& name) override;
 
     // Documented in Contactable
-    virtual bool open(const Contact& contact, bool registerName = true) override;
+    bool open(const Contact& contact, bool registerName = true) override;
 
     // Documented in Contactable
-    virtual bool addOutput(const ConstString& name) override;
+    bool addOutput(const std::string& name) override;
 
     // Documented in Contactable
-    virtual bool addOutput(const ConstString& name, const ConstString& carrier) override;
+    bool addOutput(const std::string& name, const std::string& carrier) override;
 
     // Documented in Contactable
-    virtual bool addOutput(const Contact& contact) override;
+    bool addOutput(const Contact& contact) override;
 
     // Documented in Contactable
-    virtual void close() override;
+    void close() override;
 
     // Documented in Contactable
-    virtual void interrupt() override;
+    void interrupt() override;
 
     // Documented in Contactable
-    virtual void resume() override;
+    void resume() override;
 
     // Documented in Contactable
-    virtual Contact where() const override;
+    Contact where() const override;
 
     // Documented in Contactable
-    virtual ConstString getName() const override;
+    std::string getName() const override;
 
     // Documented in Contactable
-    virtual bool setEnvelope(PortWriter& envelope) override;
+    bool setEnvelope(PortWriter& envelope) override;
 
     // Documented in Contactable
-    virtual bool getEnvelope(PortReader& envelope) override;
+    bool getEnvelope(PortReader& envelope) override;
 
     // Documented in Contactable
-    virtual int getInputCount() override;
+    int getInputCount() override;
 
     // Documented in Contactable
-    virtual int getOutputCount() override;
+    int getOutputCount() override;
 
     // Documented in Contactable
-    virtual void getReport(PortReport& reporter) override;
+    void getReport(PortReport& reporter) override;
 
     // Documented in Contactable
-    virtual void setReporter(PortReport& reporter) override;
+    void setReporter(PortReport& reporter) override;
 
     // Documented in Contactable
-    virtual void resetReporter() override;
+    void resetReporter() override;
 
     // Documented in Contactable
-    virtual bool isWriting() override;
+    bool isWriting() override;
 
     // Documented in Contactable
-    virtual void setReader(PortReader& reader) override;
+    void setReader(PortReader& reader) override;
 
     // Documented in Contactable
-    virtual void setAdminReader(PortReader& reader) override;
+    void setAdminReader(PortReader& reader) override;
 
     // Documented in Contactable
-    virtual void setInputMode(bool expectInput) override;
+    void setInputMode(bool expectInput) override;
 
     // Documented in Contactable
-    virtual void setOutputMode(bool expectOutput) override;
+    void setOutputMode(bool expectOutput) override;
 
     // Documented in Contactable
-    virtual void setRpcMode(bool expectRpc) override;
+    void setRpcMode(bool expectRpc) override;
 
     // Documented in Contactable
-    virtual Type getType() override;
+    Type getType() override;
 
     // Documented in Contactable
-    virtual void promiseType(const Type& typ) override;
+    void promiseType(const Type& typ) override;
 
     // Documented in Contactable
-    virtual Property* acquireProperties(bool readOnly) override;
+    Property* acquireProperties(bool readOnly) override;
 
     // Documented in Contactable
-    virtual void releaseProperties(Property* prop) override;
+    void releaseProperties(Property* prop) override;
 
     // Documented in UnbufferedContactable
-    virtual bool write(PortWriter& writer,
-                       PortWriter* callback = nullptr) const override;
+    virtual bool write(const PortWriter& writer,
+                       const PortWriter* callback = nullptr) const override;
 
     // Documented in UnbufferedContactable
-    virtual bool write(PortWriter& writer,
+    virtual bool write(const PortWriter& writer,
                        PortReader& reader,
-                       PortWriter* callback = nullptr) const override;
+                       const PortWriter* callback = nullptr) const override;
 
     // Documented in UnbufferedContactable
-    virtual bool read(PortReader& reader, bool willReply = false) override;
+    bool read(PortReader& reader, bool willReply = false) override;
 
     // Documented in UnbufferedContactable
-    virtual bool reply(PortWriter& writer) override;
+    bool reply(PortWriter& writer) override;
 
     // Documented in UnbufferedContactable
-    virtual bool replyAndDrop(PortWriter& writer) override;
+    bool replyAndDrop(PortWriter& writer) override;
 
     // Documented in Contactable
-    virtual void includeNodeInName(bool flag) override;
+    void includeNodeInName(bool flag) override;
 
     // Documented in Contactable
-    virtual bool setCallbackLock(yarp::os::Mutex *mutex = nullptr) override;
+    bool setCallbackLock(yarp::os::Mutex* mutex = nullptr) override;
 
     // Documented in Contactable
-    virtual bool removeCallbackLock() override;
+    bool removeCallbackLock() override;
 
     // Documented in Contactable
-    virtual bool lockCallback() override;
+    bool lockCallback() override;
 
     // Documented in Contactable
-    virtual bool tryLockCallback() override;
+    bool tryLockCallback() override;
 
     // Documented in Contactable
-    virtual void unlockCallback() override;
+    void unlockCallback() override;
 };
 
 } // namespace os

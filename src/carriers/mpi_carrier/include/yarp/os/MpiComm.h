@@ -1,17 +1,18 @@
 /*
- * Copyright (C) 2011 Daniel Krieg
- * Author: Daniel Krieg <krieg@fias.uni-frankfurt.de>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2010 Daniel Krieg <krieg@fias.uni-frankfurt.de>
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_MPICOMM
 #define YARP_MPICOMM
 
-#include <yarp/os/all.h>
-
-#include <yarp/os/ConstString.h>
+#include <string>
 #include <yarp/os/Semaphore.h>
+#include <yarp/os/SystemClock.h>
 #include <yarp/os/Thread.h>
 
 #include <string>
@@ -48,12 +49,12 @@ extern yarp::os::MpiControlThread *MpiControl;
  * Wrapper for MPI_Comm communicator.
  *
  * Uses the dynamic process management from the MPI-2 standard to
- * set up a communicator between two seperate processes.
+ * set up a communicator between two separate processes.
  *
  * @note Needs an MPI implementation with THREAD_MULTIPLE support.
  */
 class yarp::os::MpiComm {
-    ConstString name;
+    std::string name;
 
 public:
     char port_name[MPI_MAX_PORT_NAME];
@@ -62,17 +63,17 @@ public:
     yarp::os::Semaphore sema;
 
 
-    MpiComm(ConstString name);
+    MpiComm(std::string name);
     ~MpiComm() {
         #ifdef MPI_DEBUG
         printf("[MpiComm @ %s] Destructor\n", name.c_str() );
         #endif
         MPI_Comm_disconnect(&comm);
     }
-    bool connect(ConstString port);
+    bool connect(std::string port);
     bool accept();
     void disconnect(bool disconn);
-    bool notLocal(ConstString other);
+    bool notLocal(std::string other);
 
     void openPort() {
         MPI_Open_port(MPI_INFO_NULL, port_name);
@@ -88,5 +89,4 @@ public:
 };
 
 
-#endif  // _YARP_MPICOMM_
-
+#endif // YARP_MPICOMM

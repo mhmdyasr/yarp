@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/ConnectionReader.h>
 #include <yarp/os/impl/StreamConnectionReader.h>
@@ -11,13 +13,11 @@
 using namespace yarp::os;
 using namespace yarp::os::impl;
 
-ConnectionReader::~ConnectionReader()
-{
-}
+ConnectionReader::~ConnectionReader() = default;
 
 Bytes ConnectionReader::readEnvelope()
 {
-    return Bytes(nullptr, 0);
+    return {nullptr, 0};
 }
 
 void ConnectionReader::setParentConnectionReader(ConnectionReader* parentConnectionReader)
@@ -27,7 +27,7 @@ void ConnectionReader::setParentConnectionReader(ConnectionReader* parentConnect
 
 ConnectionReader *ConnectionReader::createConnectionReader(InputStream& is)
 {
-    StreamConnectionReader *reader = new StreamConnectionReader();
+    auto* reader = new StreamConnectionReader();
     Route r;
     reader->reset(is, nullptr, r, 0, false);
     return reader;

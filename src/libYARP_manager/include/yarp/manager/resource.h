@@ -1,9 +1,9 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_MANAGER_RESOURCE
@@ -43,7 +43,7 @@ public:
     //virtual Node* clone(void);
     virtual bool satisfy(GenericResource* resource) = 0;
 
-    bool operator==(const GenericResource& res) {
+    bool operator==(const GenericResource& res) const {
         return (strName == res.strName);
     }
 
@@ -76,8 +76,8 @@ public:
     MultiResource(const MultiResource& rhs);
     MultiResource& operator=(const MultiResource& rhs);
     virtual ~MultiResource();
-    virtual Node* clone(void) override;
-    virtual bool satisfy(GenericResource* resource) override;
+    Node* clone(void) override;
+    bool satisfy(GenericResource* resource) override;
 
     int resourceCount(void) const { return resources.size(); }
     GenericResource& getResourceAt(int index) const { return *(resources[index]); }

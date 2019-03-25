@@ -1,16 +1,27 @@
 /*
-* Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
-* Author: Marco Randazzo <marco.randazzo@iit.it>
-* CopyPolicy: Released under the terms of the GPLv2 or later, see GPL.TXT
-*/
-
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #ifndef LASER_FROM_DEPTH_H
 #define LASER_FROM_DEPTH_H
 
 #include <string>
 
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/IRangefinder2D.h>
@@ -33,7 +44,7 @@ struct Range_t
 
 //---------------------------------------------------------------------------------------------------------------
 
-class LaserFromDepth : public RateThread, public yarp::dev::IRangefinder2D, public DeviceDriver
+class LaserFromDepth : public PeriodicThread, public yarp::dev::IRangefinder2D, public DeviceDriver
 {
 protected:
     PolyDriver driver;
@@ -61,7 +72,7 @@ protected:
     yarp::sig::Vector m_laser_data;
 
 public:
-    LaserFromDepth(int period = 10) : RateThread(period),
+    LaserFromDepth(double period = 0.01) : PeriodicThread(period),
         iRGBD(nullptr),
         m_depth_width(0),
         m_depth_height(0),
@@ -81,26 +92,26 @@ public:
     {
     }
 
-    virtual bool open(yarp::os::Searchable& config) override;
-    virtual bool close() override;
-    virtual bool threadInit() override;
-    virtual void threadRelease() override;
-    virtual void run() override;
+    bool open(yarp::os::Searchable& config) override;
+    bool close() override;
+    bool threadInit() override;
+    void threadRelease() override;
+    void run() override;
 
 public:
     //IRangefinder2D interface
-    virtual bool getRawData(yarp::sig::Vector &data) override;
-    virtual bool getLaserMeasurement(std::vector<LaserMeasurementData> &data) override;
-    virtual bool getDeviceStatus     (Device_status &status) override;
-    virtual bool getDeviceInfo       (yarp::os::ConstString &device_info) override;
-    virtual bool getDistanceRange    (double& min, double& max) override;
-    virtual bool setDistanceRange    (double min, double max) override;
-    virtual bool getScanLimits        (double& min, double& max) override;
-    virtual bool setScanLimits        (double min, double max) override;
-    virtual bool getHorizontalResolution      (double& step) override;
-    virtual bool setHorizontalResolution      (double step) override;
-    virtual bool getScanRate         (double& rate) override;
-    virtual bool setScanRate         (double rate) override;
+    bool getRawData(yarp::sig::Vector &data) override;
+    bool getLaserMeasurement(std::vector<LaserMeasurementData> &data) override;
+    bool getDeviceStatus     (Device_status &status) override;
+    bool getDeviceInfo       (std::string &device_info) override;
+    bool getDistanceRange    (double& min, double& max) override;
+    bool setDistanceRange    (double min, double max) override;
+    bool getScanLimits        (double& min, double& max) override;
+    bool setScanLimits        (double min, double max) override;
+    bool getHorizontalResolution      (double& step) override;
+    bool setHorizontalResolution      (double step) override;
+    bool getScanRate         (double& rate) override;
+    bool setScanRate         (double rate) override;
 };
 
 #endif

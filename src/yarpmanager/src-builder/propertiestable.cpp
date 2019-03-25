@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "propertiestable.h"
 #include <QDebug>
 
@@ -23,7 +41,7 @@ PropertiesTable::PropertiesTable(Manager *manager,QWidget *parent) :
     nodeCombo(nullptr),
     deployerCombo(nullptr)
 {
-    QHBoxLayout *lay = new QHBoxLayout(this);
+    auto* lay = new QHBoxLayout(this);
     propertiesTab = new QTabWidget(this);
     appProperties = new QTreeWidget(this);
     moduleProperties = new QTreeWidget(this);
@@ -160,8 +178,8 @@ void PropertiesTable::showModuleTab(ModuleItem *mod)
         nodeCombo->addItem("localhost");
     }
     ResourcePContainer resources = manager->getKnowledgeBase()->getResources();
-    for(ResourcePIterator itr=resources.begin(); itr!=resources.end(); itr++){
-        Computer* comp = dynamic_cast<Computer*>(*itr);
+    for(auto& resource : resources) {
+        auto* comp = dynamic_cast<Computer*>(resource);
         if(comp && !compareString(comp->getName(), "localhost")){
             nodeCombo->addItem(comp->getName());
         }
@@ -182,7 +200,7 @@ void PropertiesTable::showModuleTab(ModuleItem *mod)
      for(int i=0;i<mod->getInnerModule()->argumentCount();i++){
          Argument a = mod->getInnerModule()->getArgumentAt(i);
          QTreeWidgetItem *it = new QTreeWidgetItem(modParams,QStringList() << a.getParam());
-         QComboBox *paramCombo = new QComboBox();
+         auto* paramCombo = new QComboBox();
          paramCombo->setEditable(true);
          paramCombo->addItem(a.getValue());
          if(strcmp(a.getDefault(),a.getValue()) != 0 ){
@@ -301,7 +319,7 @@ void PropertiesTable::onModItemChanged(QTreeWidgetItem *it,int col)
 
             string strPrefix;
             Application* application = manager->getKnowledgeBase()->getApplication();
-            if(application){
+            if(application) {
                 strPrefix = string(application->getPrefix()) + string(modPrefix->text(1).toLatin1().data());
                 for(int j=0; j<currentModule->getInnerModule()->outputCount(); j++){
                     OutputData *output = &currentModule->getInnerModule()->getOutputAt(j);
@@ -322,40 +340,34 @@ void PropertiesTable::onModItemChanged(QTreeWidgetItem *it,int col)
                                         Arrow *a = currentModule->oPorts.at(k)->getArrows()->at(h);
                                         if( a->getTo() == updatedCon.to()){
                                             a->updateConnectionFrom(QString(strFrom.c_str()));
-
                                         }
-
                                     }
-
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            for(int j=0; j<currentModule->getInnerModule()->inputCount(); j++){
-                InputData *input = &currentModule->getInnerModule()->getInputAt(j);
-                for(int i=0; i<application->connectionCount(); i++){
-                    Connection con = application->getConnectionAt(i);
-                    Connection updatedCon = con;
-                    if(con.getCorInputData()){
-                        if(con.getCorInputData() == input){
-                            string strTo = strPrefix + string(input->getPort());
-//                            updatedCon.setTo(strTo.c_str());
-//                            manager->getKnowledgeBase()->updateConnectionOfApplication(application,
-//                                                        con, updatedCon);
+                for(int j=0; j<currentModule->getInnerModule()->inputCount(); j++){
+                    InputData *input = &currentModule->getInnerModule()->getInputAt(j);
+                    for(int i=0; i<application->connectionCount(); i++){
+                        Connection con = application->getConnectionAt(i);
+                        Connection updatedCon = con;
+                        if(con.getCorInputData()){
+                            if(con.getCorInputData() == input){
+                                string strTo = strPrefix + string(input->getPort());
+//                              updatedCon.setTo(strTo.c_str());
+//                              manager->getKnowledgeBase()->updateConnectionOfApplication(application,
+//                                                          con, updatedCon);
 
-                            for(int k=0;k<currentModule->iPorts.count();k++){
-                                for(int h=0; h<currentModule->iPorts.at(k)->getArrows()->count();h++){
-                                    Arrow *a = currentModule->iPorts.at(k)->getArrows()->at(h);
-                                    if(a->getFrom() == updatedCon.from() ){
-                                        a->updateConnectionTo(QString(strTo.c_str()));
-
+                                for(int k=0;k<currentModule->iPorts.count();k++){
+                                    for(int h=0; h<currentModule->iPorts.at(k)->getArrows()->count();h++){
+                                        Arrow *a = currentModule->iPorts.at(k)->getArrows()->at(h);
+                                        if(a->getFrom() == updatedCon.from() ){
+                                            a->updateConnectionTo(QString(strTo.c_str()));
+                                        }
                                     }
-
                                 }
-
                             }
                         }
                     }

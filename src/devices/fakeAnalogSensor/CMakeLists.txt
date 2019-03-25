@@ -1,32 +1,36 @@
-# Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
-# Authors: Alberto Cardellino
-# email:   alberto.cardellino@iit.it
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-
-
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 yarp_prepare_plugin(fakeAnalogSensor
                     CATEGORY device
                     TYPE yarp::dev::FakeAnalogSensor
                     INCLUDE fakeAnalogSensor.h
-                    EXTRA_CONFIG WRAPPER=analogServer
-                    DEPENDS CREATE_DEVICE_LIBRARY_MODULES)
+                    EXTRA_CONFIG WRAPPER=analogServer)
 
 if(ENABLE_fakeAnalogSensor)
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
   yarp_add_plugin(yarp_fakeAnalogSensor fakeAnalogSensor.cpp
                                         fakeAnalogSensor.h)
-  target_link_libraries(yarp_fakeAnalogSensor YARP::YARP_OS
-                                              YARP::YARP_sig
-                                              YARP::YARP_dev)
+  target_link_libraries(yarp_fakeAnalogSensor PRIVATE YARP::YARP_OS
+                                                      YARP::YARP_sig
+                                                      YARP::YARP_dev)
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+                                                      YARP_sig
+                                                      YARP_dev)
+
   yarp_install(TARGETS yarp_fakeAnalogSensor
-               EXPORT YARP
-               COMPONENT runtime
+               EXPORT YARP_${YARP_PLUGIN_MASTER}
+               COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
                ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
   yarp_install(FILES fakeAnalogSensor.ini
-               COMPONENT runtime
+               COMPONENT ${YARP_PLUGIN_MASTER}
                DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+
+  set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
   set_property(TARGET yarp_fakeAnalogSensor PROPERTY FOLDER "Plugins/Device/Fake")
 endif()

@@ -1,15 +1,23 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "entitiestreewidget.h"
-#include <yarp/manager/ymm-dir.h>
+#include <dirent.h>
 #include <QProcess>
 #include <QHeaderView>
 #include <QMessageBox>
@@ -59,7 +67,7 @@ EntitiesTreeWidget::EntitiesTreeWidget(QWidget *parent) : QTreeWidget(parent)
     topLevelMenu.addAction(importFile);
 
     loadFiles = new QAction("Load",this);
-    QAction *separator = new QAction(this);
+    auto* separator = new QAction(this);
     separator->setSeparator(true);
     reopen = new QAction("Refresh",this);
     remove = new QAction("Remove",this);
@@ -316,7 +324,7 @@ void EntitiesTreeWidget::mouseMoveEvent(QMouseEvent *event)
         }
         qlonglong pointer = selectedItem->data(0,Qt::UserRole + 1).toLongLong();
 
-        QMimeData *mimeData = new QMimeData;
+        auto* mimeData = new QMimeData;
         QByteArray strPointer = QString("%1").arg(pointer).toLatin1();
         mimeData->setData("pointer",strPointer);
 
@@ -330,7 +338,7 @@ void EntitiesTreeWidget::mouseMoveEvent(QMouseEvent *event)
         QFontMetrics fontMetric(font());
         //int textWidth = fontMetric.width(selectedItem->text(0));
 
-        QDrag *drag = new QDrag(this);
+        auto* drag = new QDrag(this);
         drag->setMimeData(mimeData);
 
 //        QPixmap pix(textWidth + 40,18);
@@ -601,12 +609,12 @@ void EntitiesTreeWidget::onEdit()
 void EntitiesTreeWidget::onReopen()
 {
     QTreeWidgetItem *it = currentItem();
-    QTreeWidgetItem *parent = it -> parent();
-    int index = it -> parent() -> indexOfChild(it);
-
     if (!it) {
         return;
     }
+
+    QTreeWidgetItem *parent = it -> parent();
+    int index = it -> parent() -> indexOfChild(it);
 
     if (it->parent() == applicationNode) {
         if (it->data(0,Qt::UserRole)  == yarp::manager::APPLICATION) {

@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Alexis Maldonado, Radu Bogdan Rusu
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_DEV_SERVERINERTIAL_SERVERINERTIAL_H
 #define YARP_DEV_SERVERINERTIAL_SERVERINERTIAL_H
@@ -22,10 +24,10 @@
 #include <yarp/dev/Wrapper.h>
 
 // ROS state publisher
-#include <yarpRosHelper.h>
 #include <yarp/os/Node.h>
 #include <yarp/os/Publisher.h>
-#include <sensor_msgs_Imu.h>
+#include <yarp/rosmsg/sensor_msgs/Imu.h>
+#include <yarp/rosmsg/impl/yarpRosHelper.h>
 
 namespace yarp
 {
@@ -123,7 +125,7 @@ class yarp::dev::ServerInertial : public DeviceDriver,
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 private:
     bool spoke;
-    yarp::os::ConstString partName;
+    std::string partName;
     yarp::dev::PolyDriver *IMU_polydriver;
     IGenericSensor *IMU; //The inertial device
     IPreciselyTimed *iTimed;
@@ -142,7 +144,7 @@ private:
     std::string                                         rosTopicName;               // name of the rosTopic
     yarp::os::Node                                      *rosNode;                   // add a ROS node
     yarp::os::NetUint32                                 rosMsgCounter;              // incremental counter in the ROS message
-    yarp::os::Publisher<sensor_msgs_Imu>                rosPublisherPort;           // Dedicated ROS topic publisher
+    yarp::os::Publisher<yarp::rosmsg::sensor_msgs::Imu> rosPublisherPort;           // Dedicated ROS topic publisher
     std::vector<yarp::os::NetFloat64>                   covariance;                 // empty matrix to store covariance data needed by ROS msg
 
     bool checkROSParams(yarp::os::Searchable &config);
@@ -163,37 +165,37 @@ public:
      * @param config The options to use
      * @return true iff the object could be configured.
      */
-    virtual bool open(yarp::os::Searchable& config) override;
+    bool open(yarp::os::Searchable& config) override;
 
-    virtual bool close() override;
+    bool close() override;
 
     virtual bool getInertial(yarp::os::Bottle &bot);
 
-    virtual void run() override;
+    void run() override;
 
-    virtual bool read(yarp::os::ConnectionReader& connection) override;
+    bool read(yarp::os::ConnectionReader& connection) override;
 
-    virtual bool read(yarp::sig::Vector &out) override;
+    bool read(yarp::sig::Vector &out) override;
 
-    virtual bool getChannels(int *nc) override;
+    bool getChannels(int *nc) override;
 
-    virtual bool calibrate(int ch, double v) override;
+    bool calibrate(int ch, double v) override;
 
     /**    IWrapper interface
      * Attach to another object.
      * @param poly the polydriver that you want to attach to.
      * @return true/false on success failure.
      */
-    virtual bool attach(PolyDriver *poly) override;
-    virtual bool detach() override;
+    bool attach(PolyDriver *poly) override;
+    bool detach() override;
 
     /**   IMultipleWrapper interface
      * Attach to a list of objects.
      * @param p the polydriver list that you want to attach to.
      * @return true/false on success failure.
      */
-    virtual bool attachAll(const PolyDriverList &p) override;
-    virtual bool detachAll() override;
+    bool attachAll(const PolyDriverList &p) override;
+    bool detachAll() override;
 
 private:
 
@@ -203,8 +205,8 @@ private:
     // Open the wrapper only, the attach method needs to be called before using it
     bool openDeferredAttach(yarp::os::Property& prop);
 
-    // Iif a subdevice parameter is given to the wrapper, it will open it as well
-    // and and attach to it immediatly.
+    // If a subdevice parameter is given to the wrapper, it will open it as well
+    // and attach to it immediately.
     bool openAndAttachSubDevice(yarp::os::Property& prop);
 };
 

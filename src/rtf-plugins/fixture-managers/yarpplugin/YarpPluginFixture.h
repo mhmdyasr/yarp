@@ -1,9 +1,10 @@
 /*
- * Copyright: (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Authors: Nicolò Genesio <nicolo.genesio@iit.it>
- * Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_RTF_PLUGINS_YARPPLUGIN_YARPPLUGINFIXTURE_H
 #define YARP_RTF_PLUGINS_YARPPLUGIN_YARPPLUGINFIXTURE_H
@@ -26,15 +27,15 @@
 
 class YarpPluginFixture : public RTF::FixtureManager {
 public:
-    virtual bool setup(int argc, char** argv) override;
-    virtual bool check() override;
-    virtual void tearDown() override;
+    bool setup(int argc, char** argv) override;
+    bool check() override;
+    void tearDown() override;
 private:
     yarp::os::Bottle devices;
     yarp::os::Bottle plugins;
     yarp::os::Bottle portmonitors;
     yarp::os::Bottle carriers;
-    bool scanPlugins(yarp::os::ConstString name, yarp::os::ConstString type="");
+    bool scanPlugins(std::string name, std::string type="");
 };
 
 #endif // YARP_RTF_PLUGINS_YARPPLUGIN_YARPPLUGINFIXTURE_H

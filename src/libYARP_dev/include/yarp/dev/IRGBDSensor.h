@@ -1,9 +1,10 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Author: Alberto Cardellino <alberto.cardellino@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_DEV_IRGBDSENSOR_H
 #define YARP_DEV_IRGBDSENSOR_H
@@ -22,16 +23,16 @@ namespace yarp {
 
 
 // Interface name
-#define VOCAB_RGBD_SENSOR            VOCAB4('r','g','d','b')
-#define VOCAB_RGBD_PROTOCOL_VERSION  VOCAB4('p','r','o','t')
+constexpr yarp::conf::vocab32_t VOCAB_RGBD_SENSOR            = yarp::os::createVocab('r','g','d','b');
+constexpr yarp::conf::vocab32_t VOCAB_RGBD_PROTOCOL_VERSION  = yarp::os::createVocab('p','r','o','t');
 
 // Methods
-#define VOCAB_EXTRINSIC_PARAM   VOCAB3('e','x','t')
-#define VOCAB_ERROR_MSG         VOCAB4('m','e','s','s')
-#define VOCAB_RGB_IMAGE         VOCAB4('i','m','g','r')
-#define VOCAB_DEPTH_IMAGE       VOCAB4('i','m','g'.'d')
-#define VOCAB_IMAGES            VOCAB4('i','m','m','s')
-#define VOCAB_STATUS            VOCAB4('s','t','a','t')
+constexpr yarp::conf::vocab32_t VOCAB_EXTRINSIC_PARAM   = yarp::os::createVocab('e','x','t');
+constexpr yarp::conf::vocab32_t VOCAB_ERROR_MSG         = yarp::os::createVocab('m','e','s','s');
+constexpr yarp::conf::vocab32_t VOCAB_RGB_IMAGE         = yarp::os::createVocab('i','m','g','r');
+constexpr yarp::conf::vocab32_t VOCAB_DEPTH_IMAGE       = yarp::os::createVocab('i','m','g','d');
+constexpr yarp::conf::vocab32_t VOCAB_IMAGES            = yarp::os::createVocab('i','m','m','s');
+constexpr yarp::conf::vocab32_t VOCAB_STATUS            = yarp::os::createVocab('s','t','a','t');
 
 
 /**
@@ -74,35 +75,35 @@ public:
     /*
      *  IRgbVisualParams interface. Look at IVisualParams.h for documentation
      */
-    virtual int  getRgbHeight() override = 0;
-    virtual int  getRgbWidth() override = 0;
-    virtual bool getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations) override { return false;};
-    virtual bool getRgbResolution(int &width, int &height) override { return false;};
-    virtual bool setRgbResolution(int width, int height) override = 0;
-    virtual bool getRgbFOV(double &horizontalFov, double &verticalFov) override = 0;
-    virtual bool setRgbFOV(double horizontalFov, double verticalFov) override = 0;
-    virtual bool getRgbIntrinsicParam(yarp::os::Property &intrinsic) override = 0;
+    int  getRgbHeight() override = 0;
+    int  getRgbWidth() override = 0;
+    bool getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations) override { return false;};
+    bool getRgbResolution(int &width, int &height) override { return false;};
+    bool setRgbResolution(int width, int height) override = 0;
+    bool getRgbFOV(double &horizontalFov, double &verticalFov) override = 0;
+    bool setRgbFOV(double horizontalFov, double verticalFov) override = 0;
+    bool getRgbIntrinsicParam(yarp::os::Property &intrinsic) override = 0;
 
     /*
      * IDepthVisualParams interface. Look at IVisualParams.h for documentation
      */
-    virtual int    getDepthHeight() override = 0;
-    virtual int    getDepthWidth() override = 0;
-    virtual bool   setDepthResolution(int width, int height) override = 0;
-    virtual bool   getDepthFOV(double &horizontalFov, double &verticalFov) override = 0;
-    virtual bool   setDepthFOV(double horizontalFov, double verticalFov) override = 0;
-    virtual double getDepthAccuracy() override = 0;
-    virtual bool   setDepthAccuracy(double accuracy) override = 0;
-    virtual bool   getDepthClipPlanes(double &nearPlane, double &farPlane) override = 0;
-    virtual bool   setDepthClipPlanes(double nearPlane, double farPlane) override = 0;
-    virtual bool   getDepthIntrinsicParam(yarp::os::Property &intrinsic) override = 0;
+    int    getDepthHeight() override = 0;
+    int    getDepthWidth() override = 0;
+    bool   setDepthResolution(int width, int height) override = 0;
+    bool   getDepthFOV(double &horizontalFov, double &verticalFov) override = 0;
+    bool   setDepthFOV(double horizontalFov, double verticalFov) override = 0;
+    double getDepthAccuracy() override = 0;
+    bool   setDepthAccuracy(double accuracy) override = 0;
+    bool   getDepthClipPlanes(double &nearPlane, double &farPlane) override = 0;
+    bool   setDepthClipPlanes(double nearPlane, double farPlane) override = 0;
+    bool   getDepthIntrinsicParam(yarp::os::Property &intrinsic) override = 0;
 
     /*
      * IRGBDSensor specific interface methods
      */
 
     /**
-     * Get the extrinsic parameters ofrom the device
+     * Get the extrinsic parameters from the device
      * @param  extrinsic  return a rototranslation matrix describing the position
      *         of the depth optical frame with respect to the rgb frame
      * @return true if success
@@ -111,35 +112,30 @@ public:
 
     /**
      * Return an error message in case of error. For debugging purpose and user notification.
-     * Error message will be reset after any succesful command
+     * Error message will be reset after any successful command
      * @return A string explaining the last error occurred.
      */
-    virtual yarp::os::ConstString getLastErrorMsg(yarp::os::Stamp *timeStamp = NULL) = 0;
+    virtual std::string getLastErrorMsg(yarp::os::Stamp *timeStamp = NULL) = 0;
 
     /**
      * Get the rgb frame from the device.
      * The pixel type of the source image will usually be set as a VOCAB_PIXEL_RGB,
-     * but the user can call the function with the pixel type of his/her choise. The convertion
+     * but the user can call the function with the pixel type of his/her choice. The conversion
      * if possible, will be done automatically on client side (TO BO VERIFIED).
      * Note: this will consume CPU power because it will not use GPU optimization.
      * Use VOCAB_PIXEL_RGB for best performances.
      *
      * @param rgbImage the image to be filled.
-     * @param timeStamp time in which the image was acquired. Optional, the user must provide memory allocation
+     * @param timeStamp time in which the image was acquired. Optional, ignored if nullptr. 
      * @return True on success
      */
     virtual bool getRgbImage(yarp::sig::FlexImage &rgbImage, yarp::os::Stamp *timeStamp = NULL) = 0;
 
     /**
      * Get the depth frame from the device.
-     * The pixel type of the source image will usually be set as a VOCAB_PIXEL_RGB,
-     * but the user can call the function with the pixel type of his/her choise. The convertion
-     * if possible, will be done automatically on client side.
-     * Note: this will consume CPU power because it will not use GPU optimization.
-     * Use VOCAB_PIXEL_RGB for best performances.
-     *
-     * @param rgbImage the image to be filled.
-     * @param timeStamp time in which the image was acquired. Optional, the user must provide memory allocation
+     * 
+     * @param depthImage the depth image to be filled, depth measured in meters.
+     * @param timeStamp time in which the image was acquired. Optional, ignored if nullptr. 
      * @return True on success
      */
     virtual bool getDepthImage(yarp::sig::ImageOf<yarp::sig::PixelFloat> &depthImage, yarp::os::Stamp *timeStamp = NULL) = 0;

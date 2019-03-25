@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_CLOCK_H
@@ -10,12 +12,10 @@
 #include <yarp/os/api.h>
 
 namespace yarp {
-    namespace os {
-        class Clock;
-    }
-}
+namespace os {
 
-class YARP_OS_API yarp::os::Clock {
+class YARP_OS_API Clock
+{
 public:
     /**
      *
@@ -48,5 +48,8 @@ public:
      */
     virtual bool isValid() const = 0;
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_CLOCK_H

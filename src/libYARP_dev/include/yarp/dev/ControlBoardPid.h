@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Lorenzo Natale, Giorgio Metta
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/dev/api.h>
@@ -144,10 +147,10 @@ public:
      *
      * \param p pid to be compared
      */
-    bool operator==(const yarp::dev::Pid &p);
+    bool operator==(const yarp::dev::Pid &p) const;
 
     /*!
-    * \brief Set all pid paramters to zero
+    * \brief Set all pid parameters to zero
     *
     */
     void clear();

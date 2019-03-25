@@ -1,18 +1,21 @@
 /*
- * Copyright (C) 2007 RobotCub Consortium
- * Authors: Lorenzo Natale
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_SIG_VECTOR_H
 #define YARP_SIG_VECTOR_H
 
-//#include <cstdlib> //defines size_t
+#include <cstring>
 #include <cstddef> //defines size_t
 #include <yarp/os/Portable.h>
-#include <yarp/os/ConstString.h>
+#include <string>
 #include <yarp/os/ManagedBytes.h>
+#include <yarp/os/Type.h>
 
 #include <yarp/sig/api.h>
 #include <yarp/os/Log.h>
@@ -24,8 +27,15 @@ namespace yarp {
 
     namespace sig {
         class VectorBase;
-        class Vector;
         template<class T> class VectorOf;
+        // Swig(3.0.12) crashes when generating
+        // ruby bindings without these guards.
+        // Bindings for Vector are generated
+        // anyways throught the %template directive
+        // in the interface file.
+#ifndef SWIG
+        typedef VectorOf<double> Vector;
+#endif
     }
 }
 
@@ -35,29 +45,34 @@ namespace yarp {
 *
 * A Base class for a VectorOf<T>, provide default implementation for
 * read/write methods. Warning: the current implementation assumes the same
-* representation for data type (endianess).
+* representation for data type (endianness).
 */
 class YARP_sig_API yarp::sig::VectorBase : public yarp::os::Portable
 {
 public:
-    virtual int getElementSize() const = 0;
+    virtual size_t getElementSize() const = 0;
     virtual int getBottleTag() const = 0;
 
     virtual size_t getListSize() const = 0;
     virtual const char *getMemoryBlock() const = 0;
+    virtual char *getMemoryBlock() = 0;
     virtual void resize(size_t size) = 0;
 
     /*
     * Read vector from a connection.
     * return true iff a vector was read correctly
     */
-    virtual bool read(yarp::os::ConnectionReader& connection) override;
+    bool read(yarp::os::ConnectionReader& connection) override;
 
     /**
     * Write vector to a connection.
     * return true iff a vector was written correctly
     */
-    virtual bool write(yarp::os::ConnectionWriter& connection) override;
+    bool write(yarp::os::ConnectionWriter& connection) const override;
+
+protected:
+    virtual std::string getFormatStr(int tag) const;
+
 };
 
 /*
@@ -74,12 +89,12 @@ inline int BottleTagMap () {
 
 template<>
 inline int BottleTagMap <double> () {
-    return BOTTLE_TAG_DOUBLE;
+    return BOTTLE_TAG_FLOAT64;
   }
 
 template<>
 inline int BottleTagMap <int> () {
-    return BOTTLE_TAG_INT;
+    return BOTTLE_TAG_INT32;
   }
 
 /**
@@ -96,7 +111,7 @@ inline int BottleTagMap <int> () {
 * Warning: the class is designed to work with simple types (i.e. types
 * that do not allocate internal memory). Template instantiation needs to
 * be checked to avoid unresolved externals. Network communication assumes
-* same data representation (endianess) between machines.
+* same data representation (endianness) between machines.
 */
 template<class T>
 class yarp::sig::VectorOf : public VectorBase
@@ -128,33 +143,75 @@ public:
         _updatePointers();
     }
 
+    /**
+    * Build a vector and initialize it with def.
+    * @param s the size
+    * @param def a default value used to fill the vector
+    */
+    VectorOf(size_t s, const T&def)
+    {
+        this->resize(s,def);
+    }
+
+    /**
+    * Builds a vector and initialize it with
+    * values from 'p'. Copies memory.
+    * @param s the size of the data to be copied
+    * @param T* the pointer to the data
+    */
+    VectorOf(size_t s, const T *p)
+    {
+        len = 0;
+        this->resize(s);
+
+        memcpy(this->data(), p, sizeof(T)*s);
+    }
+
     VectorOf(const VectorOf &r) : VectorBase() {
         bytes = r.bytes;
         _updatePointers();
     }
 
+    /**
+    * Copy operator;
+    */
     const VectorOf<T> &operator=(const VectorOf<T> &r) {
-        bytes = r.bytes;
-        _updatePointers();
+
+        if (this == &r) return *this;
+
+        if(this->size() == r.size())
+        {
+            memcpy(this->data(), r.data(), sizeof(T)*r.size());
+        }
+        else
+        {
+            bytes = r.bytes;
+            _updatePointers();
+        }
         return *this;
     }
 
-    virtual int getElementSize() const override {
+    size_t getElementSize() const override {
         return sizeof(T);
     }
 
-    virtual int getBottleTag() const override {
+    int getBottleTag() const override {
         return BottleTagMap <T>();
     }
 
-    virtual size_t getListSize() const override
+    size_t getListSize() const override
     {
         return len;
     }
 
-    virtual const char *getMemoryBlock() const override
+    const char* getMemoryBlock() const override
     {
-        return (char *) bytes.get();
+        return bytes.get();
+    }
+
+    char* getMemoryBlock() override
+    {
+        return bytes.get();
     }
 
     inline const T *getFirst() const
@@ -167,7 +224,26 @@ public:
         return first;
     }
 
-    virtual void resize(size_t size) override
+    /**
+    * Return a pointer to the first element of the vector.
+    * @return a pointer to double (or nullptr if the vector is of zero length)
+    */
+    inline T *data()
+    { return first; }
+
+    /**
+    * Return a pointer to the first element of the vector,
+    * const version
+    * @return a (const) pointer to double (or nullptr if the vector is of zero length)
+    */
+    inline const T *data() const
+    { return first;}
+
+    /**
+    * Resize the vector.
+    * @param s the new size
+    */
+    void resize(size_t size) override
     {
         size_t prev_len = len;
         bytes.allocateOnNeed(size*sizeof(T),size*sizeof(T));
@@ -178,6 +254,11 @@ public:
         }
     }
 
+    /**
+    * Resize the vector and initilize the element to a default value.
+    * @param s the new size
+    * @param def the default value
+    */
     void resize(size_t size, const T&def)
     {
         bytes.allocateOnNeed(size*sizeof(T),size*sizeof(T));
@@ -188,14 +269,20 @@ public:
         }
     }
 
+    /**
+    * Push a new element in the vector: size is changed
+    */
     inline void push_back (const T &elem)
     {
         bytes.allocateOnNeed(bytes.used()+sizeof(T),bytes.length()*2+sizeof(T));
         bytes.setUsed(bytes.used()+sizeof(T));
         _updatePointers();
-        first[len-1] = elem;
+        new (&((*this)[len-1])) T(elem); // non-allocating placement operator new
     }
 
+    /**
+    * Pop an element out of the vector: size is changed
+    */
     inline void pop_back (void)
     {
         if (bytes.used()>sizeof(T)) {
@@ -249,100 +336,20 @@ public:
         return len;
     }
 
-    void clear() {
-        bytes.clear();
-        bytes.setUsed(0);
-        len = 0;
-        first = nullptr;
-    }
-};
-
-
-#ifdef _MSC_VER
-/*YARP_sig_EXTERN*/ template class YARP_sig_API yarp::sig::VectorOf<double>;
-#endif
-
-/**
-* \ingroup sig_class
-*
-* A class for a Vector. A Vector can be sent/read to/from
-* a port. Use the [] and () operator for single element
-* access.
-*/
-class YARP_sig_API yarp::sig::Vector : public yarp::os::Portable
-{
-    VectorOf<double> storage;
-
-public:
-    Vector()
-    {}
-
-    explicit Vector(size_t s):storage(s)
-    {}
-
-    /**
-    * Build a vector and initialize it with def.
-    * @param s the size
-    * @param def a default value used to fill the vector
-    */
-    explicit Vector(size_t s, const double &def)
-    {
-        storage.resize(s,def);
-    }
-
-    ~Vector()
-    {}
-
-    /**
-    * Builds a vector and initialize it with
-    * values from 'p'. Copies memory.
-    */
-    Vector(size_t s, const double *p);
-
-    /**
-    * Copy constructor.
-    */
-    Vector(const Vector &r): yarp::os::Portable(), storage(r.storage)
-    {}
-
-    /**
-    * Copy operator;
-    */
-    const Vector &operator=(const Vector &r);
-
-    /**
-    * Resize the vector.
-    * @param s the new size
-    */
-    void resize(size_t s)
-    {
-        storage.resize(s);
-    }
-
-    /**
-    * Resize the vector, if the vector is not empty preserve old content.
-    * @param size the new size
-    * @param def a default value used to fill the vector
-    */
-    void resize(size_t size, const double &def)
-    {
-        storage.resize(size, def);
-    }
-
-    inline size_t size() const
-    { return storage.size();}
-
     /**
     * Get the length of the vector.
     * @return the length of the vector.
     */
     inline size_t length() const
-    { return storage.size();}
+    { return this->size();}
 
     /**
     * Zero the elements of the vector.
     */
-    void zero();
+    void zero()
+    {
+        memset(this->data(), 0, sizeof(T)*this->size());
+    }
 
     /**
     * Creates a string object containing a text representation of the object. Useful for printing.
@@ -353,8 +360,41 @@ public:
     * Warning: the string format might change in the future. This method
     * is here to ease debugging.
     */
-    yarp::os::ConstString toString(int precision=-1, int width=-1) const;
+    std::string toString(int precision=-1, int width=-1) const
+    {
+        std::string ret = "";
+        size_t c = 0;
+        const size_t buffSize = 256;
+        char tmp[buffSize];
+        std::string formatStr;
+        if (getBottleTag() == BOTTLE_TAG_FLOAT64) {
+            if (width<0) {
+                formatStr = "% .*lf\t";
+                for (c=0;c<length();c++) {
+                    snprintf(tmp, buffSize, formatStr.c_str(), precision, (*this)[c]);
+                    ret+=tmp;
+                }
+            }
+            else{
+                formatStr = "% *.*lf ";
+                for (c=0;c<length();c++){
+                    snprintf(tmp, buffSize, formatStr.c_str(), width, precision, (*this)[c]);
+                    ret+=tmp;
+                }
+            }
+        }
+        else {
+            formatStr = "%" + getFormatStr(getBottleTag()) + " ";
+            for (c=0;c<length();c++) {
+                snprintf(tmp, buffSize, formatStr.c_str(), (*this)[c]);
+                ret+=tmp;
+            }
+        }
 
+        if (length()>=1)
+            return ret.substr(0, ret.length()-1);
+        return ret;
+    }
 
     /**
     * Creates and returns a new vector, being the portion of the original
@@ -362,7 +402,17 @@ public:
     * in the subvector. The indexes are checked: if wrong, a null vector is
     * returned.
     */
-    Vector subVector(unsigned int first, unsigned int last) const;
+    VectorOf<T> subVector(unsigned int first, unsigned int last) const
+    {
+        VectorOf<T> ret;
+        if ((first<=last)&&((int)last<(int)this->size()))
+        {
+            ret.resize(last-first+1);
+            for (unsigned int k=first; k<=last; k++)
+                ret[k-first]=(*this)[k];
+        }
+        return ret;
+    }
 
     /**
      * Set a portion of this vector with the values of the specified vector.
@@ -373,104 +423,66 @@ public:
      * @param v vector containing the values to set
      * @return true if the operation succeeded, false otherwise
      */
-    bool setSubvector(int position, const Vector &v);
+    bool setSubvector(int position, const VectorOf<T> &v)
+    {
+        if (position+v.size() > this->size())
+            return false;
+        for (size_t i=0;i<v.size();i++)
+            (*this)[position+i] = v(i);
+        return true;
+    }
 
     /**
     * Set all elements of the vector to a scalar.
     */
-    const Vector &operator=(double v);
+    const VectorOf<T> &operator=(T v)
+    {
+        T *tmp = this->data();
 
-    /**
-    * Return a pointer to the first element of the vector.
-    * @return a pointer to double (or nullptr if the vector is of zero length)
-    */
-    inline double *data()
-    { return storage.getFirst(); }
+        for(size_t k=0; k<length(); k++)
+            tmp[k]=v;
 
-    /**
-    * Return a pointer to the first element of the vector,
-    * const version
-    * @return a (const) pointer to double (or nullptr if the vector is of zero length)
-    */
-    inline const double *data() const
-    { return storage.getFirst();}
+        return *this;
+    }
 
     /**
     * True iff all elements of 'a' match all element of 'b'.
     */
-    bool operator==(const yarp::sig::Vector &r) const;
-
-    /**
-    * Push a new element in the vector: size is changed
-    */
-    inline void push_back (const double &elem)
+    bool operator==(const VectorOf<T> &r) const
     {
-        storage.push_back(elem);
+        //check dimensions first
+        size_t c=size();
+        if (c!=r.size())
+            return false;
+
+        const T *tmp1=data();
+        const T *tmp2=r.data();
+
+        while(c--)
+        {
+            if (*tmp1++!=*tmp2++)
+                return false;
+        }
+
+        return true;
+
     }
 
-    /**
-    * Pop an element out of the vector: size is changed
-    */
-    inline void pop_back (void)
-    {
-        storage.pop_back();
+    void clear() {
+        bytes.clear();
+        bytes.setUsed(0);
+        len = 0;
+        first = nullptr;
     }
 
-    /**
-    * Single element access, no range check.
-    * @param i the index of the element to access.
-    * @return a reference to the requested element.
-    */
-    inline double &operator[](size_t i)
-    {return storage[i];}
-
-    /**
-    * Single element access, no range check, const version.
-    * @param i the index of the element to access.
-    * @return a reference to the requested element.
-    */
-    inline const double &operator[](size_t i) const
-    {return storage[i];}
-
-    /**
-    * Single element access, no range check.
-    * @param i the index of the element to access.
-    * @return a reference to the requested element.
-    */
-    inline double &operator()(size_t i)
-    {return storage(i);}
-
-    /**
-    * Single element access, no range check, const version.
-    * @param i the index of the element to access.
-    * @return a reference to the requested element.
-    */
-    inline const double &operator()(size_t i) const
-    {return storage(i);}
-
-    /**
-    * Clears out the vector, it does not reallocate
-    * the buffer, but just sets the dynamic size to 0.
-    */
-    void clear ()
-    { storage.clear();}
-
-    ///////// Serialization methods
-    /*
-    * Read vector from a connection.
-    * return true iff a vector was read correctly
-    */
-    virtual bool read(yarp::os::ConnectionReader& connection) override;
-
-    /**
-    * Write vector to a connection.
-    * return true iff a vector was written correctly
-    */
-    virtual bool write(yarp::os::ConnectionWriter& connection) override;
-
-    virtual yarp::os::Type getType() override {
+    yarp::os::Type getType() const override {
         return yarp::os::Type::byName("yarp/vector");
     }
 };
+
+
+#ifdef _MSC_VER
+/*YARP_sig_EXTERN*/ template class YARP_sig_API yarp::sig::VectorOf<double>;
+#endif
 
 #endif // YARP_SIG_VECTOR_H

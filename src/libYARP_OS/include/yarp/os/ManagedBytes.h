@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_MANAGEDBYTES_H
@@ -12,16 +15,14 @@
 #include <yarp/os/Portable.h>
 
 namespace yarp {
-    namespace os {
-        class ManagedBytes;
-    }
-}
+namespace os {
 
 /**
  * An abstraction for a block of bytes, with optional
  * responsibility for allocating/destroying that block.
  */
-class YARP_OS_API yarp::os::ManagedBytes : public Portable {
+class YARP_OS_API ManagedBytes : public Portable
+{
 public:
     /**
      * Constructor.  No data present.
@@ -55,7 +56,7 @@ public:
      * is made.
      * @return this object
      */
-    const ManagedBytes& operator = (const ManagedBytes& alt);
+    const ManagedBytes& operator=(const ManagedBytes& alt);
 
     /**
      * Destructor.
@@ -88,9 +89,14 @@ public:
     size_t used() const;
 
     /**
+     * @return address of data block (const version)
+     */
+    const char* get() const;
+
+    /**
      * @return address of data block
      */
-    char *get() const;
+    char* get();
 
     /**
      * Disassociate object with any data block (deleting block if appropriate).
@@ -98,10 +104,15 @@ public:
     void clear();
 
     /**
+     * @return description of data block associated with this object (const
+     * version)
+     */
+    const Bytes& bytes() const;
+
+    /**
      * @return description of data block associated with this object
      */
-    const Bytes& bytes();
-
+    Bytes& bytes();
 
     /**
      * @return description of used portion of data block associated
@@ -125,14 +136,15 @@ public:
 
     bool read(ConnectionReader& reader) override;
 
-    bool write(ConnectionWriter& writer) override;
+    bool write(ConnectionWriter& writer) const override;
 
     /**
      *
      * @return true iff the managed data block is owned by this object
      *
      */
-    bool isOwner() const {
+    bool isOwner() const
+    {
         return owned;
     }
 
@@ -142,5 +154,8 @@ private:
     size_t use;
     bool use_set;
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_MANAGEDBYTES_H

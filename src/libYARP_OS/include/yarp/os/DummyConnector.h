@@ -1,6 +1,10 @@
 /*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2007 Freyr Magnusson
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_DUMMYCONNECTOR_H
@@ -10,10 +14,7 @@
 #include <yarp/os/ConnectionWriter.h>
 
 namespace yarp {
-    namespace os {
-        class DummyConnector;
-    }
-}
+namespace os {
 
 /**
  *
@@ -34,7 +35,8 @@ namespace yarp {
  * \author Freyr Magnusson
  *
  */
-class YARP_OS_API yarp::os::DummyConnector {
+class YARP_OS_API DummyConnector
+{
 public:
     /**
      * Default constructor. TextMode set to false.
@@ -82,8 +84,10 @@ public:
     void reset();
 
 private:
-    void *implementation;
+    void* implementation;
 };
 
+} // namespace os
+} // namespace yarp
 
 #endif // DUMMYCONNECTOR_H

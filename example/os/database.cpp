@@ -1,19 +1,18 @@
 /*
- * Copyright: (C) 2010 RobotCub Consortium
- * Author: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <stdio.h>
 #include <yarp/os/all.h>
+#include <yarp/dev/GenericVocabs.h>
 
 using namespace yarp::os;
 
-#define VOCAB_SET VOCAB3('s','e','t')
-#define VOCAB_GET VOCAB3('g','e','t')
-#define VOCAB_NOT VOCAB3('n','o','t')
-#define VOCAB_IS VOCAB2('i','s')
-#define VOCAB_REMOVE VOCAB2('r','m')
 
 
 int main(int argc, char *argv[]) {
@@ -49,7 +48,7 @@ int main(int argc, char *argv[]) {
 
         Bottle tmp;
         tmp.add(cmd.get(1));
-        ConstString key = tmp.toString();
+        std::string key = tmp.toString();
 
         switch (Vocab::encode(cmd.get(0).toString())) {
         case VOCAB_SET:

@@ -1,54 +1,66 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_STRINGOUTPUTSTREAM_H
 #define YARP_OS_STRINGOUTPUTSTREAM_H
 
+#include <yarp/os/Bytes.h>
 #include <yarp/os/OutputStream.h>
-#include <yarp/os/ConstString.h>
+
+#include <string>
 
 namespace yarp {
-    namespace os {
-        class StringOutputStream;
-    }
-}
+namespace os {
 
 /**
  * An OutputStream that produces a string.  Handy for testing purposes.
  */
-class yarp::os::StringOutputStream : public OutputStream {
+class StringOutputStream : public OutputStream
+{
 public:
     using OutputStream::write;
 
-    StringOutputStream() { }
+    StringOutputStream() {}
 
-    ConstString toString() {
+    std::string toString() const
+    {
         return data;
     }
 
-    void reset() {
+    void reset()
+    {
         data = "";
     }
 
-    virtual void write(const Bytes& b) override {
-        ConstString tmp((char*)b.get(), b.length());
+    void write(const Bytes& b) override
+    {
+        std::string tmp((char*)b.get(), b.length());
         data += tmp;
     }
 
-    virtual void close() override {
-    }
+    void close() override {}
 
-    virtual bool isOk() override {
+    bool isOk() const override
+    {
         return true;
     }
 
-    const ConstString& str() { return data; }
+    const std::string& str() const
+    {
+        return data;
+    }
 
 private:
-    ConstString data;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) data;
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_STRINGOUTPUTSTREAM_H

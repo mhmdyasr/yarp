@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_FACE_H
@@ -12,15 +15,13 @@
 #include <yarp/os/OutputProtocol.h>
 
 namespace yarp {
-    namespace os {
-        class Face;
-    }
-}
+namespace os {
 
 /**
  * The initial point-of-contact with a port.
  */
-class YARP_OS_API yarp::os::Face {
+class YARP_OS_API Face
+{
 public:
     /**
      * Constructor.
@@ -59,7 +60,7 @@ public:
      *         failure.
      *
      */
-    virtual InputProtocol *read() = 0;
+    virtual InputProtocol* read() = 0;
 
     /**
      *
@@ -71,7 +72,7 @@ public:
      * @return a protocol object to talk with, or nullptr on failure.
      *
      */
-    virtual OutputProtocol *write(const Contact& address) = 0;
+    virtual OutputProtocol* write(const Contact& address) = 0;
 
 
     /**
@@ -82,9 +83,13 @@ public:
      * @return an address
      *
      */
-    virtual Contact getLocalAddress() {
+    virtual Contact getLocalAddress() const
+    {
         return Contact();
     }
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_FACE_H

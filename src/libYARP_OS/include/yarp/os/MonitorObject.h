@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_MONITOROBJECT_H
@@ -11,14 +13,16 @@
 #include <yarp/os/api.h>
 
 namespace yarp {
-    namespace os {
-        class MonitorObject;
-        class Property;
-        class Things;
-    }
-}
+namespace os {
+class Property;
+class Things;
+} // namespace os
+} // namespace yarp
 
-class YARP_OS_API yarp::os::MonitorObject
+namespace yarp {
+namespace os {
+
+class YARP_OS_API MonitorObject
 {
 public:
     virtual ~MonitorObject();
@@ -72,7 +76,7 @@ public:
 
     /**
      * After data get accpeted in the accept() callback, an instance of that
-     * is given to the update fucntion where the data can be accessed and modified
+     * is given to the update function where the data can be accessed and modified
      *
      * @param thing An instance of yarp::os::Thing object which can be used
      *        to typecast the data to the correct type.
@@ -91,5 +95,8 @@ public:
      */
     virtual yarp::os::Things& updateReply(yarp::os::Things& thing);
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_MONITOROBJECT_H

@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2007 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_ICONFIG_H
@@ -11,10 +14,7 @@
 #include <yarp/os/Searchable.h>
 
 namespace yarp {
-    namespace os {
-        class IConfig;
-    }
-}
+namespace os {
 
 /**
  *
@@ -23,9 +23,9 @@ namespace yarp {
  * files, command line options, or GUIs.
  *
  */
-class YARP_OS_API yarp::os::IConfig {
+class YARP_OS_API IConfig
+{
 public:
-
     /**
      * Destructor.
      */
@@ -55,5 +55,8 @@ public:
      */
     virtual bool configure(Searchable& config);
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_ICONFIG_H

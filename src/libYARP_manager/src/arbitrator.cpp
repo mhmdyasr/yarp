@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/arbitrator.h>
 #include <yarp/manager/binexparser.h>
@@ -85,7 +84,7 @@ bool Arbitrator::trainWeights(const char* opnd)
 
     // parsing the compact logic
     rule = string(opnd) + " : " + rule;
-    if(!parser.parse(rule.c_str()))
+    if(!parser.parse(rule))
         return false;
 
     // trining the weights

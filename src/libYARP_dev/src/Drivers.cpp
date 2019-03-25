@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/Log.h>
 #include <yarp/os/Os.h>
@@ -18,57 +20,50 @@
 
 #include <yarp/dev/Drivers.h>
 
-#include <yarp/os/impl/PlatformSignal.h>
-#include <yarp/os/impl/Logger.h>
-
-#include <yarp/os/YarpPlugin.h>
-
 #include <vector>
 #include <sstream>
 #include <iterator>
+#include <csignal>
 
 using namespace yarp::os;
 using namespace yarp::dev;
-using namespace std;
-
-Drivers Drivers::instance;
 
 class DriversHelper : public YarpPluginSelector {
 public:
     std::vector<DriverCreator *> delegates;
 
     ~DriversHelper() {
-        for (unsigned int i=0; i<delegates.size(); i++) {
-            if (delegates[i]==nullptr) continue;
-            delete delegates[i];
+        for (auto& delegate : delegates) {
+            if (delegate==nullptr) continue;
+            delete delegate;
         }
         delegates.clear();
     }
 
-    virtual bool select(Searchable& options) override {
+    bool select(Searchable& options) override {
         return options.check("type",Value("none")).asString() == "device";
     }
 
-    ConstString toString() {
-        ConstString s;
+    std::string toString() {
+        std::string s;
         Property done;
-        for (unsigned int i=0; i<delegates.size(); i++) {
-            if (delegates[i]==nullptr) continue;
-            ConstString name = delegates[i]->getName();
+        for (auto& delegate : delegates) {
+            if (delegate==nullptr) continue;
+            std::string name = delegate->getName();
             done.put(name,1);
-            ConstString wrapper = delegates[i]->getWrapper();
+            std::string wrapper = delegate->getWrapper();
             s += "Device \"";
-            s += delegates[i]->getName();
+            s += delegate->getName();
             s += "\"";
             s += ",";
             s += " C++ class ";
-            s += delegates[i]->getCode();
+            s += delegate->getCode();
             s += ", ";
             if (wrapper=="") {
                 s += "has no network wrapper";
             } else if (wrapper!=name) {
                 s += "wrapped by \"";
-                s += delegates[i]->getWrapper();
+                s += delegate->getWrapper();
                 s += "\"";
             } else {
                 s += "is a network wrapper.";
@@ -78,9 +73,9 @@ public:
 
         scan();
         Bottle lst = getSelectedPlugins();
-        for (int i=0; i<lst.size(); i++) {
+        for (size_t i=0; i<lst.size(); i++) {
             Value& prop = lst.get(i);
-            ConstString name = prop.check("name",Value("untitled")).asString();
+            std::string name = prop.check("name",Value("untitled")).asString();
             if (done.check(name)) continue;
 
             SharedLibraryFactory lib;
@@ -88,15 +83,15 @@ public:
             settings.setSelector(*this);
             settings.readFromSearchable(prop,name);
             settings.open(lib);
-            ConstString location = lib.getName().c_str();
+            std::string location = lib.getName();
             if (location=="") {
               // A wrong library name ends up with empty location
               yWarning("Wrong library name for plugin %s", name.c_str());
               continue;
             }
 
-            ConstString cxx = prop.check("cxx",Value("unknown")).asString();
-            ConstString wrapper = prop.check("wrapper",Value("unknown")).asString();
+            std::string cxx = prop.check("cxx",Value("unknown")).asString();
+            std::string wrapper = prop.check("wrapper",Value("unknown")).asString();
             s += "Device \"";
             s += name;
             s += "\"";
@@ -116,7 +111,7 @@ public:
                 //s += "network wrapper unknown";
             } else if (wrapper!=name) {
                 s += ", wrapped by \"";
-                s += wrapper.c_str();
+                s += wrapper;
                 s += "\"";
             } else {
                 s += ", is a network wrapper";
@@ -136,23 +131,23 @@ public:
     DriverCreator *load(const char *name);
 
     DriverCreator *find(const char *name) {
-        for (unsigned int i=0; i<delegates.size(); i++) {
-            if (delegates[i]==nullptr) continue;
-            ConstString s = delegates[i]->toString();
+        for (auto& delegate : delegates) {
+            if (delegate == nullptr) continue;
+            std::string s = delegate->toString();
             if (s==name) {
-                return delegates[i];
+                return delegate;
             }
         }
         return load(name);
     }
 
     bool remove(const char *name) {
-        for (unsigned int i=0; i<delegates.size(); i++) {
-            if (delegates[i]==nullptr) continue;
-            ConstString s = delegates[i]->toString();
+        for (auto& delegate : delegates) {
+            if (delegate == nullptr) continue;
+            std::string s = delegate->toString();
             if (s==name) {
-                delete delegates[i];
-                delegates[i] = nullptr;
+                delete delegate;
+                delegate = nullptr;
             }
         }
         return false;
@@ -180,8 +175,7 @@ public:
         init();
     }
 
-    virtual ~StubDriver() {
-    }
+    virtual ~StubDriver() = default;
 
     void init() {
         if (plugin.open(settings)) {
@@ -193,16 +187,16 @@ public:
         }
     }
 
-    bool isValid() {
+    bool isValid() const {
         return dev.isValid();
     }
 
-    virtual bool open(yarp::os::Searchable& config) override {
+    bool open(yarp::os::Searchable& config) override {
         if (!isValid()) return false;
         return dev.getContent().open(config);
     }
 
-    virtual bool close() override {
+    bool close() override {
         if (!isValid()) return false;
         return dev.getContent().close();
     }
@@ -211,32 +205,38 @@ public:
         return &dev.getContent();
     }
 
-    ConstString getDllName() {
+    std::string getDllName() const {
         return settings.getLibraryName();
     }
 
-    ConstString getFnName() {
+    std::string getFnName() const {
         return settings.getMethodName();
     }
 
-    ConstString getwrapName() {
+    std::string getwrapName() const {
         return settings.getWrapperName();
     }
 
-    ConstString getPluginName() {
+    std::string getPluginName() const {
         return settings.getPluginName();
     }
 
-    ConstString getClassName() {
+    std::string getClassName() const {
         return settings.getClassName();
     }
 
-    ConstString getBaseClassName() {
+    std::string getBaseClassName() const {
         return settings.getBaseClassName();
     }
 };
 
 #define HELPER(x) (*(((DriversHelper*)(x))))
+
+Drivers& Drivers::factory()
+{
+   static Drivers instance;
+   return instance;
+}
 
 Drivers::Drivers() {
     implementation = new DriversHelper;
@@ -252,7 +252,7 @@ Drivers::~Drivers() {
     }
 }
 
-yarp::os::ConstString Drivers::toString() {
+std::string Drivers::toString() const {
     return HELPER(implementation).toString();
 }
 
@@ -278,7 +278,7 @@ DeviceDriver *Drivers::open(yarp::os::Searchable& prop) {
 }
 
 DriverCreator *DriversHelper::load(const char *name) {
-    StubDriver *result = new StubDriver(name,false);
+    auto* result = new StubDriver(name,false);
     if (!result->isValid()) {
         delete result;
         result = nullptr;
@@ -301,21 +301,21 @@ static void toDox(PolyDriver& dd, FILE *os) {
     fprintf(os,"== Options checked by device:\n== \n");
 
     Bottle order = dd.getOptions();
-    for (int i=0; i<order.size(); i++) {
-        ConstString name = order.get(i).toString();
-        if (name=="wrapped"||(name.find(".wrapped")!=ConstString::npos)) {
+    for (size_t i=0; i<order.size(); i++) {
+        std::string name = order.get(i).toString();
+        if (name=="wrapped"||(name.find(".wrapped")!=std::string::npos)) {
             continue;
         }
-        ConstString desc = dd.getComment(name.c_str());
+        std::string desc = dd.getComment(name.c_str());
         Value def = dd.getDefaultValue(name.c_str());
         Value actual = dd.getValue(name.c_str());
-        ConstString out = "";
+        std::string out;
         out += name;
         if (!actual.isNull()) {
             if (actual.toString()!="") {
                 out += "=";
                 if (actual.toString().length()<40) {
-                    out += actual.toString().c_str();
+                    out += actual.toString();
                 } else {
                     out += "(value too long)";
                 }
@@ -325,7 +325,7 @@ static void toDox(PolyDriver& dd, FILE *os) {
             if (def.toString()!="") {
                 out += " [";
                 if (def.toString().length()<40) {
-                    out += def.toString().c_str();
+                    out += def.toString();
                 } else {
                     out += "(value too long)";
                 }
@@ -334,7 +334,7 @@ static void toDox(PolyDriver& dd, FILE *os) {
         }
         if (desc!="") {
             out += "\n    ";
-            out += desc.c_str();
+            out += desc;
         }
         fprintf(os,"%s\n", out.c_str());
     }
@@ -343,7 +343,7 @@ static void toDox(PolyDriver& dd, FILE *os) {
 }
 
 
-static ConstString terminatorKey = "";
+static std::string terminatorKey;
 static bool terminated = false;
 static void handler (int) {
     Time::useSystemClock();
@@ -376,16 +376,16 @@ static void handler (int) {
 // TODO Move somewhere else?
 namespace {
 template<typename Out>
-void split(const ConstString &s, char delim, Out result) {
+void split(const std::string &s, char delim, Out result) {
     std::stringstream ss;
     ss.str(s);
-    ConstString item;
+    std::string item;
     while (std::getline(ss, item, delim)) {
         *(result++) = item;
     }
 }
-std::vector<ConstString> split(const ConstString &s, char delim) {
-    std::vector<ConstString> elems;
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
     split(s, delim, std::back_inserter(elems));
     return elems;
 }
@@ -393,8 +393,8 @@ std::vector<ConstString> split(const ConstString &s, char delim) {
 
 int Drivers::yarpdev(int argc, char *argv[]) {
 
-    yarp::os::impl::signal(SIGINT, handler);
-    yarp::os::impl::signal(SIGTERM, handler);
+    std::signal(SIGINT, handler);
+    std::signal(SIGTERM, handler);
 
     // get command line options
     ResourceFinder rf;
@@ -409,7 +409,7 @@ int Drivers::yarpdev(int argc, char *argv[]) {
 
     // interpret command line options as a set of flags
     //options.fromCommand(argc,argv,true,false);
-    options.fromString(rf.toString().c_str(), false);
+    options.fromString(rf.toString(), false);
 
     // check if we're being asked to read the options from file
     Value *val;
@@ -419,7 +419,7 @@ int Drivers::yarpdev(int argc, char *argv[]) {
         yError("*** yarpdev --file is deprecated, please use --from\n");
         yError("*** yarpdev --file will be removed in a future version of YARP\n");
 
-        ConstString fname = val->toString();
+        std::string fname = val->toString();
         options.unput("file");
         yDebug("yarpdev: working with config file %s\n", fname.c_str());
         options.fromConfigFile(fname,false);
@@ -432,7 +432,7 @@ int Drivers::yarpdev(int argc, char *argv[]) {
     // check if we want to use nested options (less ambiguous)
     if (options.check("nested",val)||options.check("lispy",val))
     {
-        ConstString lispy = val->toString();
+        std::string lispy = val->toString();
         yDebug("yarpdev: working with config %s\n", lispy.c_str());
         options.fromString(lispy);
     }
@@ -500,7 +500,7 @@ int Drivers::yarpdev(int argc, char *argv[]) {
     // Using the YARP_CLOCK_DEFAULT the behaviour will be determined by the
     // environment variable.
     //
-    yarp::os::Network::yarpClockInit(yarp::os::YARP_CLOCK_DEFAULT);
+    yarp::os::NetworkBase::yarpClockInit(yarp::os::YARP_CLOCK_DEFAULT);
 
     PolyDriver dd(options);
     if (verbose) {
@@ -528,7 +528,7 @@ int Drivers::yarpdev(int argc, char *argv[]) {
     Terminee *terminee = nullptr;
     if (dd.isValid()) {
         Value *v;
-        ConstString s("/yarpdev/quit");
+        std::string s("/yarpdev/quit");
         if (options.check("device", v)) {
             if (v->isString()) {
                 s = "";
@@ -542,10 +542,10 @@ int Drivers::yarpdev(int argc, char *argv[]) {
             s += v->toString();
             s += "/quit";
         }
-        if (s.find("=") == ConstString::npos &&
-            s.find("@") == ConstString::npos) {
+        if (s.find('=') == std::string::npos &&
+            s.find('@') == std::string::npos) {
             terminee = new Terminee(s.c_str());
-            terminatorKey = s.c_str();
+            terminatorKey = s;
             if (terminee == nullptr) {
                 yError("Can't allocate terminator port\n");
                 terminatorKey = "";
@@ -609,9 +609,9 @@ int Drivers::yarpdev(int argc, char *argv[]) {
     return 0;
 }
 
-DeviceDriver *StubDriverCreator::create() {
+DeviceDriver *StubDriverCreator::create() const {
     //yDebug("Creating %s from %s\n", desc.c_str(), libname.c_str());
-    StubDriver *result = new StubDriver(libname.c_str(),fnname.c_str(),false);
+    auto* result = new StubDriver(libname.c_str(),fnname.c_str(),false);
     if (result==nullptr) return result;
     if (!result->isValid()) {
         delete result;

@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IMOTORENCODERS_H
@@ -271,17 +273,17 @@ public:
 };
 
 // interface IMotorEncoders sets
-#define VOCAB_MOTOR_E_RESET VOCAB3('m','r','e')
-#define VOCAB_MOTOR_E_RESETS VOCAB4('m','r','e','s')
-#define VOCAB_MOTOR_ENCODER VOCAB3('m','n','c')
-#define VOCAB_MOTOR_ENCODERS VOCAB4('m','n','c','s')
-#define VOCAB_MOTOR_CPR VOCAB4('m','c','p','r')
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_E_RESET  = yarp::os::createVocab('m','r','e');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_E_RESETS = yarp::os::createVocab('m','r','e','s');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER  = yarp::os::createVocab('m','n','c');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODERS = yarp::os::createVocab('m','n','c','s');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_CPR      = yarp::os::createVocab('m','c','p','r');
 
 // interface IMotorEncoders gets
-#define VOCAB_MOTOR_ENCODER_NUMBER VOCAB4('m','n','u','m')
-#define VOCAB_MOTOR_ENCODER_SPEED VOCAB3('m','s','p')
-#define VOCAB_MOTOR_ENCODER_SPEEDS VOCAB4('m','s','p','s')
-#define VOCAB_MOTOR_ENCODER_ACCELERATION VOCAB3('m','a','c')
-#define VOCAB_MOTOR_ENCODER_ACCELERATIONS VOCAB4('m','a','c','s')
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_NUMBER        =  yarp::os::createVocab('m','n','u','m');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_SPEED         = yarp::os::createVocab('m','s','p');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_SPEEDS        = yarp::os::createVocab('m','s','p','s');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_ACCELERATION  = yarp::os::createVocab('m','a','c');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_ACCELERATIONS = yarp::os::createVocab('m','a','c','s');
 
 #endif // YARP_DEV_IMOTORENCODERS_H

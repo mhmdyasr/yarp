@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo <marco.randazzo@iit.it>
- *         Francesco Nori <francesco.nori@iit.it>
- *         Davide Perrone <dperrone@aitek.it>
- * CopyPolicy: Released under the terms of the GPLv2 or later, see GPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #include "sequencewindow.h"
 #include "ui_sequencewindow.h"
@@ -85,10 +94,10 @@ SequenceWindow::SequenceWindow(QString partName, int count,QWidget *parent) :
         ss << "0";
         ss1 << "10";
     }
-    QTreeWidgetItem *itemPos = new QTreeWidgetItem(ss);
+    auto* itemPos = new QTreeWidgetItem(ss);
     ui->treePositions->addTopLevelItem(itemPos);
 
-    QTreeWidgetItem *itemSpeed = new QTreeWidgetItem(ss1);
+    auto* itemSpeed = new QTreeWidgetItem(ss1);
     ui->treeSpeed->addTopLevelItem(itemSpeed);
 }
 
@@ -179,11 +188,11 @@ void SequenceWindow::onDoubleClickPositions(QTreeWidgetItem *item,int column)
     for(int i=0; i<jointCount;i++){
         ss << "0";
     }
-    QTreeWidgetItem *newItem = new QTreeWidgetItem(ss);
+    auto* newItem = new QTreeWidgetItem(ss);
     item->setFlags(newItem->flags() & ~Qt::ItemIsEditable);
     ui->treePositions->addTopLevelItem(newItem);
 
-    QTreeWidgetItem *newItem1 = new QTreeWidgetItem(ss1);
+    auto* newItem1 = new QTreeWidgetItem(ss1);
     ui->treeSpeed->addTopLevelItem(newItem1);
 
 
@@ -401,11 +410,11 @@ void SequenceWindow::loadSequence(QList<SequenceItem> sequence)
             ss1.append(QString("%1").arg(seq.getSpeeds().at(i)));
         }
 
-        QTreeWidgetItem *newItem = new QTreeWidgetItem(ss);
+        auto* newItem = new QTreeWidgetItem(ss);
         ui->treePositions->addTopLevelItem(newItem);
 
 
-        QTreeWidgetItem *newItem1 = new QTreeWidgetItem(ss1);
+        auto* newItem1 = new QTreeWidgetItem(ss1);
         ui->treeSpeed->addTopLevelItem(newItem1);
 
         ss.clear();

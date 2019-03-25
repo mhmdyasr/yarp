@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_MANAGER_APPLICATION
 #define YARP_MANAGER_APPLICATION
@@ -38,7 +37,7 @@ public:
     virtual ~Portmap(){}
     const char* oldPort(void) { return strOld.c_str(); }
     const char* newPort(void) { return strNew.c_str(); }
-    bool operator==(const Portmap& alt) {
+    bool operator==(const Portmap& alt) const {
         return ((strOld == alt.strOld) && (strNew == alt.strNew));
     }
 
@@ -117,7 +116,7 @@ public:
     void setModelBase(GraphicModel& mdl) { modelBase = mdl; };
 
 
-    bool operator==(const Connection& alt) {
+    bool operator==(const Connection& alt) const {
         return ((strFrom == alt.strFrom) && (strTo == alt.strTo));
     }
 
@@ -190,7 +189,7 @@ public:
     const char* getTag(void) { return strTag.c_str(); }
     const char* getDisplay() { return strDisplay.c_str(); }
 
-    bool operator==(const ModuleInterface& modint) {
+    bool operator==(const ModuleInterface& modint) const {
         return (strName == modint.strName);
     }
 
@@ -256,7 +255,7 @@ public:
     void setPrefix(const char* szPrefix) { if(szPrefix) strPrefix = szPrefix; }
     const char* getName(void) { return strName.c_str(); }
     const char* getPrefix(void) { return strPrefix.c_str(); }
-    bool operator==(const ApplicationInterface& alt) {
+    bool operator==(const ApplicationInterface& alt) const {
         return (strName == alt.strName);
     }
 
@@ -300,7 +299,7 @@ public:
     size_t getNameLenght() {return strName.length(); }
     const char* getVersion(void) { return strVersion.c_str(); }
     const char* getDescription(void) { return strDescription.c_str(); }
-    virtual Node* clone(void) override;
+    Node* clone(void) override;
 
     void addAuthor(Author& author) { authors.push_back(author); }
     int authorCount(void) { return authors.size(); }
@@ -348,7 +347,7 @@ public:
     Node* owner(void) { return appOwner; }
 
 
-    bool operator==(const Application& app) {
+    bool operator==(const Application& app) const {
         return (strName == app.strName);
     }
 

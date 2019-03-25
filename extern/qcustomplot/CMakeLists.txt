@@ -1,7 +1,8 @@
-# Copyright (C) 2013 Istituto Italiano di Tecnologia (IIT)
-# Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 # QCustomPlot
 project(YARP_priv_qcustomplot)
@@ -23,10 +24,13 @@ set(QCustomPlot_LIBRARIES "YARP_priv_qcustomplot" PARENT_SCOPE)
 set(QCustomPlot_DEFINITIONS "" PARENT_SCOPE)
 
 install(TARGETS YARP_priv_qcustomplot
-        EXPORT YARP
-        COMPONENT runtime
+        EXPORT YARP_priv_qcustomplot
+        COMPONENT YARP_priv_qcustomplot
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
-set_property(GLOBAL APPEND PROPERTY YARP_LIBS YARP_priv_qcustomplot)
+if(NOT CREATE_SHARED_LIBS)
+  include(YarpInstallBasicPackageFiles)
+  yarp_install_basic_package_files(YARP_priv_qcustomplot)
+endif()

@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2009 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_RPCCLIENT_H
@@ -10,10 +13,7 @@
 #include <yarp/os/AbstractContactable.h>
 
 namespace yarp {
-    namespace os {
-        class RpcClient;
-    }
-}
+namespace os {
 
 /**
  * \ingroup comm_class
@@ -22,12 +22,9 @@ namespace yarp {
  * connect to a single server, and receive replies on the same connection.
  *
  */
-class YARP_OS_API yarp::os::RpcClient : public AbstractContactable {
+class YARP_OS_API RpcClient : public AbstractContactable
+{
 public:
-#ifndef YARP_NO_DEPRECATED // since YARP 2.3.72
-    using AbstractContactable::open;
-#endif // YARP_NO_DEPRECATED
-
     /**
      * Constructor.
      */
@@ -38,36 +35,35 @@ public:
      */
     virtual ~RpcClient();
 
-    // documented in UnbufferedContactable
-    virtual bool read(PortReader& reader, bool willReply = false) override;
+    // Non-copyable
+    RpcClient(const RpcClient& alt) = delete;
+    const RpcClient& operator=(const RpcClient& alt) = delete;
 
     // documented in UnbufferedContactable
-    virtual bool reply(PortWriter& writer) override;
+    bool read(PortReader& reader, bool willReply = false) override;
 
     // documented in UnbufferedContactable
-    virtual bool replyAndDrop(PortWriter& writer) override;
+    bool reply(PortWriter& writer) override;
 
+    // documented in UnbufferedContactable
+    bool replyAndDrop(PortWriter& writer) override;
 
     void setInputMode(bool expectInput) override;
     void setOutputMode(bool expectOutput) override;
     void setRpcMode(bool expectRpc) override;
 
-    virtual Port& asPort() override {
-        return port;
-    }
+    Port& asPort() override;
+    const Port& asPort() const override;
 
-    virtual const Port& asPort() const override {
-        return port;
-    }
-
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 private:
-    // an RpcClient may be implemented with a regular port
-    Port port;
+    class Private;
+    Private* mPriv;
+#endif // DOXYGEN_SHOULD_SKIP_THIS
 
-    // forbid copy constructor and assignment operator by making them private
-    // and not implementing them
-    RpcClient(const RpcClient& alt);
-    const RpcClient& operator = (const RpcClient& alt);
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_RPCCLIENT_H

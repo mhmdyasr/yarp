@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/node.h>
 
@@ -43,7 +42,7 @@ bool Node::removeSuc(Node* node)
 {
     __CHECK_NULLPTR(node);
 
-    LinkIterator it = findSuc(node);
+    auto it = findSuc(node);
     if(it != sucessors.end())
         sucessors.erase(it);
     return true;
@@ -59,7 +58,7 @@ void Node::removeAllSuc()
 
 bool Node::hasSuc(Node* node)
 {
-    LinkIterator it = findSuc(node);
+    auto it = findSuc(node);
     if(it == sucessors.end())
         return false;
     return true;

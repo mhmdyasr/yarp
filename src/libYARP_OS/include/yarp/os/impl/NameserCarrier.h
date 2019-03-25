@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_IMPL_NAMESERCARRIER_H
@@ -29,26 +32,26 @@ class yarp::os::impl::NameserTwoWayStream : public TwoWayStream, InputStream
 {
 private:
     TwoWayStream *delegate;
-    ConstString pendingRead;
-    ConstString swallowRead;
+    std::string pendingRead;
+    std::string swallowRead;
 public:
     NameserTwoWayStream(TwoWayStream *delegate);
 
     virtual ~NameserTwoWayStream();
 
-    virtual InputStream& getInputStream() override;
-    virtual OutputStream& getOutputStream() override;
-    virtual const Contact& getLocalAddress() override;
-    virtual const Contact& getRemoteAddress() override;
+    InputStream& getInputStream() override;
+    OutputStream& getOutputStream() override;
+    const Contact& getLocalAddress() const override;
+    const Contact& getRemoteAddress() const override;
 
-    virtual bool isOk() override;
-    virtual void reset() override;
-    virtual void close() override;
-    virtual void beginPacket() override;
-    virtual void endPacket() override;
+    bool isOk() const override;
+    void reset() override;
+    void close() override;
+    void beginPacket() override;
+    void endPacket() override;
 
     using yarp::os::InputStream::read;
-    virtual YARP_SSIZE_T read(const yarp::os::Bytes& b) override;
+    yarp::conf::ssize_t read(yarp::os::Bytes& b) override;
 };
 
 
@@ -64,25 +67,25 @@ private:
 public:
     NameserCarrier();
 
-    virtual ConstString getName() override;
-    virtual ConstString getSpecifierName();
+    std::string getName() const override;
+    std::string getSpecifierName() const;
 
-    virtual Carrier *create() override;
+    Carrier *create() const override;
 
-    virtual bool checkHeader(const Bytes& header) override;
-    virtual void getHeader(const Bytes& header) override;
-    virtual bool requireAck() override;
-    virtual bool isTextMode() override;
-    virtual bool supportReply() override;
-    virtual bool canEscape() override;
-    virtual bool sendHeader(ConnectionState& proto) override;
-    virtual bool expectSenderSpecifier(ConnectionState& proto) override;
-    virtual bool expectIndex(ConnectionState& proto) override;
-    virtual bool sendAck(ConnectionState& proto) override;
-    virtual bool expectAck(ConnectionState& proto) override;
-    virtual bool respondToHeader(ConnectionState& proto) override;
-    virtual bool expectReplyToHeader(ConnectionState& proto) override;
-    virtual bool write(ConnectionState& proto, SizedWriter& writer) override;
+    bool checkHeader(const Bytes& header) override;
+    void getHeader(Bytes& header) const override;
+    bool requireAck() const override;
+    bool isTextMode() const override;
+    bool supportReply() const override;
+    bool canEscape() const override;
+    bool sendHeader(ConnectionState& proto) override;
+    bool expectSenderSpecifier(ConnectionState& proto) override;
+    bool expectIndex(ConnectionState& proto) override;
+    bool sendAck(ConnectionState& proto) override;
+    bool expectAck(ConnectionState& proto) override;
+    bool respondToHeader(ConnectionState& proto) override;
+    bool expectReplyToHeader(ConnectionState& proto) override;
+    bool write(ConnectionState& proto, SizedWriter& writer) override;
 };
 
 #endif // YARP_OS_IMPL_NAMESERCARRIER_H

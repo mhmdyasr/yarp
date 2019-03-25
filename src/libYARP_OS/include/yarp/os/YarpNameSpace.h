@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2011 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_YARPNAMESPACE_H
@@ -12,42 +14,40 @@
 #include <cstdio>
 
 namespace yarp {
-    namespace os {
-        class YarpNameSpace;
-        class YarpDummyNameSpace;
-    }
-}
+namespace os {
 
-class YARP_OS_API yarp::os::YarpNameSpace : public NameSpace
+class YARP_OS_API YarpNameSpace : public NameSpace
 {
 public:
     YarpNameSpace(const Contact& contact);
 
     virtual ~YarpNameSpace();
 
-    virtual Contact getNameServerContact() const override
+    Contact getNameServerContact() const override
     {
         return contact;
     }
 
-    virtual Contact queryName(const ConstString& name) override;
+    Contact queryName(const std::string& name) override;
 
-    virtual Contact registerName(const ConstString& name) override;
+    Contact registerName(const std::string& name) override;
 
-    virtual Contact registerContact(const Contact& contact) override;
+    Contact registerContact(const Contact& contact) override;
 
-    virtual Contact unregisterName(const ConstString& name) override;
+    Contact unregisterName(const std::string& name) override;
 
-    virtual Contact unregisterContact(const Contact& contact) override;
+    Contact unregisterContact(const Contact& contact) override;
 
-    virtual bool setProperty(const ConstString& name, const ConstString& key,
+    virtual bool setProperty(const std::string& name,
+                             const std::string& key,
                              const Value& value) override;
 
-    virtual Value *getProperty(const ConstString& name, const ConstString& key) override;
+    virtual Value* getProperty(const std::string& name,
+                               const std::string& key) override;
 
     virtual bool connectPortToTopic(const Contact& src,
                                     const Contact& dest,
-                                    ContactStyle style)  override
+                                    ContactStyle style) override
     {
         return connectTopic("subscribe", false, true, src, dest, style);
     }
@@ -87,7 +87,7 @@ public:
         return connectTopic("unsubscribe", false, false, src, dest, style);
     }
 
-    virtual bool connectTopic(const ConstString& dir,
+    virtual bool connectTopic(const std::string& dir,
                               bool srcIsTopic,
                               bool destIsTopic,
                               const Contact& src,
@@ -99,7 +99,7 @@ public:
         Contact dynamicDest = dest;
         Bottle cmd, reply;
         cmd.addString(dir.c_str());
-        if (style.carrier!="") {
+        if (style.carrier != "") {
             if (!destIsTopic) {
                 dynamicDest.setCarrier(style.carrier);
             } else {
@@ -122,16 +122,12 @@ public:
         }
         bool ok = false;
         if (!NetworkBase::getQueryBypass()) {
-            ok = NetworkBase::write(getNameServerContact(),
-                                    cmd,
-                                    reply);
+            ok = NetworkBase::write(getNameServerContact(), cmd, reply);
         } else {
             ContactStyle style;
-            ok = NetworkBase::writeToNameServer(cmd,
-                                                reply,
-                                                style);
+            ok = NetworkBase::writeToNameServer(cmd, reply, style);
         }
-        bool fail = (reply.get(0).toString()=="fail")||!ok;
+        bool fail = (reply.get(0).toString() == "fail") || !ok;
         if (fail) {
             if (!style.quiet) {
                 fprintf(stderr, "Failure: name server did not accept connection to topic.\n");
@@ -140,22 +136,22 @@ public:
         return !fail;
     }
 
-    virtual bool localOnly() const override
+    bool localOnly() const override
     {
         return false;
     }
 
-    virtual bool usesCentralServer() const override
+    bool usesCentralServer() const override
     {
         return true;
     }
 
-    virtual bool serverAllocatesPortNumbers() const override
+    bool serverAllocatesPortNumbers() const override
     {
         return true;
     }
 
-    virtual bool connectionHasNameOfEndpoints() const override
+    bool connectionHasNameOfEndpoints() const override
     {
         return true;
     }
@@ -169,26 +165,27 @@ public:
                                    const ContactStyle& style) override;
 
 private:
-    void *system_resource;
+    void* system_resource;
     Contact contact;
 };
 
-class yarp::os::YarpDummyNameSpace : public YarpNameSpace
+class YarpDummyNameSpace : public YarpNameSpace
 {
 public:
-    YarpDummyNameSpace() : YarpNameSpace(Contact())
-    {
-    }
+    YarpDummyNameSpace() : YarpNameSpace(Contact()) {}
 
-    virtual bool localOnly() const override
+    bool localOnly() const override
     {
         return true;
     }
 
-    virtual Contact getNameServerContact() const override
+    Contact getNameServerContact() const override
     {
         return Contact("/root");
     }
- };
+};
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_YARPNAMESPACE_H

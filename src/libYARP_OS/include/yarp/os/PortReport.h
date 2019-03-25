@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_PORTREPORT_H
@@ -10,12 +13,13 @@
 #include <yarp/os/api.h>
 
 namespace yarp {
-    namespace os {
-        class PortInfo;
-        class PortReport;
-    }
-}
+namespace os {
+class PortInfo;
+} // namespace os
+} // namespace yarp
 
+namespace yarp {
+namespace os {
 
 /**
  * \ingroup comm_class
@@ -23,7 +27,8 @@ namespace yarp {
  * A base class for objects that want information about port status
  * changes.
  */
-class YARP_OS_API yarp::os::PortReport {
+class YARP_OS_API PortReport
+{
 public:
     /**
      * Destructor.
@@ -43,5 +48,7 @@ public:
     virtual void report(const PortInfo& info) = 0;
 };
 
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_PORTREPORT_H

@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_IMPL_HTTPCARRIER
@@ -11,6 +14,8 @@
 #include <yarp/os/NetType.h>
 #include <yarp/os/StringInputStream.h>
 #include <yarp/os/StringOutputStream.h>
+#include <yarp/os/TwoWayStream.h>
+#include <yarp/os/Property.h>
 
 namespace yarp {
     namespace os {
@@ -48,16 +53,16 @@ namespace yarp {
 class yarp::os::impl::HttpTwoWayStream : public TwoWayStream, public OutputStream
 {
 private:
-    ConstString proc;
-    ConstString part;
+    std::string proc;
+    std::string part;
     bool data;
     bool filterData;
     bool chunked;
     TwoWayStream *delegate;
     StringInputStream sis;
     StringOutputStream sos;
-    ConstString format;
-    ConstString outer;
+    std::string format;
+    std::string outer;
     bool isWriter;
 public:
     HttpTwoWayStream(TwoWayStream *delegate,
@@ -68,24 +73,24 @@ public:
 
     virtual ~HttpTwoWayStream();
 
-    virtual InputStream& getInputStream() override;
-    virtual OutputStream& getOutputStream() override;
-    virtual const Contact& getLocalAddress() override;
-    virtual const Contact& getRemoteAddress() override;
+    InputStream& getInputStream() override;
+    OutputStream& getOutputStream() override;
+    const Contact& getLocalAddress() const override;
+    const Contact& getRemoteAddress() const override;
 
-    virtual bool isOk() override;
-    virtual void reset() override;
+    bool isOk() const override;
+    void reset() override;
     using yarp::os::OutputStream::write;
-    virtual void write(const Bytes& b) override;
+    void write(const Bytes& b) override;
     virtual void apply(char ch);
-    virtual void close() override;
-    virtual void beginPacket() override;
-    virtual void endPacket() override;
+    void close() override;
+    void beginPacket() override;
+    void endPacket() override;
 
     void flip();
     void finish();
     bool useJson();
-    ConstString *typeHint();
+    std::string *typeHint();
 };
 
 
@@ -96,7 +101,7 @@ public:
 class yarp::os::impl::HttpCarrier : public TcpCarrier
 {
 private:
-    ConstString url, input, prefix;
+    std::string url, input, prefix;
     bool urlDone;
     bool expectPost;
     int contentLength;
@@ -105,29 +110,29 @@ private:
 public:
     HttpCarrier();
 
-    virtual Carrier *create() override;
+    Carrier *create() const override;
 
-    virtual ConstString getName() override;
+    std::string getName() const override;
 
     bool checkHeader(const Bytes& header, const char *prefix);
 
-    virtual bool checkHeader(const Bytes& header) override;
-    virtual void setParameters(const Bytes& header) override;
-    virtual void getHeader(const Bytes& header) override;
-    virtual bool requireAck() override;
-    virtual bool isTextMode() override;
-    virtual bool supportReply() override;
-    virtual bool sendHeader(ConnectionState& proto) override;
-    virtual bool expectSenderSpecifier(ConnectionState& proto) override;
-    virtual bool expectReplyToHeader(ConnectionState& proto) override;
-    virtual bool sendIndex(ConnectionState& proto, SizedWriter& writer) override;
-    virtual bool expectIndex(ConnectionState& proto) override;
-    virtual bool sendAck(ConnectionState& proto) override;
-    virtual bool expectAck(ConnectionState& proto) override;
-    virtual bool respondToHeader(ConnectionState& proto) override;
+    bool checkHeader(const Bytes& header) override;
+    void setParameters(const Bytes& header) override;
+    void getHeader(Bytes& header) const override;
+    bool requireAck() const override;
+    bool isTextMode() const override;
+    bool supportReply() const override;
+    bool sendHeader(ConnectionState& proto) override;
+    bool expectSenderSpecifier(ConnectionState& proto) override;
+    bool expectReplyToHeader(ConnectionState& proto) override;
+    bool sendIndex(ConnectionState& proto, SizedWriter& writer) override;
+    bool expectIndex(ConnectionState& proto) override;
+    bool sendAck(ConnectionState& proto) override;
+    bool expectAck(ConnectionState& proto) override;
+    bool respondToHeader(ConnectionState& proto) override;
 
-    virtual bool reply(ConnectionState& proto, SizedWriter& writer) override;
-    virtual bool write(ConnectionState& proto, SizedWriter& writer) override;
+    bool reply(ConnectionState& proto, SizedWriter& writer) override;
+    bool write(ConnectionState& proto, SizedWriter& writer) override;
 };
 
 #endif // YARP_OS_IMPL_HTTPCARRIER

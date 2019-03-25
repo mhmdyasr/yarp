@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2009 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <cstdio>
@@ -23,9 +25,9 @@ using namespace std;
 //#define mutex printf("mutex %s %d\n", __FILE__, __LINE__), mutex
 
 
-Contact NameServiceOnTriples::query(const yarp::os::ConstString& portName,
+Contact NameServiceOnTriples::query(const std::string& portName,
                                     NameTripleState& act,
-                                    const yarp::os::ConstString& prefix,
+                                    const std::string& prefix,
                                     bool nested) {
     if (!nested) lock();
     Triple t;
@@ -34,15 +36,15 @@ Contact NameServiceOnTriples::query(const yarp::os::ConstString& portName,
     TripleContext context;
     context.setRid(result);
     if (result!=-1) {
-        ConstString host = "";
-        if (ConstString(prefix)!="") {
+        std::string host;
+        if (std::string(prefix)!="") {
             printf("LOOKING AT IPS FOR %s\n", prefix.c_str());
             t.setNameValue("ips","*");
             list<Triple> lst = act.mem.query(t,&context);
-            for (list<Triple>::iterator it=lst.begin();it!=lst.end();it++) {
-                printf("LOOKING AT IPS %s\n", it->value.c_str());
-                if (it->value.find(prefix)==0) {
-                    host = it->value;
+            for (auto& it : lst) {
+                printf("LOOKING AT IPS %s\n", it.value.c_str());
+                if (it.value.find(prefix)==0) {
+                    host = it.value;
                     break;
                 }
             }
@@ -51,7 +53,7 @@ Contact NameServiceOnTriples::query(const yarp::os::ConstString& portName,
             t.setNameValue("host","*");
             list<Triple> lst = act.mem.query(t,&context);
             if (lst.size()>0) {
-                host = lst.begin()->value.c_str();
+                host = lst.begin()->value;
             }
         }
         if (host=="") {
@@ -64,16 +66,16 @@ Contact NameServiceOnTriples::query(const yarp::os::ConstString& portName,
             sock = atoi(lst.begin()->value.c_str());
         }
         t.setNameValue("carrier","*");
-        ConstString carrier = "tcp";
+        std::string carrier = "tcp";
         lst = act.mem.query(t,&context);
         if (lst.size()>0) {
-            carrier = lst.begin()->value.c_str();
+            carrier = lst.begin()->value;
         }
         t.setNameValue("type","*");
-        ConstString typ = "*";
+        std::string typ = "*";
         lst = act.mem.query(t,&context);
         if (lst.size()>0) {
-            typ = lst.begin()->value.c_str();
+            typ = lst.begin()->value;
         }
         if (!nested) unlock();
         Contact result = Contact(portName, carrier, host, sock);
@@ -93,7 +95,7 @@ Contact NameServiceOnTriples::query(const yarp::os::ConstString& portName,
 }
 
 
-yarp::os::Contact NameServiceOnTriples::query(const ConstString& port) {
+yarp::os::Contact NameServiceOnTriples::query(const std::string& port) {
     Contact check = Contact::fromString(port);
     if (check.getHost()!="") return check;
     Bottle cmd,reply,event;
@@ -105,16 +107,16 @@ yarp::os::Contact NameServiceOnTriples::query(const ConstString& port) {
 
 
 bool NameServiceOnTriples::cmdQuery(NameTripleState& act, bool nested) {
-    ConstString port = act.cmd.get(1).asString();
+    std::string port = act.cmd.get(1).asString();
 
     ParseName parser;
-    parser.apply(port.c_str());
+    parser.apply(port);
     port = parser.getPortName();
 
     /*
     // port names may be prefixed - sort that out
-    ConstString base = port;
-    ConstString pat = "";
+    std::string base = port;
+    std::string pat = "";
     if (base.find("/net=") == 0 || base.find("/NET=") == 0) {
         int patStart = 5;
         int patEnd = base.find('/',patStart);
@@ -133,8 +135,8 @@ bool NameServiceOnTriples::cmdQuery(NameTripleState& act, bool nested) {
         act.reply :
         act.reply.addList();
     Contact c = query(port, act, parser.getNetworkChoice(), nested);
-    ConstString host = c.getHost();
-    ConstString carrier = c.getCarrier();
+    std::string host = c.getHost();
+    std::string carrier = c.getCarrier();
     int sock = c.getPort();
     if (c.isValid()) {
         if (!act.bottleMode) {
@@ -144,7 +146,7 @@ bool NameServiceOnTriples::cmdQuery(NameTripleState& act, bool nested) {
             q.addString("ip");
             q.addString(host);
             q.addString("port");
-            q.addInt(sock);
+            q.addInt32(sock);
             q.addString("type");
             q.addString(carrier);
         } else {
@@ -156,7 +158,7 @@ bool NameServiceOnTriples::cmdQuery(NameTripleState& act, bool nested) {
             bip.addString(host);
             Bottle bnum;
             bnum.addString("port_number");
-            bnum.addInt(sock);
+            bnum.addInt32(sock);
             Bottle bcarrier;
             bcarrier.addString("carrier");
             bcarrier.addString(carrier);
@@ -170,7 +172,7 @@ bool NameServiceOnTriples::cmdQuery(NameTripleState& act, bool nested) {
         if (act.bottleMode) {
             Bottle bstate;
             bstate.addString("error");
-            bstate.addInt(-2);
+            bstate.addInt32(-2);
             bstate.addString("port not known");
             q.addString("port");
             q.addList() = bstate;
@@ -180,7 +182,7 @@ bool NameServiceOnTriples::cmdQuery(NameTripleState& act, bool nested) {
 }
 
 bool NameServiceOnTriples::cmdRegister(NameTripleState& act) {
-    ConstString port = act.cmd.get(1).asString();
+    std::string port = act.cmd.get(1).asString();
 
     lock();
     Triple t;
@@ -231,11 +233,11 @@ bool NameServiceOnTriples::cmdRegister(NameTripleState& act) {
 
     act.reply.addString("old");
 
-    int at = 2;
+    size_t at = 2;
     int sock = -1;
-    ConstString carrier = "...";
-    ConstString machine = "...";
-    ConstString typ = "*";
+    std::string carrier = "...";
+    std::string machine = "...";
+    std::string typ = "*";
     if (act.cmd.size()>at) {
         carrier = act.cmd.get(at).asString();
         at++;
@@ -251,7 +253,7 @@ bool NameServiceOnTriples::cmdRegister(NameTripleState& act) {
         if (carrier=="topic") {
             machine = serverContact.getHost();
         } else if (carrier!="mcast") {
-            ConstString remote = act.remote.getHost();
+            std::string remote = act.remote.getHost();
             if (remote==""||remote=="...") {
                 //fprintf(stderr,"Not detecting real remote machine name, guessing local\n");
                 machine = "localhost";
@@ -261,7 +263,7 @@ bool NameServiceOnTriples::cmdRegister(NameTripleState& act) {
         }
     }
     if (act.cmd.size()>at) {
-        sock = act.cmd.get(at).asInt();
+        sock = act.cmd.get(at).asInt32();
         at++;
     } else {
         if (carrier=="topic") {
@@ -294,7 +296,7 @@ bool NameServiceOnTriples::cmdRegister(NameTripleState& act) {
     Contact c(port, carrier, machine, sock);
     c = alloc->completeSocket(c);
     sock = c.getPort();
-    machine = c.getHost().c_str();
+    machine = c.getHost();
     t.setNameValue("host",machine.c_str());
     act.mem.update(t,&context);
     sprintf(buf,"%d",sock);
@@ -321,7 +323,7 @@ bool NameServiceOnTriples::cmdRegister(NameTripleState& act) {
 }
 
 
-bool NameServiceOnTriples::announce(const ConstString& name, int activity) {
+bool NameServiceOnTriples::announce(const std::string& name, int activity) {
     if (subscriber != nullptr && gonePublic) {
         subscriber->welcome(name,activity);
     }
@@ -329,7 +331,7 @@ bool NameServiceOnTriples::announce(const ConstString& name, int activity) {
 }
 
 bool NameServiceOnTriples::cmdUnregister(NameTripleState& act) {
-    ConstString port = act.cmd.get(1).asString();
+    std::string port = act.cmd.get(1).asString();
     //printf(" - unregister %s\n", port.c_str());
     announce(port,-1);
     lock();
@@ -345,10 +347,10 @@ bool NameServiceOnTriples::cmdUnregister(NameTripleState& act) {
         t.setNameValue("owns","*");
         list<Triple> lst = act.mem.query(t,&context);
         unlock();
-        for (list<Triple>::iterator it=lst.begin();it!=lst.end();it++) {
+        for (auto& it : lst) {
             act.cmd.clear();
             act.cmd.addString("unregister");
-            act.cmd.addString(it->value.c_str());
+            act.cmd.addString(it.value.c_str());
             cmdUnregister(act);
         }
         lock();
@@ -372,6 +374,54 @@ bool NameServiceOnTriples::cmdUnregister(NameTripleState& act) {
     return cmdQuery(act);
 }
 
+bool NameServiceOnTriples::cmdListRunners(NameTripleState& act)
+{ // this is a combination of cmdList and cmdCheck codes
+    if (!act.bottleMode)
+    {
+        act.reply.addString("old");
+    } else
+    {
+        act.reply.addString("ports");
+    }
+    lock();
+    Triple t;
+    t.setNameValue("port","*");
+
+    // obtain all ports names
+    list<Triple> lst = act.mem.query(t, nullptr);
+    act.nestedMode = true;
+
+    for (auto& it : lst)
+    { // check yarprun property for each port
+        std::string port    = it.value;
+        act.mem.reset();
+
+        Triple t;
+        t.setNameValue("port",port.c_str());
+        int rid = act.mem.find(t, nullptr);
+        if (rid == -1) {
+            unlock();
+            return false;
+        }
+
+        // find all triples with yarprun = true for the specified RID (at most one)
+        TripleContext context;
+        context.setRid(rid);
+        t.setNameValue("yarprun","true");
+        list<Triple> lst = act.mem.query(t,&context);
+
+        if (!lst.empty())
+        { // if the port is a runner, do a classic query to build the reply with complete information about the port
+            act.cmd.clear();
+            act.cmd.addString("query");
+            act.cmd.addString(port);
+            act.mem.reset();
+            cmdQuery(act, true);
+        }
+    }
+    unlock();
+    return true;
+}
 
 bool NameServiceOnTriples::cmdList(NameTripleState& act) {
     if (!act.bottleMode) {
@@ -382,21 +432,21 @@ bool NameServiceOnTriples::cmdList(NameTripleState& act) {
     lock();
     Triple t;
     t.setNameValue("port","*");
-    ConstString prefix = "";
+    std::string prefix;
     if (act.cmd.size()>1) {
         prefix = act.cmd.get(1).asString();
     }
     list<Triple> lst = act.mem.query(t, nullptr);
     act.nestedMode = true;
-    for (list<Triple>::iterator it=lst.begin(); it!=lst.end(); it++) {
+    for (auto& it : lst) {
         if (prefix=="") {
             act.cmd.clear();
             act.cmd.addString("query");
-            act.cmd.addString(it->value.c_str());
+            act.cmd.addString(it.value.c_str());
             act.mem.reset();
             cmdQuery(act,true);
         } else {
-            ConstString iname = it->value.c_str();
+            std::string iname = it.value;
             if (iname.find(prefix)==0) {
                 if (iname==prefix || iname[prefix.length()]=='/' ||
                     prefix[prefix.length()-1]=='/') {
@@ -419,8 +469,8 @@ bool NameServiceOnTriples::cmdSet(NameTripleState& act) {
     if (!act.bottleMode) {
         act.reply.addString("old");
     }
-    ConstString port = act.cmd.get(1).asString();
-    ConstString key = act.cmd.get(2).toString();
+    std::string port = act.cmd.get(1).asString();
+    std::string key = act.cmd.get(2).toString();
     int at = 3;
     int n = act.cmd.size()-at;
     Triple t;
@@ -456,8 +506,8 @@ bool NameServiceOnTriples::cmdGet(NameTripleState& act) {
             act.reply.addString("old");
         }
     }
-    ConstString port = act.cmd.get(1).asString();
-    ConstString key = act.cmd.get(2).toString();
+    std::string port = act.cmd.get(1).asString();
+    std::string key = act.cmd.get(2).toString();
     Triple t;
     t.setNameValue("port",port.c_str());
     int result = act.mem.find(t, nullptr);
@@ -476,13 +526,13 @@ bool NameServiceOnTriples::cmdGet(NameTripleState& act) {
         q.addString("property");
         q.addString(key);
         q.addString("=");
-        for (list<Triple>::iterator it=lst.begin(); it!=lst.end(); it++) {
-            q.addString(it->value.c_str());
+        for (auto& it : lst) {
+            q.addString(it.value.c_str());
         }
     } else {
-        for (list<Triple>::iterator it=lst.begin(); it!=lst.end(); it++) {
+        for (auto& it : lst) {
             Value v;
-            v.fromString(it->value.c_str());
+            v.fromString(it.value.c_str());
             q.add(v);
         }
     }
@@ -496,9 +546,9 @@ bool NameServiceOnTriples::cmdCheck(NameTripleState& act) {
     if (act.reply.size()==0) {
         act.reply.addString("old");
     }
-    ConstString port = act.cmd.get(1).asString();
-    ConstString key = act.cmd.get(2).toString();
-    ConstString val = act.cmd.get(3).toString();
+    std::string port = act.cmd.get(1).asString();
+    std::string key = act.cmd.get(2).toString();
+    std::string val = act.cmd.get(3).toString();
     Triple t;
     t.setNameValue("port",port.c_str());
     int result = act.mem.find(t, nullptr);
@@ -518,9 +568,9 @@ bool NameServiceOnTriples::cmdCheck(NameTripleState& act) {
     q.addString("value");
     q.addString(val);
     q.addString("present");
-    ConstString present = "false";
-    for (list<Triple>::iterator it=lst.begin(); it!=lst.end(); it++) {
-        if (val == it->value.c_str()) {
+    std::string present = "false";
+    for (auto& it : lst) {
+        if (val == it.value) {
             present = "true";
         }
     }
@@ -534,15 +584,15 @@ bool NameServiceOnTriples::cmdRoute(NameTripleState& act) {
     if (act.reply.size()==0) {
         act.reply.addString("old");
     }
-    ConstString port1 = act.cmd.get(1).asString();
-    ConstString port2 = act.cmd.get(2).asString();
+    std::string port1 = act.cmd.get(1).asString();
+    std::string port2 = act.cmd.get(2).asString();
     Bottle& q = act.reply.addList();
     q.addString("port");
     q.addString(port1);
     q.addString("route");
     q.addString(port2);
     q.addString("=");
-    q.addString(ConstString("tcp:/") + port2);
+    q.addString(std::string("tcp:/") + port2);
     return true;
 }
 
@@ -562,7 +612,7 @@ bool NameServiceOnTriples::cmdHelp(NameTripleState& act) {
         bot.addString("Here are some ways to use the name server:");
     }
     bot.addString("+ help");
-    bot.addString("+ list");
+    bot.addString("+ list [$prefix]");
     bot.addString("+ register $portname");
     bot.addString("+ register $portname $carrier $ipAddress $portNumber");
     bot.addString("  (if you want a field set automatically, write '...')");
@@ -571,8 +621,9 @@ bool NameServiceOnTriples::cmdHelp(NameTripleState& act) {
     bot.addString("+ set $portname $property $value");
     bot.addString("+ get $portname $property");
     bot.addString("+ check $portname $property");
-    bot.addString("+ match $portname $property $prefix");
     bot.addString("+ route $port1 $port2");
+    bot.addString("+ runners");
+    bot.addString("  (to get a list of the yarprun ports)");
     return true;
 }
 
@@ -580,14 +631,14 @@ bool NameServiceOnTriples::apply(yarp::os::Bottle& cmd,
                                  yarp::os::Bottle& reply,
                                  yarp::os::Bottle& event,
                                  const yarp::os::Contact& remote) {
-    ConstString key = cmd.get(0).toString();
-    ConstString prefix = " * ";
+    std::string key = cmd.get(0).toString();
+    std::string prefix = " * ";
 
     access.wait();
     if (key=="register") {
-        lastRegister = cmd.get(1).asString().c_str();
+        lastRegister = cmd.get(1).asString();
     } else if (key=="set") {
-        if (cmd.get(1).asString()==lastRegister.c_str()) {
+        if (cmd.get(1).asString()==lastRegister) {
             prefix = "   + ";
         }
     } else {
@@ -630,6 +681,8 @@ bool NameServiceOnTriples::apply(yarp::os::Bottle& cmd,
         return cmdQuery(act);
     } else if (key=="list") {
         return cmdList(act);
+    } else if (key=="runners") {
+        return cmdListRunners(act);
     } else if (key=="set") {
         return cmdSet(act);
     } else if (key=="get") {
@@ -654,13 +707,13 @@ bool NameServiceOnTriples::apply(yarp::os::Bottle& cmd,
 
 
 void NameServiceOnTriples::lock() {
-    mutex.wait();
+    mutex.lock();
     db->begin(nullptr);
 }
 
 void NameServiceOnTriples::unlock() {
     db->end(nullptr);
-    mutex.post();
+    mutex.unlock();
 }
 
 

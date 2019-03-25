@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_SHIFTSTREAM_H
@@ -10,10 +13,7 @@
 #include <yarp/os/TwoWayStream.h>
 
 namespace yarp {
-    namespace os {
-        class ShiftStream;
-    }
-}
+namespace os {
 
 /**
  * A container for a stream, allowing the stream implementation to
@@ -22,73 +22,38 @@ namespace yarp {
  * an optimized stream type with user-preferred properties and
  * trade-offs.
  */
-class YARP_OS_API yarp::os::ShiftStream : public TwoWayStream {
+class YARP_OS_API ShiftStream : public TwoWayStream
+{
 public:
     /**
      * Constructor.
      */
-    ShiftStream() : stream(nullptr)
-    {
-    }
+    ShiftStream();
 
     /**
      * Destructor.
      */
-    virtual ~ShiftStream() {
-        close();
-    }
+    virtual ~ShiftStream();
 
     /**
      * Perform maintenance actions, if needed.
      */
-    virtual void check() {
-    }
+    virtual void check() const;
 
-    virtual InputStream& getInputStream() override {
-        check();
-        if (stream == nullptr) {
-            return nullStream;
-        }
-        return stream->getInputStream();
-    }
+    InputStream& getInputStream() override;
+    OutputStream& getOutputStream() override;
 
-    virtual OutputStream& getOutputStream() override {
-        check();
-        if (stream == nullptr) {
-            return nullStream;
-        }
-        return stream->getOutputStream();
-    }
+    const Contact& getLocalAddress() const override;
+    const Contact& getRemoteAddress() const override;
 
-    virtual const Contact& getLocalAddress() override {
-        check();
-        return (stream == nullptr) ? nullStream.getLocalAddress()
-                                        : (stream->getLocalAddress());
-    }
-
-    virtual const Contact& getRemoteAddress() override {
-        check();
-        return (stream == nullptr) ? nullStream.getRemoteAddress()
-                                        : (stream->getRemoteAddress());
-    }
-
-    virtual void close() override {
-        if (stream != nullptr) {
-            stream->close();
-            delete stream;
-            stream = nullptr;
-        }
-    }
+    void close() override;
 
     /**
      * Wrap the supplied stream.  If a stream is already wrapped,
      * it will be closed and destroyed.
      * @param stream the stream to wrap.
      */
-    virtual void takeStream(TwoWayStream *stream) {
-        close();
-        this->stream = stream;
-    }
+    virtual void takeStream(TwoWayStream* stream);
 
     /**
      * Removes the wrapped stream and returns it.
@@ -96,55 +61,35 @@ public:
      * @return the wrapped stream (which after this call will be the
      * caller's responsibility).
      */
-    virtual TwoWayStream *giveStream() {
-        TwoWayStream *result = stream;
-        stream = nullptr;
-        return result;
-    }
+    virtual TwoWayStream* giveStream();
 
     /**
      * @return the wrapped stream (which after this call will remain
      * this container's responsibility - compare with giveStream).
      */
-    virtual TwoWayStream *getStream() {
-        return stream;
-    }
+    virtual TwoWayStream* getStream() const;
 
     /**
      * @return true if there is no wrapped stream.
      */
-    virtual bool isEmpty() {
-        return stream == nullptr;
-    }
+    virtual bool isEmpty() const;
 
-    virtual bool isOk() override {
-        if (stream != nullptr) {
-            return stream->isOk();
-        }
-        return false;
-    }
+    bool isOk() const override;
 
-    virtual void reset() override {
-        if (stream != nullptr) {
-            stream->reset();
-        }
-    }
+    void reset() override;
 
-    virtual void beginPacket() override {
-        if (stream != nullptr) {
-            stream->beginPacket();
-        }
-    }
+    void beginPacket() override;
 
-    virtual void endPacket() override {
-        if (stream != nullptr) {
-            stream->endPacket();
-        }
-    }
+    void endPacket() override;
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 private:
-    TwoWayStream *stream;
-    NullStream nullStream;
+    class Private;
+    Private* mPriv;
+#endif // DOXYGEN_SHOULD_SKIP_THIS
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_SHIFTSTREAM_H

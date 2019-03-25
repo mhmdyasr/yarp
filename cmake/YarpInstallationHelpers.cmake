@@ -1,7 +1,8 @@
-# Copyright: (C) 2013, 2015 Istituto Italiano di Tecnologia (IIT)
-# Authors: Elena Ceseracciu, Daniele E. Domenichelli
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 # Needed by yarp_configure_external_installation in caller scope
 include(GNUInstallDirs)
@@ -244,6 +245,9 @@ function(YARP_CONFIGURE_EXTERNAL_INSTALLATION _name)
 path \"@_path@\"
 ")
       set(_path "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/${_name}")
+      if(WIN32)
+        string(REPLACE "/" "\\" _path ${_path})
+      endif()
       configure_file("${_in_file}" "${_install_file}" @ONLY)
 
       # Install the file into yarp config dir
@@ -279,6 +283,9 @@ path \"@_path@\"
         # Suggest to use the build tree
         set(_msg "Using YARP from build tree")
         set(_path "${CMAKE_BINARY_DIR}/${${_NAME}_DATA_INSTALL_DIR}")
+      endif()
+      if(WIN32)
+        string(REPLACE "/" "\\" _path ${_path})
       endif()
       message(STATUS "${_msg}: no file will we be installed into path.d folder, you need to set YARP_DATA_DIRS environment variable to ${_data_dirs}${_path_separator}${_path}")
     endif()
@@ -450,4 +457,3 @@ macro(YARP_INSTALL _what)
   endif()
 
 endmacro()
-

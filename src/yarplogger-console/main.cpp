@@ -1,20 +1,20 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo
- * email:  marco.randazzo@iit.it
- * website: www.robotcub.org
- * Permission is granted to copy, distribute, and/or modify this program
- * under the terms of the GNU General Public License, version 2 or any
- * later version published by the Free Software Foundation.
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * A copy of the license can be found at
- * http://www.robotcub.org/icub/license/gpl.txt
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
- * Public License for more details
-*/
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #include <yarp/os/Network.h>
 #include <yarp/os/Port.h>
@@ -37,7 +37,7 @@ class logger_module : public yarp::os::RFModule
     protected:
     yarp::os::Port rpcPort;
 
-    virtual bool configure(yarp::os::ResourceFinder &rf) override
+    bool configure(yarp::os::ResourceFinder &rf) override
     {
         the_logger = new LoggerEngine ("/logger");
 
@@ -49,13 +49,13 @@ class logger_module : public yarp::os::RFModule
         return true;
     }
 
-    virtual bool interruptModule() override
+    bool interruptModule() override
     {
         rpcPort.interrupt();
         return true;
     }
 
-    virtual bool close() override
+    bool close() override
     {
         rpcPort.interrupt();
         rpcPort.close();
@@ -68,18 +68,18 @@ class logger_module : public yarp::os::RFModule
         return true;
     }
 
-    virtual double getPeriod() override
+    double getPeriod() override
     {
         return 10.0;
     }
 
-    virtual bool updateModule() override
+    bool updateModule() override
     {
         printf("logger running, listening to %d ports\n",the_logger->get_num_of_processes());
         return true;
     }
 
-    virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply) override
+    bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply) override
     {
         reply.clear();
         if (command.get(0).asString()=="quit")

@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo <marco.randazzo@iit.it>
- *         Francesco Nori <francesco.nori@iit.it>
- *         Davide Perrone <dperrone@aitek.it>
- * CopyPolicy: Released under the terms of the GPLv2 or later, see GPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #include "piddlg.h"
 #include "ui_piddlg.h"
@@ -80,6 +89,7 @@ PidDlg::PidDlg(QString partname, int jointIndex, QString jointName, QWidget *par
     connect(ui->btnRefresh, SIGNAL(clicked()), this, SLOT(onRefresh()));
     connect(ui->btnSend,SIGNAL(clicked()),this,SLOT(onSend()));
     connect(ui->btnCancel,SIGNAL(clicked()),this,SLOT(onCancel()));
+    connect(ui->btnDump, SIGNAL(clicked()), this, SLOT(onDumpRemoteVariables()));
 
     ui->tablePosition->setItemDelegate(new TableDoubleDelegate);
     ui->tableVelocity->setItemDelegate(new TableDoubleDelegate);
@@ -90,12 +100,17 @@ PidDlg::PidDlg(QString partname, int jointIndex, QString jointName, QWidget *par
     ui->tableCurrent->setItemDelegate(new TableGenericDelegate);
 }
 
+void PidDlg::onDumpRemoteVariables()
+{
+    emit dumpRemoteVariables();
+}
+
 PidDlg::~PidDlg()
 {
-    for (size_t cc = 0; cc < buttons.size(); cc++)
+    for (auto& button : buttons)
     {
-        delete buttons[cc];
-        buttons[cc] = nullptr;
+        delete button;
+        button = nullptr;
     }
     buttons.clear();
     delete ui;
@@ -248,10 +263,10 @@ void PidDlg::initRemoteVariables(IRemoteVariables* iVar)
         {
             std::string s = keys.toString();
             int keys_size = keys.size();
-            for (size_t cc = 0; cc < buttons.size(); cc++)
+            for (auto& button : buttons)
             {
-                delete buttons[cc];
-                buttons[cc] = nullptr;
+                delete button;
+                button = nullptr;
             }
             buttons.clear();
             buttons.resize(keys_size);

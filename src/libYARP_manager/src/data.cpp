@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/data.h>
 
@@ -44,12 +43,12 @@ InputData::InputData(const InputData &input) : Node(input)
 }
 
 
-InputData::~InputData() { }
+InputData::~InputData() = default;
 
 
 Node* InputData::clone()
 {
-    InputData* input = new InputData(*this);
+    auto* input = new InputData(*this);
     return input;
 }
 
@@ -85,11 +84,11 @@ OutputData::OutputData(const OutputData &output) : Node(output)
 }
 
 
-OutputData::~OutputData() { }
+OutputData::~OutputData() = default;
 
 
 Node* OutputData::clone()
 {
-    OutputData* output = new OutputData(*this);
+    auto* output = new OutputData(*this);
     return output;
 }

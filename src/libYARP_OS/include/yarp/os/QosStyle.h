@@ -1,46 +1,39 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan and Daniele E. Domenichelli
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_QOSSTYLE_H
 #define YARP_OS_QOSSTYLE_H
 
 #include <yarp/os/api.h>
-#include <yarp/conf/system.h>
+
+#include <string>
 
 namespace yarp {
-    namespace os {
-        class QosStyle;
-    }
-}
-
-#ifndef YARP_WRAP_STL_STRING
-# include <string>
-namespace yarp { namespace os { typedef std::string ConstString; }}
-#else
-namespace yarp { namespace os { class ConstString; }}
-#endif
+namespace os {
 
 /**
  * \ingroup comm_class
  *
  * Preferences for the port's Quality of Service.
  * All fields have sensible defaults.
- *
  */
-class YARP_OS_API yarp::os::QosStyle {
+class YARP_OS_API QosStyle
+{
 public:
-
     /**
      * The PacketPriorityLevel defines the packets
      * quality of service (priority) levels
      */
-    enum PacketPriorityLevel {
+    enum PacketPriorityLevel
+    {
         PacketPriorityInvalid = -1,
         PacketPriorityNormal = 0,
-        PacketPriorityLow  = 10,
+        PacketPriorityLow = 10,
         PacketPriorityHigh = 36,
         PacketPriorityCritical = 44,
         PacketPriorityUndefined = 0x7FFF
@@ -51,7 +44,8 @@ public:
      * The PacketPriorityDSCP defines the packets
      * quality of service (priority) using DSCP
      */
-    enum PacketPriorityDSCP {
+    enum PacketPriorityDSCP
+    {
         DSCP_Invalid = -1,
         DSCP_CS0 = 0,
         DSCP_CS1 = 8,
@@ -103,7 +97,8 @@ public:
      * @brief sets the packet priority given as TOS value
      * @param tos the packet TOS
      */
-    void setPacketPrioritybyTOS(int tos) {
+    void setPacketPrioritybyTOS(int tos)
+    {
         packetPriority = tos;
     }
 
@@ -125,14 +120,15 @@ public:
      * @param priority the string to be interpreted as priority
      * @return true if correctly set, false otherwise
      */
-    bool setPacketPriority(const ConstString& priority);
+    bool setPacketPriority(const std::string& priority);
 
 
     /**
      * @brief sets the communication thread priority level
      * @param priority the thread's priority
      */
-    void setThreadPriority(int priority) {
+    void setThreadPriority(int priority)
+    {
         threadPriority = priority;
     }
 
@@ -141,7 +137,8 @@ public:
      * @brief sets the communication thread scheduling policy
      * @param policy the thread's real-time scheduling policy
      */
-    void setThreadPolicy(int policy) {
+    void setThreadPolicy(int policy)
+    {
         threadPolicy = policy;
     }
 
@@ -150,7 +147,8 @@ public:
      * @brief returns the packet TOS value
      * @return the TOS
      */
-    int getPacketPriorityAsTOS() const {
+    int getPacketPriorityAsTOS() const
+    {
         return packetPriority;
     }
 
@@ -173,7 +171,8 @@ public:
      * @brief returns the communication thread priority level
      * @return the thread priority
      */
-    int getThreadPriority() const {
+    int getThreadPriority() const
+    {
         return threadPriority;
     }
 
@@ -182,7 +181,8 @@ public:
      * @brief returns the communication thread scheduling policy
      * @return the thread scheduling policy
      */
-    int getThreadPolicy() const {
+    int getThreadPolicy() const
+    {
         return threadPolicy;
     }
 
@@ -207,7 +207,9 @@ private:
     int threadPriority;
     int threadPolicy;
     int packetPriority;
-
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_QOSSTYLE_H

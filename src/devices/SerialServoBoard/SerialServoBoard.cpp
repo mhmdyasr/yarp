@@ -1,7 +1,10 @@
 /*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2008 Giacomo Spigler
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "SerialServoBoard.h"
@@ -150,6 +153,30 @@ bool SerialServoBoard::stop() {
     return true;
 }
 
+bool SerialServoBoard::positionMove(const int n_joint, const int *joints, const double *refs) {
+    return true;
+}
+bool SerialServoBoard::relativeMove(const int n_joint, const int *joints, const double *deltas) {
+    return true;
+}
+bool SerialServoBoard::checkMotionDone(const int n_joint, const int *joints, bool *flags) {
+    return true;
+}
+bool SerialServoBoard::setRefSpeeds(const int n_joint, const int *joints, const double *spds) {
+    return true;
+}
+bool SerialServoBoard::setRefAccelerations(const int n_joint, const int *joints, const double *accs) {
+    return true;
+}
+bool SerialServoBoard::getRefSpeeds(const int n_joint, const int *joints, double *spds) {
+    return true;
+}
+bool SerialServoBoard::getRefAccelerations(const int n_joint, const int *joints, double *accs) {
+    return true;
+}
+bool SerialServoBoard::stop(const int n_joint, const int *joints) {
+    return true;
+}
 
 
 
@@ -178,7 +205,7 @@ bool movessc32(int j, double ref, double *positions, double *speeds, ISerialDevi
 
 
 bool moveminissc(int j, double ref, double *positions, double *speeds, ISerialDevice *serial) {
-    unsigned char pos=(unsigned char)((int)(positions[j]*1.411) + 127);
+    auto pos=(unsigned char)((int)(positions[j]*1.411) + 127);
 
     char cmd[3];
 
@@ -194,7 +221,7 @@ bool moveminissc(int j, double ref, double *positions, double *speeds, ISerialDe
 
 
 bool movepontech(int j, double ref, double *positions, double *speeds, ISerialDevice *serial) {
-    unsigned char pos=(unsigned char)((int)(positions[j]*1.411) + 127);
+    auto pos=(unsigned char)((int)(positions[j]*1.411) + 127);
 
     Bottle bot;
     char str[80];
@@ -209,7 +236,7 @@ bool movepontech(int j, double ref, double *positions, double *speeds, ISerialDe
 
 
 bool movemondotronic(int j, double ref, double *positions, double *speeds, ISerialDevice *serial) {
-    unsigned char pos=(unsigned char)((int)(positions[j]*1.411) + 127);
+    auto pos=(unsigned char)((int)(positions[j]*1.411) + 127);
 
     char cmd[3];
 
@@ -258,7 +285,7 @@ bool movepicopic(int j, double ref, double *positions, double *speeds, ISerialDe
     if(FABS(speeds[j])<0.1) {
         cmd[4]=255; //speed
     } else {
-        unsigned char speed=(unsigned char)((int)(speeds[j]*1.411) + 127);
+        auto speed=(unsigned char)((int)(speeds[j]*1.411) + 127);
 
         cmd[4]=speed; //speed
     }

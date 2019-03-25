@@ -1,7 +1,19 @@
 /*
- * Copyright (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Authors: Nicolò Genesio <nicolo.genesio@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "clusterWidget.h"
@@ -17,6 +29,7 @@
 #include <yarp/os/Time.h>
 
 #include <yarp/os/impl/NameClient.h>
+#include <yarp/profiler/NetworkProfiler.h>
 
 #include <mainwindow.h>
 
@@ -217,9 +230,9 @@ void ClusterWidget::onRunSelected()
         ClusterNode node = cluster.nodes[itr];
         string portName = node.name;
 
-        if (portName.find("/") == std::string::npos)
+        if (portName.find('/') == std::string::npos)
         {
-            portName = "/" + portName;
+            portName.insert(0, 1, '/');
         }
 
         if (node.onOff)
@@ -230,21 +243,21 @@ void ClusterWidget::onRunSelected()
         string cmdRunYarprun = getSSHCmd(node.user, node.name, node.ssh_options);
         if (node.display)
         {
-            cmdRunYarprun = cmdRunYarprun + " 'export DISPLAY=" + node.displayValue + " && ";
+            cmdRunYarprun.append(" 'export DISPLAY=").append(node.displayValue).append(" && ");
 
         }
         if (qobject_cast<QCheckBox*>(ui->nodestreeWidget->itemWidget((QTreeWidgetItem *)it, 4))->isChecked())
         {
-            cmdRunYarprun = cmdRunYarprun + " yarprun --server "+ portName  + " --log 2>&1 2>/tmp/yarprunserver.log";
+            cmdRunYarprun.append(" yarprun --server ").append(portName).append(" --log 2>&1 2>/tmp/yarprunserver.log");
         }
         else
         {
-            cmdRunYarprun = cmdRunYarprun + " yarprun --server "+ portName  + " 2>&1 2>/tmp/yarprunserver.log";
+            cmdRunYarprun.append(" yarprun --server ").append(portName).append(" 2>&1 2>/tmp/yarprunserver.log");
         }
 
         if (node.display)
         {
-            cmdRunYarprun = cmdRunYarprun + "'";
+            cmdRunYarprun.append("'");
         }
         if (system(cmdRunYarprun.c_str()) != 0)
         {
@@ -275,14 +288,14 @@ void ClusterWidget::onStopSelected()
             continue;
         }
         string portName = node.name;
-        if (portName.find("/") == std::string::npos)
+        if (portName.find('/') == std::string::npos)
         {
-            portName = "/" + portName;
+            portName.insert(0, 1, '/');
         }
 
         string cmdStopYarprun = getSSHCmd(node.user, node.name, node.ssh_options);
 
-        cmdStopYarprun = cmdStopYarprun + " yarprun --exit --on "+ portName + " &";
+        cmdStopYarprun.append(" yarprun --exit --on ").append(portName).append(" &");
 
         if (system(cmdStopYarprun.c_str()) != 0)
         {
@@ -314,7 +327,7 @@ void ClusterWidget::onKillSelected()
 
         string cmdKillYarprun = getSSHCmd(node.user, node.name, node.ssh_options);
 
-        cmdKillYarprun = cmdKillYarprun + " killall -9 yarprun &";
+        cmdKillYarprun.append(" killall -9 yarprun &");
 
         if (system(cmdKillYarprun.c_str()) != 0)
         {
@@ -346,7 +359,7 @@ void ClusterWidget::onExecute()
 
         string cmdExecute = getSSHCmd(node.user, node.name, node.ssh_options);
 
-        cmdExecute = cmdExecute + " "+ ui->lineEditExecute->text().toStdString();
+        cmdExecute.append(" ").append(ui->lineEditExecute->text().toStdString());
 
         if (system(cmdExecute.c_str()) != 0)
         {
@@ -387,7 +400,7 @@ void ClusterWidget::addRow(const std::string& name,const std::string& display,
 {
     QStringList stringList;
     stringList <<""<< QString(name.c_str()) << QString(display.c_str()) << QString(user.c_str())<< "" <<QString(std::to_string(id).c_str());
-    QTreeWidgetItem* it = new QTreeWidgetItem(stringList);
+    auto* it = new QTreeWidgetItem(stringList);
     ui->nodestreeWidget->addTopLevelItem(it);
     ui->nodestreeWidget->setItemWidget((QTreeWidgetItem *) it, 4, new QCheckBox(this));
 
@@ -435,9 +448,16 @@ bool ClusterWidget::checkNameserver()
         return false;
     }
 
-    if (name.find("/") == std::string::npos)
+    if (name.find('/') == std::string::npos)
     {
         name = "/" + name;
+    }
+
+
+    if (!NetworkBase::checkNetwork(2.0))
+    {
+        yError()<<"ClusterWidget: yarpserver is not running";
+        return false;
     }
 
 
@@ -448,7 +468,7 @@ bool ClusterWidget::checkNameserver()
     bool ret = yarp::os::impl::NameClient::getNameClient().send(cmd, reply);
     if (!ret)
     {
-        yError()<<"Manager::Cannot contact the NameClient";
+        yError()<<"ClusterWidget: Cannot contact the NameClient";
         return false;
     }
     if (reply.size()==6)
@@ -472,10 +492,24 @@ bool ClusterWidget::checkNameserver()
 bool ClusterWidget::checkNode(const string &name)
 {
     string portname = name;
-    if (portname.find("/") == std::string::npos)
+    if (portname.find('/') == std::string::npos)
     {
         portname = "/" + portname;
     }
+
+    if (!NetworkBase::checkNetwork(2.0))
+    {
+        yError()<<"ClusterWidget: yarpserver is not running";
+        return false;
+    }
+
+    yarp::profiler::NetworkProfiler::PortDetails dummy;
+    if (! yarp::profiler::NetworkProfiler::getPortDetails(portname, dummy))
+    {
+        yError()<<"ClusterWidget: port"<<portname<<"is not responding";
+        return false;
+    }
+
 
     yarp::os::Bottle cmd, reply;
     cmd.addString("get");
@@ -484,7 +518,7 @@ bool ClusterWidget::checkNode(const string &name)
     bool ret = yarp::os::impl::NameClient::getNameClient().send(cmd, reply);
     if (!ret)
     {
-        yError()<<"Manager::Cannot contact the NameClient";
+        yError()<<"ClusterWidget: Cannot contact the NameClient";
         return false;
     }
     if (reply.size()==6)

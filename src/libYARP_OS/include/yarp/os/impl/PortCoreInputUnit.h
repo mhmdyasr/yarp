@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_IMPL_PORTCOREINPUTUNIT_H
@@ -11,6 +14,7 @@
 #include <yarp/os/impl/PortCoreUnit.h>
 #include <yarp/os/impl/Logger.h>
 #include <yarp/os/InputProtocol.h>
+#include <yarp/os/Semaphore.h>
 
 namespace yarp {
     namespace os {
@@ -52,7 +56,7 @@ public:
      * Start a thread running to serve this input.
      *
      */
-    virtual bool start() override;
+    bool start() override;
 
     /**
      *
@@ -61,34 +65,34 @@ public:
      * data gets to the user
      *
      */
-    virtual void run() override;
+    void run() override;
 
-    virtual bool isInput() override;
+    bool isInput() override;
 
-    virtual void close() override;
+    void close() override;
 
-    virtual bool isFinished() override;
+    bool isFinished() override;
 
-    const ConstString& getName();
+    const std::string& getName();
 
-    virtual Route getRoute() override;
+    Route getRoute() override;
 
-    virtual bool interrupt() override;
+    bool interrupt() override;
 
-    virtual void setCarrierParams(const yarp::os::Property& params) override;
+    void setCarrierParams(const yarp::os::Property& params) override;
 
-    virtual void getCarrierParams(yarp::os::Property& params) override;
+    void getCarrierParams(yarp::os::Property& params) override;
 
     // return the protocol object
     InputProtocol* getInPutProtocol();
 
-    virtual bool isBusy() override;
+    bool isBusy() override;
 
 private:
     InputProtocol *ip;
-    SemaphoreImpl phase, access;
+    yarp::os::Semaphore phase, access;
     bool closing, finished, running;
-    ConstString name;
+    std::string name;
     yarp::os::PortReader *localReader;
     Route officialRoute;
     bool reversed;

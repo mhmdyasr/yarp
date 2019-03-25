@@ -1,11 +1,10 @@
 /*
-*  Yarp Modules Manager
-*  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
-*  Authors: Ali Paikan <ali.paikan@iit.it>
-*
-*  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
-
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #include <yarp/manager/binexparser.h>
 #include <yarp/os/Log.h>
@@ -33,9 +32,9 @@ using namespace std;
 using namespace yarp::manager;
 
 
-BinaryExpParser::BinaryExpParser() { }
+BinaryExpParser::BinaryExpParser() = default;
 
-BinaryExpParser::~BinaryExpParser() { }
+BinaryExpParser::~BinaryExpParser() = default;
 
 bool BinaryExpParser::parse(string _exp)
 {
@@ -59,8 +58,8 @@ bool BinaryExpParser::parse(string _exp)
     {
         ErrorLogger* logger = ErrorLogger::Instance();
         string msg = "Invalid operands";
-        for(int i=0; i<(int)invalidOperands.size(); i++)
-            msg += " '" + invalidOperands[i] + "'";
+        for(const auto& invalidOperand : invalidOperands)
+            msg += " '" + invalidOperand + "'";
         logger->addError(msg);
         return false;
     }
@@ -70,7 +69,7 @@ bool BinaryExpParser::parse(string _exp)
     int n = truthTable.size();
     for(int x = 0; x < (1 << (n-1)); ++x)
     {
-        map<string, bool>::iterator itr = operands.begin();
+        auto itr = operands.begin();
         for(int y = 0; y < (n-1); ++y)
             (*itr++).second = (truthTable[y][x] != 0);
         truthTable[n-1][x] = evalTree(root, operands);
@@ -91,14 +90,14 @@ bool BinaryExpParser::exportDotGraph(const char* szFileName)
     {
         switch((*itr)->getType()) {
             case OPERATOR: {
-                    BinaryNodePtr node = (BinaryNodePtr)(*itr);
+                    auto node = (BinaryNodePtr)(*itr);
                     dot<<"\""<<node->getLabel()<<"\"";
                     dot<<" [label=\""<< node->getName()<<"\"";
                     dot<<" shape=circle, fillcolor=lightslategrey, style=filled];"<<endl;
                     for(int i=0; i<node->sucCount(); i++)
                     {
                         Link l = node->getLinkAt(i);
-                        BinaryNodePtr to = (BinaryNodePtr)l.to();
+                        auto to = (BinaryNodePtr)l.to();
                         dot<<"\""<<node->getLabel()<<"\" -> ";
                         dot<<"\""<<to->getLabel()<<"\"";
                         dot<<" [label=\"\"];"<<endl;
@@ -106,7 +105,7 @@ bool BinaryExpParser::exportDotGraph(const char* szFileName)
                     break;
                 }
              case OPERAND: {
-                    BinaryNodePtr node = (BinaryNodePtr)(*itr);
+                    auto node = (BinaryNodePtr)(*itr);
                     dot<<"\""<<node->getLabel()<<"\"";
                     dot<<" [label=\""<< node->getName()<<"\"";
                     dot<<" shape=square];"<<endl;
@@ -134,21 +133,21 @@ bool BinaryExpParser::evalTree(BinaryNodePtr node, std::map<std::string, bool>& 
     {
         if(strcmp(node->getName(), "~") == 0)
         {
-            BinaryNodePtr left = (BinaryNodePtr)node->getLinkAt(0).to();
+            auto left = (BinaryNodePtr)node->getLinkAt(0).to();
             result = !evalTree(left, opnd);
             node->setValue(result);
         }
         else if(strcmp(node->getName(), "&") == 0)
         {
-            BinaryNodePtr left = (BinaryNodePtr)node->getLinkAt(0).to();
-            BinaryNodePtr right = (BinaryNodePtr)node->getLinkAt(1).to();
+            auto left = (BinaryNodePtr)node->getLinkAt(0).to();
+            auto right = (BinaryNodePtr)node->getLinkAt(1).to();
             result = evalTree(left, opnd) && evalTree(right, opnd);
             node->setValue(result);
         }
         else if(strcmp(node->getName(), "|") == 0)
         {
-            BinaryNodePtr left = (BinaryNodePtr)node->getLinkAt(0).to();
-            BinaryNodePtr right = (BinaryNodePtr)node->getLinkAt(1).to();
+            auto left = (BinaryNodePtr)node->getLinkAt(0).to();
+            auto right = (BinaryNodePtr)node->getLinkAt(1).to();
             result = evalTree(left, opnd) || evalTree(right, opnd);
             node->setValue(result);
         }
@@ -351,7 +350,7 @@ std::string BinaryExpParser::popNextOperand(std::string &strexp) {
 void BinaryExpParser::createTruthTable(const int n)
 {
     yAssert((n-1) > 0);
-    yAssert((n-1) < PRECISION(INT_MAX));
+    yAssert((unsigned)(n-1) < PRECISION(INT_MAX));
     yAssert(1 <= (INT_MAX >> (n-1)));
 
     truthTable.clear();
@@ -374,7 +373,7 @@ void BinaryExpParser::printTruthTable(std::string lopr)
     int n = truthTable.size();
 
     yAssert((n-1) > 0);
-    yAssert((n-1) < PRECISION(INT_MAX));
+    yAssert((unsigned)(n-1) < PRECISION(INT_MAX));
     yAssert(1 <= (INT_MAX >> (n-1)));
 
     map<string, bool>::iterator itr;
@@ -396,7 +395,7 @@ void BinaryExpParser::printTruthTable(std::string lopr)
 
 bool LinkTrainer::train(const std::vector<std::vector<int> >&  truthTable)
 {
-    // reseting weights
+    // resetting weights
     int n = truthTable.size();
     errors.clear();
     alphas.clear();

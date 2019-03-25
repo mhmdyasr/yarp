@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/impl/FakeFace.h>
 #include <yarp/os/impl/Logger.h>
@@ -33,6 +35,6 @@ InputProtocol *FakeFace::read()
 OutputProtocol *FakeFace::write(const Contact& address)
 {
     YARP_UNUSED(address);
-    Protocol *prot = new Protocol(new FakeTwoWayStream());
+    auto* prot = new Protocol(new FakeTwoWayStream());
     return prot;
 }

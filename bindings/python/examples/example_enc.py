@@ -1,8 +1,11 @@
 #!/usr/bin/python
 
-# Copyright: (C) 2010 RobotCub Consortium
-# Authors: Ali Paikan, Massimo Regoli
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2010 RobotCub Consortium
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 import sys
 import yarp
@@ -35,7 +38,7 @@ def main():
         sys.exit()
      
     # wait a bit for the interface 
-    yarp.Time_delay(1.0)
+    yarp.delay(1.0)
 
     encs = yarp.Vector(ipos.getAxes())
     for i in range(0,10):
@@ -45,7 +48,7 @@ def main():
 
         print "Current encoders value: "
         print encs.toString(-1, -1)
-        yarp.Time_delay(0.01)
+        yarp.delay(0.01)
     
     # closing the driver
     driver.close()

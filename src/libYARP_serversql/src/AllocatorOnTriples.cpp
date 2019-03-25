@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2009 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <cstdio>
@@ -15,7 +17,7 @@ using namespace yarp::serversql::impl;
 using namespace std;
 
 Contact AllocatorOnTriples::completePortName(const Contact& c) {
-    string name = "";
+    string name;
     Triple t;
     t.setNsNameValue("alloc","tmpid","*");
     TripleContext context;
@@ -53,7 +55,7 @@ Contact AllocatorOnTriples::completePortName(const Contact& c) {
     t.setNsNameValue("alloc",name.c_str(),"in_use");
     db->update(t,&context);
 
-    return Contact(name.c_str(),
+    return Contact(name,
                    c.getCarrier(),
                    c.getHost(),
                    c.getPort());
@@ -76,9 +78,9 @@ Contact AllocatorOnTriples::completePortNumber(const Contact& c) {
     // we also try to keep port numbers stable for port names,
     // when possible.
 
-    string npref = "";
+    string npref;
     int pref = -1;
-    string nstring = "";
+    string nstring;
     int number = -1;
     Triple t;
     t.setNsNameValue("alloc","regid","*");
@@ -160,7 +162,7 @@ Contact AllocatorOnTriples::completeHost(const yarp::os::Contact& c) {
         return c;
     }
 
-    string name = "";
+    string name;
     Triple t;
     t.setNsNameValue("alloc","mcastCursor","*");
     TripleContext context;
@@ -206,15 +208,15 @@ Contact AllocatorOnTriples::completeHost(const yarp::os::Contact& c) {
     db->update(t,&context);
 
     Contact contact = c;
-    contact.setHost(name.c_str());
+    contact.setHost(name);
     return contact;
 }
 
 
 bool AllocatorOnTriples::freePortResources(const yarp::os::Contact& c) {
-    string portName = c.getName().c_str();
+    string portName = c.getName();
     int portNumber = c.getPort();
-    string hostName = c.getHost().c_str();
+    string hostName = c.getHost();
 
     // free up automatic name for port, if one was allocated
     Triple t;

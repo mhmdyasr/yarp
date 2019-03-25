@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_MANAGER_MODULE_H
 #define YARP_MANAGER_MODULE_H
@@ -36,7 +35,7 @@ public:
     const char* getName(void) { return strName.c_str(); }
     const char* getEmail(void) { return strEmail.c_str(); }
 
-    bool operator==(const Author& alt) {
+    bool operator==(const Author& alt) const {
         return (strName == alt.strName);
     }
 
@@ -71,7 +70,7 @@ public:
     const char* getDescription(void) { return strDesc.c_str(); }
     bool isSwitch(void) { return bSwitch; }
     bool isRequired(void) {return bRequired; }
-    bool operator==(const Argument& alt) {
+    bool operator==(const Argument& alt) const {
         return (strParam == alt.strParam);
     }
 
@@ -108,7 +107,7 @@ public:
     Module(const char* szName);
     Module(const Module &mod);
     virtual ~Module();
-    virtual Node* clone(void) override;
+    Node* clone(void) override;
     Module& operator=(const Module& rhs);
 
     void setName(const char* szName) { if(szName) strName = szName; }

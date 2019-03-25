@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "RobotDescriptionClient.h"
@@ -23,8 +26,8 @@ bool yarp::dev::RobotDescriptionClient::open(yarp::os::Searchable &config)
     m_local_name.clear();
     m_remote_name.clear();
 
-    m_local_name           = config.find("local").asString().c_str();
-    m_remote_name          = config.find("remote").asString().c_str();
+    m_local_name           = config.find("local").asString();
+    m_remote_name          = config.find("remote").asString();
 
     if (m_local_name == "")
     {
@@ -38,12 +41,12 @@ bool yarp::dev::RobotDescriptionClient::open(yarp::os::Searchable &config)
         return false;
     }
 
-    ConstString local_rpc,  remote_rpc;
+    std::string local_rpc,  remote_rpc;
 
     local_rpc  = m_local_name + "/rpc";
     remote_rpc = m_remote_name + "/rpc";
 
-    if (!m_rpc_port.open(local_rpc.c_str()))
+    if (!m_rpc_port.open(local_rpc))
     {
         yError("RobotDescriptionClient::open() error could not open rpc port %s, check network", local_rpc.c_str());
         return false;
@@ -52,7 +55,7 @@ bool yarp::dev::RobotDescriptionClient::open(yarp::os::Searchable &config)
 
     bool ok = true;
 
-    ok = Network::connect(local_rpc.c_str(), remote_rpc.c_str());
+    ok = Network::connect(local_rpc, remote_rpc);
     if (!ok)
     {
         yError("RobotDescriptionClient::open() error could not connect to %s", remote_rpc.c_str());
@@ -91,7 +94,7 @@ bool yarp::dev::RobotDescriptionClient::getAllDevicesByType(const std::string &t
         else
         {
             Bottle *b = resp.get(1).asList();
-            for (int i = 0; i < b->size(); i += 2)
+            for (size_t i = 0; i < b->size(); i += 2)
             {
                 DeviceDescription desc;
                 desc.device_name = b->get(i).asString();
@@ -182,7 +185,7 @@ bool yarp::dev::RobotDescriptionClient::getAllDevices(std::vector<DeviceDescript
         else
         {
             Bottle *b = resp.get(1).asList();
-            for (int i = 0; i < b->size();i+=2)
+            for (size_t i = 0; i < b->size();i+=2)
             {
                 DeviceDescription desc;
                 desc.device_name = b->get(i).asString();

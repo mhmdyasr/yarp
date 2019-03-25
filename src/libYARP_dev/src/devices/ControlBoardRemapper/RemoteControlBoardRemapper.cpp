@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Author: Silvio Traversaro
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "RemoteControlBoardRemapper.h"
@@ -27,23 +29,19 @@ DriverCreator *createRemoteControlBoardRemapper()
             ("remotecontrolboardremapper", "controlboardwrapper2", "yarp::dev::RemoteControlBoardRemapper");
 }
 
-RemoteControlBoardRemapper::RemoteControlBoardRemapper()
-{
-}
+RemoteControlBoardRemapper::RemoteControlBoardRemapper() = default;
 
-RemoteControlBoardRemapper::~RemoteControlBoardRemapper()
-{
-}
+RemoteControlBoardRemapper::~RemoteControlBoardRemapper() = default;
 
 void RemoteControlBoardRemapper::closeAllRemoteControlBoards()
 {
-    for(size_t ctrlBrd=0; ctrlBrd < m_remoteControlBoardDevices.size(); ctrlBrd++)
+    for(auto& m_remoteControlBoardDevice : m_remoteControlBoardDevices)
     {
-        if( m_remoteControlBoardDevices[ctrlBrd] )
+        if( m_remoteControlBoardDevice )
         {
-            m_remoteControlBoardDevices[ctrlBrd]->close();
-            delete m_remoteControlBoardDevices[ctrlBrd];
-            m_remoteControlBoardDevices[ctrlBrd] = nullptr;
+            m_remoteControlBoardDevice->close();
+            delete m_remoteControlBoardDevice;
+            m_remoteControlBoardDevice = nullptr;
         }
     }
 
@@ -71,7 +69,7 @@ bool RemoteControlBoardRemapper::close()
 bool RemoteControlBoardRemapper::open(Searchable& config)
 {
     Property prop;
-    prop.fromString(config.toString().c_str());
+    prop.fromString(config.toString());
 
     std::string localPortPrefix;
     std::vector<std::string> remoteControlBoardsPorts;
@@ -79,7 +77,7 @@ bool RemoteControlBoardRemapper::open(Searchable& config)
     // Check if the required parameters  are found
     if( prop.check("localPortPrefix") && prop.find("localPortPrefix").isString() )
     {
-        localPortPrefix = prop.find("localPortPrefix").asString().c_str();
+        localPortPrefix = prop.find("localPortPrefix").asString();
     }
     else
     {
@@ -95,12 +93,12 @@ bool RemoteControlBoardRemapper::open(Searchable& config)
     }
 
     remoteControlBoardsPorts.resize(remoteControlBoards->size());
-    for(int ax=0; ax < remoteControlBoards->size(); ax++)
+    for(size_t ax=0; ax < remoteControlBoards->size(); ax++)
     {
-        remoteControlBoardsPorts[ax] = remoteControlBoards->get(ax).asString().c_str();
+        remoteControlBoardsPorts[ax] = remoteControlBoards->get(ax).asString();
     }
 
-    // Load the REMOTE_CONTROLBOARD_OPTIONS, containg any additional option to pass to the remote control boards
+    // Load the REMOTE_CONTROLBOARD_OPTIONS, containing any additional option to pass to the remote control boards
     Property remoteControlBoardsOptions;
 
     Bottle & optionsGroupBot = prop.findGroup("REMOTE_CONTROLBOARD_OPTIONS");
@@ -137,7 +135,7 @@ bool RemoteControlBoardRemapper::open(Searchable& config)
             return false;
         }
 
-        // We use the remote name of the remote_controlboard as the key for it, in absense of anything better
+        // We use the remote name of the remote_controlboard as the key for it, in absence of anything better
         remoteControlBoardsList.push((m_remoteControlBoardDevices[ctrlBrd]),remote.c_str());
     }
 

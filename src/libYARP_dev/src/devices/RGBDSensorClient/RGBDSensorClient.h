@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Author: Alberto Cardellino <alberto.cardellino@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_RGBDSENSORCLIENT_RGBDSENSORCLIENT_H
@@ -10,7 +12,6 @@
 
 #include <yarp/os/Time.h>
 #include <yarp/os/Network.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/os/BufferedPort.h>
 
 #include <yarp/dev/PolyDriver.h>
@@ -18,7 +19,7 @@
 #include <yarp/dev/PreciselyTimed.h>
 #include <yarp/dev/IVisualParamsImpl.h>
 #include <yarp/dev/FrameGrabberControl2.h>
-#include <yarp/dev/FrameGrabberControl2Impl.h>
+#include <yarp/dev/FrameGrabberControlImpl.h>
 
 #define DEFAULT_THREAD_PERIOD       20    //ms
 #define RGBDSENSOR_TIMEOUT_DEFAULT  100   //ms
@@ -38,7 +39,7 @@ namespace yarp {
 
 
 /**
- *  @ingroup dev_impl_client
+ *  @ingroup dev_impl_network_clients
  *
  * \section RGBDSensorClient Description of input parameters
  * A Network client to receive data from kinect-like devices.
@@ -70,7 +71,7 @@ namespace yarp {
  * remoteRpcPort      /RGBD/rpc
  * \endcode
  *
- * XML format, using 'networks' keywork. This file is meant to be used in junction with yarprobotinterface executable,
+ * XML format, using 'networks' keyword. This file is meant to be used in junction with yarprobotinterface executable,
  * therefore has an addictional section at the end.
  *
  * \code{.xml}
@@ -87,7 +88,7 @@ namespace yarp {
  */
 
 class yarp::dev::RGBDSensorClient:  public DeviceDriver,
-                                    public FrameGrabberControls2_Sender,
+                                    public FrameGrabberControls_Sender,
                                     public IRGBDSensor
 {
 
@@ -95,16 +96,16 @@ class yarp::dev::RGBDSensorClient:  public DeviceDriver,
     yarp::dev::Implement_RgbVisualParams_Sender*   RgbMsgSender;
     yarp::dev::Implement_DepthVisualParams_Sender* DepthMsgSender;
 protected:
-    yarp::os::ConstString local_colorFrame_StreamingPort_name;
-    yarp::os::ConstString local_depthFrame_StreamingPort_name;
-    yarp::os::ConstString remote_colorFrame_StreamingPort_name;
-    yarp::os::ConstString remote_depthFrame_StreamingPort_name;
+    std::string local_colorFrame_StreamingPort_name;
+    std::string local_depthFrame_StreamingPort_name;
+    std::string remote_colorFrame_StreamingPort_name;
+    std::string remote_depthFrame_StreamingPort_name;
     yarp::os::BufferedPort<yarp::sig::FlexImage> colorFrame_StreamingPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf< yarp::sig::PixelFloat> > depthFrame_StreamingPort;
 
     // Use a single RPC port for now
-    yarp::os::ConstString local_rpcPort_name;
-    yarp::os::ConstString remote_rpcPort_name;
+    std::string local_rpcPort_name;
+    std::string remote_rpcPort_name;
     yarp::os::Port        rpcPort;
 
 
@@ -117,10 +118,10 @@ protected:
      * another one, it will result in concurrent thread most probably) and buffering issues.
      *
 
-        yarp::os::ConstString local_colorFrame_rpcPort_Name;
-        yarp::os::ConstString local_depthFrame_rpcPort_Name;
-        yarp::os::ConstString remote_colorFrame_rpcPort_Name;
-        yarp::os::ConstString remote_depthFrame_rpcPort_Name;
+        std::string local_colorFrame_rpcPort_Name;
+        std::string local_depthFrame_rpcPort_Name;
+        std::string remote_colorFrame_rpcPort_Name;
+        std::string remote_depthFrame_rpcPort_Name;
 
         yarp::os::Port colorFrame_rpcPort;
         yarp::os::Port depthFrame_rpcPort;
@@ -152,32 +153,32 @@ public:
     ~RGBDSensorClient();
 
 
-    virtual int  getRgbHeight() override;
-    virtual int  getRgbWidth() override;
-    virtual bool getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations) override;
-    virtual bool getRgbResolution(int &width, int &height) override;
-    virtual bool setRgbResolution(int width, int height) override;
-    virtual bool getRgbFOV(double &horizontalFov, double &verticalFov) override;
-    virtual bool setRgbFOV(double horizontalFov, double verticalFov) override;
-    virtual bool getRgbIntrinsicParam(yarp::os::Property &intrinsic) override;
-    virtual bool getRgbMirroring(bool& mirror) override;
-    virtual bool setRgbMirroring(bool mirror) override;
+    int  getRgbHeight() override;
+    int  getRgbWidth() override;
+    bool getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations) override;
+    bool getRgbResolution(int &width, int &height) override;
+    bool setRgbResolution(int width, int height) override;
+    bool getRgbFOV(double &horizontalFov, double &verticalFov) override;
+    bool setRgbFOV(double horizontalFov, double verticalFov) override;
+    bool getRgbIntrinsicParam(yarp::os::Property &intrinsic) override;
+    bool getRgbMirroring(bool& mirror) override;
+    bool setRgbMirroring(bool mirror) override;
 
     /*
      * IDepthVisualParams interface. Look at IVisualParams.h for documentation
      */
-    virtual int    getDepthHeight() override;
-    virtual int    getDepthWidth() override;
-    virtual bool   setDepthResolution(int width, int height) override;
-    virtual bool   getDepthFOV(double &horizontalFov, double &verticalFov) override;
-    virtual bool   setDepthFOV(double horizontalFov, double verticalFov) override;
-    virtual double getDepthAccuracy() override;
-    virtual bool   setDepthAccuracy(double accuracy) override;
-    virtual bool   getDepthClipPlanes(double &near, double &far) override;
-    virtual bool   setDepthClipPlanes(double near, double far) override;
-    virtual bool   getDepthIntrinsicParam(yarp::os::Property &intrinsic) override;
-    virtual bool   getDepthMirroring(bool& mirror) override;
-    virtual bool   setDepthMirroring(bool mirror) override;
+    int    getDepthHeight() override;
+    int    getDepthWidth() override;
+    bool   setDepthResolution(int width, int height) override;
+    bool   getDepthFOV(double &horizontalFov, double &verticalFov) override;
+    bool   setDepthFOV(double horizontalFov, double verticalFov) override;
+    double getDepthAccuracy() override;
+    bool   setDepthAccuracy(double accuracy) override;
+    bool   getDepthClipPlanes(double &near, double &far) override;
+    bool   setDepthClipPlanes(double near, double far) override;
+    bool   getDepthIntrinsicParam(yarp::os::Property &intrinsic) override;
+    bool   getDepthMirroring(bool& mirror) override;
+    bool   setDepthMirroring(bool mirror) override;
 
     // Device Driver interface //
     /**
@@ -210,7 +211,7 @@ public:
      */
 
     /**
-     * Get the extrinsic parameters ofrom the device
+     * Get the extrinsic parameters from the device
      * @param  extrinsic  return a rototranslation matrix describing the position
      *         of the depth optical frame with respect to the rgb frame
      * @return true if success
@@ -227,15 +228,15 @@ public:
 
     /**
      * Return an error message in case of error. For debugging purpose and user notification.
-     * Error message will be reset after any succesful command
+     * Error message will be reset after any successful command
      * @return A string explaining the last error occurred.
      */
-    yarp::os::ConstString getLastErrorMsg(yarp::os::Stamp *timeStamp = NULL) override;
+    std::string getLastErrorMsg(yarp::os::Stamp *timeStamp = NULL) override;
 
     /**
      * Get the rgb frame from the device.
      * The pixel type of the source image will usually be set as a VOCAB_PIXEL_RGB,
-     * but the user can call the function with the pixel type of his/her choise. The convertion
+     * but the user can call the function with the pixel type of his/her choice. The conversion
      * if possible, will be done automatically on client side (TO BO VERIFIED).
      * Note: this will consume CPU power because it will not use GPU optimization.
      * Use VOCAB_PIXEL_RGB for best performances.
@@ -249,7 +250,7 @@ public:
     /**
      * Get the depth frame from the device.
      * The pixel type of the source image will usually be set as a VOCAB_PIXEL_RGB,
-     * but the user can call the function with the pixel type of his/her choise. The convertion
+     * but the user can call the function with the pixel type of his/her choice. The conversion
      * if possible, will be done automatically on client side (TO BO VERIFIED).
      * Note: this will consume CPU power because it will not use GPU optimization.
      * Use VOCAB_PIXEL_RGB for best performances.
@@ -278,19 +279,19 @@ public:
     //
     // Implemented by FrameGrabberControls2_Sender
     //
-    using FrameGrabberControls2_Sender::getCameraDescription;
-    using FrameGrabberControls2_Sender::hasFeature;
-    using FrameGrabberControls2_Sender::setFeature;
-    using FrameGrabberControls2_Sender::getFeature;
-    using FrameGrabberControls2_Sender::hasOnOff;
-    using FrameGrabberControls2_Sender::setActive;
-    using FrameGrabberControls2_Sender::getActive;
-    using FrameGrabberControls2_Sender::hasAuto;
-    using FrameGrabberControls2_Sender::hasManual;
-    using FrameGrabberControls2_Sender::hasOnePush;
-    using FrameGrabberControls2_Sender::setMode;
-    using FrameGrabberControls2_Sender::getMode;
-    using FrameGrabberControls2_Sender::setOnePush;
+    using FrameGrabberControls_Sender::getCameraDescription;
+    using FrameGrabberControls_Sender::hasFeature;
+    using FrameGrabberControls_Sender::setFeature;
+    using FrameGrabberControls_Sender::getFeature;
+    using FrameGrabberControls_Sender::hasOnOff;
+    using FrameGrabberControls_Sender::setActive;
+    using FrameGrabberControls_Sender::getActive;
+    using FrameGrabberControls_Sender::hasAuto;
+    using FrameGrabberControls_Sender::hasManual;
+    using FrameGrabberControls_Sender::hasOnePush;
+    using FrameGrabberControls_Sender::setMode;
+    using FrameGrabberControls_Sender::getMode;
+    using FrameGrabberControls_Sender::setOnePush;
 };
 
 #endif // YARP_DEV_RGBDSENSORCLIENT_RGBDSENSORCLIENT_H

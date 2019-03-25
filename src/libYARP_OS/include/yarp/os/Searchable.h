@@ -1,31 +1,42 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_SEARCHABLE_H
 #define YARP_OS_SEARCHABLE_H
 
+#include <yarp/os/api.h>
+
 #include <cstddef>
-#include <yarp/os/ConstString.h>
+#include <string>
+
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
+#    include <yarp/os/ConstString.h>
+#endif // YARP_NO_DEPRECATED
+
 
 namespace yarp {
-    namespace os {
-        class Value;
-        class Bottle;
-        class Searchable;
-        class SearchMonitor;
-        class SearchReport;
-    }
-}
+namespace os {
+class Value;
+class Bottle;
+} // namespace os
+} // namespace yarp
+
+namespace yarp {
+namespace os {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-class YARP_OS_API yarp::os::SearchReport {
+class YARP_OS_API SearchReport
+{
 public:
-    ConstString key;
-    ConstString value;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) key;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) value;
     bool isFound;
     bool isGroup;
     bool isComment;
@@ -34,29 +45,30 @@ public:
     explicit SearchReport();
 };
 
-class YARP_OS_API yarp::os::SearchMonitor {
+class YARP_OS_API SearchMonitor
+{
 public:
     virtual ~SearchMonitor();
-    virtual void report(const SearchReport& report, const char *context) = 0;
+    virtual void report(const SearchReport& report, const char* context) = 0;
 };
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 
 /**
- *
  * A base class for nested structures that can be searched.
  * A Searchable object promises that you can look inside it
  * with the find() and findGroup() methods to get values and
  * lists corresponding to keywords.
  *
  * @see Property Bottle Value
- *
  */
-class YARP_OS_API yarp::os::Searchable {
+class YARP_OS_API Searchable
+{
 private:
-    SearchMonitor *monitor;
-    ConstString monitorContext;
+    SearchMonitor* monitor;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) monitorContext;
+
 public:
     /**
      * Default constructor.
@@ -74,7 +86,7 @@ public:
      * @return true iff a property of the given name exists, even if
      * it doesn't have a value associated with it
      */
-    virtual bool check(const ConstString& key) const = 0;
+    virtual bool check(const std::string& key) const = 0;
 
 
     /**
@@ -84,18 +96,18 @@ public:
      * @return true iff a property of the given name exists, even if
      * it doesn't have a value associated with it
      */
-    virtual bool check(const ConstString& key,
-                       const ConstString& comment) const;
+    virtual bool check(const std::string& key,
+                       const std::string& comment) const;
 
     /**
      * Gets a value corresponding to a given keyword
      * @param key The keyword to look for
      * @return A value corresponding to a given keyword.  If there is no
      * such value, then the isNull() method called on the result will be
-     * true.  Otherwise, the value can be read by calling result.asInt(),
+     * true.  Otherwise, the value can be read by calling result.asInt32(),
      * result.asString(), etc. as appropriate.
      */
-    virtual Value& find(const ConstString& key) const = 0;
+    virtual Value& find(const std::string& key) const = 0;
 
     /**
      * Gets a list corresponding to a given keyword
@@ -107,7 +119,7 @@ public:
      * result.get(i) for i>=1 are the "real" elements of the list.
      *
      */
-    virtual Bottle& findGroup(const ConstString& key) const = 0;
+    virtual Bottle& findGroup(const std::string& key) const = 0;
 
     /**
      * Gets a list corresponding to a given keyword
@@ -120,7 +132,7 @@ public:
      * result.get(i) for i>=1 are the "real" elements of the list.
      *
      */
-    Bottle& findGroup(const ConstString& key, const ConstString& comment) const;
+    Bottle& findGroup(const std::string& key, const std::string& comment) const;
 
     /**
      * Gets a value corresponding to a given keyword.  If a property
@@ -137,7 +149,7 @@ public:
      * p.check("foo")   // this is false
      * Value *v;
      * p.check("help", v)  // this is false, there is no value associated
-     * p.check("width", v) // this is true, and v->asInt() is 10
+     * p.check("width", v) // this is true, and v->asInt32() is 10
      * \endcode
      *
      * @param key The keyword to look for
@@ -147,8 +159,9 @@ public:
      * false otherwise.  See the find() method for interpreting the
      * value found.
      */
-    virtual bool check(const ConstString& key, Value *& result,
-                       const ConstString& comment = "") const;
+    virtual bool check(const std::string& key,
+                       Value*& result,
+                       const std::string& comment = "") const;
 
 
     /**
@@ -160,8 +173,9 @@ public:
      * or the default if nothing is found.  See the find() method for
      * interpreting the value found.
      */
-    virtual Value check(const ConstString& key, const Value& fallback,
-                        const ConstString& comment = "") const;
+    virtual Value check(const std::string& key,
+                        const Value& fallback,
+                        const std::string& comment = "") const;
 
     /**
      * Checks if the object is invalid.
@@ -176,15 +190,17 @@ public:
      * @return A standard text representation of the content of the
      * object.
      */
-    virtual ConstString toString() const = 0;
+    virtual std::string toString() const = 0;
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-    virtual void setMonitor(SearchMonitor *monitor, const char *context="");
-    virtual SearchMonitor *getMonitor() const;
-    virtual ConstString getMonitorContext() const;
+    virtual void setMonitor(SearchMonitor* monitor, const char* context = "");
+    virtual SearchMonitor* getMonitor() const;
+    virtual std::string getMonitorContext() const;
     virtual void reportToMonitor(const SearchReport& report) const;
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 };
 
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_SEARCHABLE_H

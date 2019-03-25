@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Author: Lorenzo Natale and Giorgio Metta
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/dev/ControlBoardInterfaces.h>
@@ -36,10 +39,7 @@ Pid::Pid(double p, double d, double i,
     kff(ff)
 {}
 
-Pid::~Pid()
-{
-
-}
+Pid::~Pid() = default;
 
 Pid::Pid()
 {
@@ -106,7 +106,7 @@ void Pid::setKff(double ff)
     kff=ff;
 }
 
-bool Pid::operator==(const yarp::dev::Pid &p)
+bool Pid::operator==(const yarp::dev::Pid &p) const
 {
 
     if(kp != p.kp)

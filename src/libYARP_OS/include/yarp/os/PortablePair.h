@@ -1,23 +1,23 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_PORTABLEPAIR_H
 #define YARP_OS_PORTABLEPAIR_H
 
-#include <yarp/os/Portable.h>
 #include <yarp/os/Bottle.h>
+#include <yarp/os/Portable.h>
 
 namespace yarp {
-    namespace os {
-        class PortablePairBase;
-        template <class HEAD, class BODY> class PortablePair;
-    }
-}
+namespace os {
 
-class YARP_OS_API yarp::os::PortablePairBase : public Portable {
+class YARP_OS_API PortablePairBase : public Portable
+{
 public:
     /**
      * Reads an object pair from a network connection.
@@ -38,8 +38,8 @@ public:
      * @return true iff the object pair was successfully written
      */
     static bool writePair(ConnectionWriter& connection,
-                          Portable& head,
-                          Portable& body);
+                          const Portable& head,
+                          const Portable& body);
 };
 
 /**
@@ -47,7 +47,8 @@ public:
  * Handy for adding general-purpose headers, for example.
  */
 template <class HEAD, class BODY>
-class yarp::os::PortablePair : public PortablePairBase {
+class PortablePair : public PortablePairBase
+{
 public:
     /**
      * An object of the first type (HEAD).
@@ -64,7 +65,8 @@ public:
      * @param connection an interface to the network connection for reading
      * @return true iff the object pair was successfully read
      */
-    virtual bool read(ConnectionReader& connection) override {
+    bool read(ConnectionReader& connection) override
+    {
         return readPair(connection, head, body);
     }
 
@@ -73,7 +75,8 @@ public:
      * @param connection an interface to the network connection for writing
      * @return true iff the object pair was successfully written
      */
-    virtual bool write(ConnectionWriter& connection) override {
+    bool write(ConnectionWriter& connection) const override
+    {
         return writePair(connection, head, body);
     }
 
@@ -81,10 +84,14 @@ public:
      * This is called when the port has finished all writing operations.
      * Passes call on to head and body.
      */
-    virtual void onCompletion() override {
+    void onCompletion() const override
+    {
         head.onCompletion();
         body.onCompletion();
     }
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_PORTABLEPAIR_H

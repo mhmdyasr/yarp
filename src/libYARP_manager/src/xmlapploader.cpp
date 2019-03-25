@@ -1,15 +1,14 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/xmlapploader.h>
 #include <yarp/manager/utility.h>
-#include <yarp/manager/ymm-dir.h>
+#include <dirent.h>
 #include <tinyxml.h>
 #include <yarp/os/Value.h>
 #ifdef WITH_GEOMETRY
@@ -43,7 +42,7 @@ XmlAppLoader::XmlAppLoader(const char* szPath, const char* szAppName)
 
     if(strlen(szPath))
     {
-        const yarp::os::ConstString directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+        const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
         strPath = szPath;
         if((strPath.rfind(directorySeparator)==string::npos) ||
             (strPath.rfind(directorySeparator)!=strPath.size()-1))
@@ -206,7 +205,7 @@ Application* XmlAppLoader::parsXml(const char* szFile)
     }
 
     /* retrieving name */
-    TiXmlElement* name = (TiXmlElement*) root->FirstChild("name");
+    auto* name = (TiXmlElement*) root->FirstChild("name");
     if(!name || !name->GetText())
     {
         OSTRINGSTREAM err;
@@ -228,9 +227,9 @@ Application* XmlAppLoader::parsXml(const char* szFile)
     if(name)
     {
         string strname = parser->parseText(name->GetText());
-        for(unsigned int i=0; i<strname.size(); i++)
-            if(strname[i] == ' ')
-                strname[i] = '_';
+        for(char& i : strname)
+            if(i == ' ')
+                i = '_';
         app.setName(strname.c_str());
     }
 
@@ -304,7 +303,7 @@ Application* XmlAppLoader::parsXml(const char* szFile)
         }
 
     /* retrieving modules information*/
-    typedef void (ModuleInterface::*setter)(const char*);
+    using setter = void (ModuleInterface::*)(const char*);
 
     vector<pair<const char*, setter> > modList;
     pair<const char*, setter>          pairNode;
@@ -337,9 +336,9 @@ Application* XmlAppLoader::parsXml(const char* szFile)
 
                 ModuleInterface module(text);
 
-                for(size_t i = 0; i < modList.size(); i++)
+                for(auto& i : modList)
                 {
-                    if((element = (TiXmlElement*) mod->FirstChild(modList[i].first)))
+                    if((element = (TiXmlElement*) mod->FirstChild(i.first)))
                     {
                         text = nullptr;
                         if(element->GetText())
@@ -348,7 +347,7 @@ Application* XmlAppLoader::parsXml(const char* szFile)
                             text     = elemText.c_str();
                         }
 
-                        (module.*(modList[i].second))(text);
+                        (module.*(i.second))(text);
                     }
                 }
 
@@ -372,8 +371,8 @@ Application* XmlAppLoader::parsXml(const char* szFile)
                     GyPoint pt;
                     if(prop.check("Pos"))
                     {
-                        pt.x = prop.findGroup("Pos").find("x").asDouble();
-                        pt.y = prop.findGroup("Pos").find("y").asDouble();
+                        pt.x = prop.findGroup("Pos").find("x").asFloat64();
+                        pt.y = prop.findGroup("Pos").find("y").asFloat64();
                         model.points.push_back(pt);
                         module.setModelBase(model);
                     }
@@ -489,7 +488,7 @@ Application* XmlAppLoader::parsXml(const char* szFile)
                 if((prefix=(TiXmlElement*) embApp->FirstChild("prefix")))
                     IApp.setPrefix(parser->parseText(prefix->GetText()).c_str());
 #ifdef WITH_GEOMETRY
-                TiXmlElement* element = (TiXmlElement*) embApp->FirstChild("geometry");
+                auto* element = (TiXmlElement*) embApp->FirstChild("geometry");
                 if(element && element->GetText())
                 {
                     yarp::os::Property prop(parser->parseText(element->GetText()).c_str());
@@ -497,8 +496,8 @@ Application* XmlAppLoader::parsXml(const char* szFile)
                     GyPoint pt;
                     if(prop.check("Pos"))
                     {
-                        pt.x = prop.findGroup("Pos").find("x").asDouble();
-                        pt.y = prop.findGroup("Pos").find("y").asDouble();
+                        pt.x = prop.findGroup("Pos").find("x").asFloat64();
+                        pt.y = prop.findGroup("Pos").find("y").asFloat64();
                         model.points.push_back(pt);
                         IApp.setModelBase(model);
                     }
@@ -523,7 +522,7 @@ Application* XmlAppLoader::parsXml(const char* szFile)
     {
         if(compareString(arb->Value(), "arbitrator"))
         {
-            TiXmlElement* port = (TiXmlElement*) arb->FirstChild("port");
+            auto* port = (TiXmlElement*) arb->FirstChild("port");
             if(port && port->GetText())
             {
                 Arbitrator arbitrator(parser->parseText(port->GetText()).c_str());
@@ -539,7 +538,7 @@ Application* XmlAppLoader::parsXml(const char* szFile)
                     }
                 }
 #ifdef WITH_GEOMETRY
-                TiXmlElement* geometry = (TiXmlElement*) arb->FirstChild("geometry");
+                auto* geometry = (TiXmlElement*) arb->FirstChild("geometry");
                 if(geometry && geometry->GetText())
                 {
                     yarp::os::Property prop(parser->parseText(geometry->GetText()).c_str());
@@ -547,11 +546,11 @@ Application* XmlAppLoader::parsXml(const char* szFile)
                     if(prop.check("Pos"))
                     {
                         yarp::os::Bottle pos = prop.findGroup("Pos");
-                        for(int i=1; i<pos.size(); i++)
+                        for(size_t i=1; i<pos.size(); i++)
                         {
                             GyPoint pt;
-                            pt.x = pos.get(i).find("x").asDouble();
-                            pt.y = pos.get(i).find("y").asDouble();
+                            pt.x = pos.get(i).find("x").asFloat64();
+                            pt.y = pos.get(i).find("y").asFloat64();
                             model.points.push_back(pt);
                         }
                         arbitrator.setModelBase(model);
@@ -576,8 +575,8 @@ Application* XmlAppLoader::parsXml(const char* szFile)
     {
         if(compareString(cnn->Value(), "connection"))
         {
-            TiXmlElement* from = (TiXmlElement*) cnn->FirstChild("from");
-            TiXmlElement* to = (TiXmlElement*) cnn->FirstChild("to");
+            auto* from = (TiXmlElement*) cnn->FirstChild("from");
+            auto* to = (TiXmlElement*) cnn->FirstChild("to");
 
             if(!from)
                 from = (TiXmlElement*) cnn->FirstChild("output");
@@ -590,7 +589,7 @@ Application* XmlAppLoader::parsXml(const char* szFile)
                 string strCarrier;
                 if((protocol=(TiXmlElement*) cnn->FirstChild("protocol")) &&
                     protocol->GetText())
-                    strCarrier = parser->parseText(protocol->GetText()).c_str();
+                    strCarrier = parser->parseText(protocol->GetText());
                 Connection connection(parser->parseText(from->GetText()).c_str(),
                                     parser->parseText(to->GetText()).c_str(),
                                     strCarrier.c_str());
@@ -647,7 +646,7 @@ Application* XmlAppLoader::parsXml(const char* szFile)
                     connection.setPersistent(true);
 
 #ifdef WITH_GEOMETRY
-                TiXmlElement* geometry = (TiXmlElement*) cnn->FirstChild("geometry");
+                auto* geometry = (TiXmlElement*) cnn->FirstChild("geometry");
                 if(geometry && geometry->GetText())
                 {
                     yarp::os::Property prop(parser->parseText(geometry->GetText()).c_str());
@@ -655,11 +654,11 @@ Application* XmlAppLoader::parsXml(const char* szFile)
                     if(prop.check("Pos"))
                     {
                         yarp::os::Bottle pos = prop.findGroup("Pos");
-                        for(int i=1; i<pos.size(); i++)
+                        for(size_t i=1; i<pos.size(); i++)
                         {
                             GyPoint pt;
-                            pt.x = pos.get(i).find("x").asDouble();
-                            pt.y = pos.get(i).find("y").asDouble();
+                            pt.x = pos.get(i).find("x").asFloat64();
+                            pt.y = pos.get(i).find("y").asFloat64();
                             model.points.push_back(pt);
                         }
                         connection.setModelBase(model);

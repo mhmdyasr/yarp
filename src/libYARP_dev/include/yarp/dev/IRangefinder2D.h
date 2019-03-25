@@ -1,23 +1,26 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IRANGEFINDER2D_H
 #define YARP_DEV_IRANGEFINDER2D_H
 
+#include <yarp/os/Vocab.h>
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/LaserMeasurementData.h>
 #include <vector>
 
-#define VOCAB_ILASER2D     VOCAB4('i','l','a','s')
-#define VOCAB_DEVICE_INFO  VOCAB4('l','s','n','f')
-#define VOCAB_LASER_DISTANCE_RANGE VOCAB4('l','s','d','r')
-#define VOCAB_LASER_ANGULAR_RANGE  VOCAB4('l','s','a','r')
-#define VOCAB_LASER_ANGULAR_STEP   VOCAB4('l','s','a','s')
-#define VOCAB_LASER_SCAN_RATE      VOCAB4('l','s','s','r')
+constexpr yarp::conf::vocab32_t VOCAB_ILASER2D             = yarp::os::createVocab('i','l','a','s');
+constexpr yarp::conf::vocab32_t VOCAB_DEVICE_INFO          = yarp::os::createVocab('l','s','n','f');
+constexpr yarp::conf::vocab32_t VOCAB_LASER_DISTANCE_RANGE = yarp::os::createVocab('l','s','d','r');
+constexpr yarp::conf::vocab32_t VOCAB_LASER_ANGULAR_RANGE  = yarp::os::createVocab('l','s','a','r');
+constexpr yarp::conf::vocab32_t VOCAB_LASER_ANGULAR_STEP   = yarp::os::createVocab('l','s','a','s');
+constexpr yarp::conf::vocab32_t VOCAB_LASER_SCAN_RATE      = yarp::os::createVocab('l','s','s','r');
 
 namespace yarp {
     namespace dev {
@@ -41,7 +44,7 @@ public:
         DEVICE_TIMEOUT          = 3
     };
 
-    virtual ~IRangefinder2D(){}
+    virtual ~IRangefinder2D();
 
     /**
     * Get the device measurements
@@ -129,7 +132,7 @@ public:
     * @param device_info string containing the device infos
     * @return true/false.
     */
-    virtual bool getDeviceInfo(yarp::os::ConstString &device_info) = 0;
+    virtual bool getDeviceInfo(std::string &device_info) = 0;
 };
 
 #endif // YARP_DEV_IRANGEFINDER2D_H

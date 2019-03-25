@@ -1,18 +1,21 @@
 /*
- * Copyright (C) 2006, 2007 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/Property.h>
 #include <yarp/os/Bottle.h>
+#include <yarp/os/NetType.h>
+#include <yarp/os/StringInputStream.h>
+#include <yarp/os/Network.h>
+
 #include <yarp/os/impl/BottleImpl.h>
 #include <yarp/os/impl/Logger.h>
-#include <yarp/os/StringInputStream.h>
-#include <yarp/os/NetType.h>
 #include <yarp/os/impl/SplitString.h>
-
 #include <yarp/os/impl/PlatformDirent.h>
 
 #include <algorithm>
@@ -46,6 +49,16 @@ public:
         }
     }
 
+    /*
+     * The const version of the processBuffered() method performs a const_cast,
+     * and calls the non-const version. This allows to call it in const methods.
+     * Conceptually this is not completely wrong because it does not modify
+     * the external state of the class, but just some internal representation.
+     */
+    void flush() const {
+        const_cast<PropertyItem*>(this)->flush();
+    }
+
     void flush() {
         if (backing) {
             Bottle flatten(backing->toString());
@@ -54,7 +67,7 @@ public:
         }
     }
 
-    ConstString toString() {
+    std::string toString() const {
         flush();
         return bot.toString();
     }
@@ -62,13 +75,13 @@ public:
 
 class PropertyHelper {
 public:
-    std::map<ConstString, PropertyItem> data;
+    std::map<std::string, PropertyItem> data;
     Property& owner;
 
     PropertyHelper(Property& owner, int hash_size) :
         owner(owner) {}
 
-    PropertyItem *getPropNoCreate(const ConstString& key) const {
+    PropertyItem *getPropNoCreate(const std::string& key) const {
         auto it = data.find(key);
         if (it==data.end()) {
             return nullptr;
@@ -76,8 +89,8 @@ public:
         return const_cast<PropertyItem*>(&(it->second));
     }
 
-    PropertyItem *getProp(const ConstString& key, bool create = true) {
-        std::map<ConstString, PropertyItem>::iterator entry = data.find(key);
+    PropertyItem *getProp(const std::string& key, bool create = true) {
+        auto entry = data.find(key);
         if (entry == data.end()) {
             if (!create) {
                 return nullptr;
@@ -89,7 +102,7 @@ public:
         return &(entry->second);
     }
 
-    void put(const ConstString& key, const ConstString& val) {
+    void put(const std::string& key, const std::string& val) {
         PropertyItem *p = getProp(key, true);
         p->singleton = true;
         p->clear();
@@ -98,7 +111,7 @@ public:
         p->bot.addString(val);
     }
 
-    void put(const ConstString& key, const Value& bit) {
+    void put(const std::string& key, const Value& bit) {
         PropertyItem *p = getProp(key, true);
         p->singleton = true;
         p->clear();
@@ -107,7 +120,7 @@ public:
         p->bot.add(bit);
     }
 
-    void put(const ConstString& key, Value *bit) {
+    void put(const std::string& key, Value *bit) {
         PropertyItem *p = getProp(key, true);
         p->singleton = true;
         p->clear();
@@ -116,7 +129,7 @@ public:
         p->bot.add(bit);
     }
 
-    Property& addGroup(const ConstString& key) {
+    Property& addGroup(const std::string& key) {
         PropertyItem *p = getProp(key, true);
         p->singleton = true;
         p->clear();
@@ -127,18 +140,18 @@ public:
         return *(p->backing);
     }
 
-    bool check(const ConstString& key, Value *&output) const {
+    bool check(const std::string& key, Value *&output) const {
         YARP_UNUSED(output);
         PropertyItem *p = getPropNoCreate(key);
 
         return p!=nullptr;
     }
 
-    void unput(const ConstString& key) {
+    void unput(const std::string& key) {
         data.erase(key);
     }
 
-    bool check(const ConstString& key) const {
+    bool check(const std::string& key) const {
         PropertyItem *p = getPropNoCreate(key);
         if (owner.getMonitor()!=nullptr) {
             SearchReport report;
@@ -149,8 +162,8 @@ public:
         return p!=nullptr;
     }
 
-    Value& get(const ConstString& key) const {
-        ConstString out;
+    Value& get(const std::string& key) const {
+        std::string out;
         PropertyItem *p = getPropNoCreate(key);
         if (p!=nullptr) {
             p->flush();
@@ -199,7 +212,7 @@ public:
     }
 
 
-    Bottle *getBottle(const ConstString& key) const {
+    Bottle *getBottle(const std::string& key) const {
         PropertyItem *p = getPropNoCreate(key);
         if (p!=nullptr) {
             p->flush();
@@ -212,25 +225,25 @@ public:
         data.clear();
     }
 
-    void fromString(const ConstString& txt, bool wipe=true) {
+    void fromString(const std::string& txt, bool wipe=true) {
         Bottle bot;
         bot.fromString(txt);
         fromBottle(bot, wipe);
     }
 
     void fromCommand(int argc, char *argv[], bool wipe=true) {
-        ConstString tag = "";
+        std::string tag;
         Bottle accum;
         Bottle total;
         bool qualified = false;
         for (int i=0; i<argc; i++) {
-            ConstString work = argv[i];
+            std::string work = argv[i];
             bool isTag = false;
             if (work.length()>=2) {
                 if (work[0]=='-'&&work[1]=='-') {
                     work = work.substr(2, work.length()-2);
                     isTag = true;
-                    if (work.find("::")!=ConstString::npos) {
+                    if (work.find("::")!=std::string::npos) {
                         qualified = true;
                     }
                 }
@@ -242,21 +255,21 @@ public:
                 tag = work;
                 accum.clear();
             } else {
-                if (work.find('\\')!=ConstString::npos) {
+                if (work.find('\\')!=std::string::npos) {
                     // Specifically when reading from the command
                     // line, we will allow windows-style paths.
                     // Hence we have to break the "\" character
-                    ConstString buf = "";
-                    for (unsigned int i=0; i<work.length(); i++) {
-                        buf += work[i];
-                        if (work[i]=='\\') {
-                            buf += work[i];
+                    std::string buf;
+                    for (char i : work) {
+                        buf += i;
+                        if (i=='\\') {
+                            buf += i;
                         }
                     }
                     work = buf;
                 }
             }
-            accum.add(Value::makeValue(work.c_str()));
+            accum.add(Value::makeValue(work));
         }
         if (tag!="") {
             total.addList().copy(accum);
@@ -269,22 +282,22 @@ public:
             clear();
         }
         Bottle *cursor = nullptr;
-        for (int i=0; i<total.size(); i++) {
+        for (size_t i=0; i<total.size(); i++) {
             cursor = nullptr;
             Bottle *term = total.get(i).asList();
             if (!term) continue;
-            ConstString key = term->get(0).asString();
-            ConstString base = key;
+            std::string key = term->get(0).asString();
+            std::string base = key;
             while (key.length()>0) {
-                int at = key.find("::");
                 base = key;
-                if (at>=0) {
+                size_t at = key.find("::");
+                if (at != std::string::npos) {
                     base = key.substr(0, at);
                     key = key.substr(at+2);
                 } else {
                     key = "";
                 }
-                Bottle& result = (cursor!=nullptr)? (cursor->findGroup(base.c_str())) : owner.findGroup(base.c_str());
+                Bottle& result = (cursor!=nullptr)? (cursor->findGroup(base)) : owner.findGroup(base);
                 if (result.isNull()) {
                     if (!cursor) {
                         cursor = &putBottle((base).c_str());
@@ -303,10 +316,10 @@ public:
         }
     }
 
-    bool readDir(const ConstString& dirname, yarp::os::impl::DIR *&dir, ConstString& result, const ConstString& section=ConstString()) {
+    bool readDir(const std::string& dirname, yarp::os::impl::DIR *&dir, std::string& result, const std::string& section=std::string()) {
         bool ok = true;
         YARP_DEBUG(Logger::get(),
-                   ConstString("reading directory ") + dirname);
+                   std::string("reading directory ") + dirname);
 
         yarp::os::impl::dirent **namelist;
         yarp::os::impl::closedir(dir);
@@ -316,31 +329,31 @@ public:
             return false;
         }
         for (int i=0; i<n; i++) {
-            ConstString name = namelist[i]->d_name;
+            std::string name = namelist[i]->d_name;
             free(namelist[i]);
             int len = (int)name.length();
             if (len<4) continue;
             if (name.substr(len-4)!=".ini") continue;
-            ConstString fname = ConstString(dirname) + "/" + name;
+            std::string fname = std::string(dirname) + "/" + name;
             std::replace(fname.begin(), fname.end(), '\\', '/');
             if (section.empty()) {
                 ok = ok && readFile(fname, result, false);
                 result += "\n[]\n";  // reset any nested sections
             } else {
-                result += "[include " + section + " \"" + fname + "\" \"" + fname + "\"]\n";
+                result.append("[include ").append(section).append(" \"").append(fname).append("\" \"").append(fname).append("\"]\n");
             }
         }
         free(namelist);
         return ok;
     }
 
-    bool readFile(const ConstString& fname, ConstString& result, bool allowDir) {
+    bool readFile(const std::string& fname, std::string& result, bool allowDir) {
         if (allowDir) {
             yarp::os::impl::DIR *dir = yarp::os::impl::opendir(fname.c_str());
             if (dir) return readDir(fname, dir, result);
         }
         YARP_DEBUG(Logger::get(),
-                   ConstString("reading file ") + fname);
+                   std::string("reading file ") + fname);
         FILE *fin = fopen(fname.c_str(), "r");
         if (!fin) {
             return false;
@@ -354,34 +367,33 @@ public:
         return true;
     }
 
-    bool fromConfigFile(const ConstString& fname, Searchable& env, bool wipe=true) {
-        ConstString searchPath =
+    bool fromConfigFile(const std::string& fname, Searchable& env, bool wipe=true) {
+        std::string searchPath =
             env.check("CONFIG_PATH",
                       Value(""),
-                      "path to search for config files").toString().c_str();
+                      "path to search for config files").toString();
 
         YARP_DEBUG(Logger::get(),
-                   ConstString("looking for ") + fname.c_str() + ", search path: " +
+                   std::string("looking for ") + fname + ", search path: " +
                    searchPath);
 
-        ConstString pathPrefix("");
-        ConstString txt;
+        std::string pathPrefix;
+        std::string txt;
 
         bool ok = true;
         if (!readFile(fname, txt, true)) {
             ok = false;
             SplitString ss(searchPath.c_str(), ';');
             for (int i=0; i<ss.size(); i++) {
-                ConstString trial = ss.get(i);
+                std::string trial = ss.get(i);
                 trial += '/';
                 trial += fname;
 
                 YARP_DEBUG(Logger::get(),
-                           ConstString("looking for ") + fname + " as " +
-                           trial.c_str());
+                           std::string("looking for ").append(fname).append(" as ").append(trial));
 
                 txt = "";
-                if (readFile(trial.c_str(), txt, true)) {
+                if (readFile(trial, txt, true)) {
                     ok = true;
                     pathPrefix = ss.get(i);
                     pathPrefix += '/';
@@ -390,17 +402,17 @@ public:
             }
         }
 
-        ConstString path("");
+        std::string path;
         size_t index = fname.rfind('/');
-        if (index==ConstString::npos) {
+        if (index==std::string::npos) {
             index = fname.rfind('\\');
         }
-        if (index!=ConstString::npos) {
+        if (index!=std::string::npos) {
             path = fname.substr(0, index);
         }
 
         if (!ok) {
-            YARP_ERROR(Logger::get(), ConstString("cannot read from ") +
+            YARP_ERROR(Logger::get(), std::string("cannot read from ") +
                        fname);
             return false;
         }
@@ -413,30 +425,30 @@ public:
             }
             searchPath += pathPrefix;
             searchPath += path;
-            envExtended.put("CONFIG_PATH", searchPath.c_str());
+            envExtended.put("CONFIG_PATH", searchPath);
         }
 
         fromConfig(txt.c_str(), envExtended, wipe);
         return true;
     }
 
-    bool fromConfigDir(const ConstString& dirname, const ConstString& section, bool wipe=true) {
+    bool fromConfigDir(const std::string& dirname, const std::string& section, bool wipe=true) {
         Property p;
         if (section.empty()) {
             return fromConfigFile(dirname, p, wipe);
         }
 
-        YARP_DEBUG(Logger::get(), ConstString("looking for ") + dirname.c_str());
+        YARP_DEBUG(Logger::get(), std::string("looking for ") + dirname);
 
         yarp::os::impl::DIR *dir = yarp::os::impl::opendir(dirname.c_str());
         if (!dir) {
-            YARP_ERROR(Logger::get(), ConstString("cannot read from ") + dirname);
+            YARP_ERROR(Logger::get(), std::string("cannot read from ") + dirname);
             return false;
         }
 
-        ConstString txt;
+        std::string txt;
         if (!readDir(dirname, dir, txt, section)) {
-            YARP_ERROR(Logger::get(), ConstString("cannot read from ") + dirname);
+            YARP_ERROR(Logger::get(), std::string("cannot read from ") + dirname);
             return false;
         }
 
@@ -451,13 +463,13 @@ public:
         if (wipe) {
             clear();
         }
-        ConstString tag = "";
+        std::string tag;
         Bottle accum;
         bool done = false;
         do {
             bool isTag = false;
             bool including = false;
-            ConstString buf;
+            std::string buf;
             bool good = true;
             buf = sis.readLine('\n', &good);
             while (good && !BottleImpl::isComplete(buf.c_str())) {
@@ -469,7 +481,7 @@ public:
             if (!done) {
                 including = false;
 
-                if (buf.find("//")!=ConstString::npos||buf.find('#')!=ConstString::npos) {
+                if (buf.find("//")!=std::string::npos||buf.find('#')!=std::string::npos) {
                     bool quoted = false;
                     bool prespace = true;
                     int comment = 0;
@@ -503,15 +515,15 @@ public:
                 }
 
                 // expand any environment references
-                buf = expand(buf.c_str(), env, owner).c_str();
+                buf = expand(buf.c_str(), env, owner);
 
                 if (buf.length()>0 && buf[0]=='[') {
                     size_t stop = buf.find(']');
-                    if (stop!=ConstString::npos) {
+                    if (stop!=std::string::npos) {
                         buf = buf.substr(1, stop-1);
                         size_t space = buf.find(' ');
-                        if (space!=ConstString::npos) {
-                            Bottle bot(buf.c_str());
+                        if (space!=std::string::npos) {
+                            Bottle bot(buf);
                             // BEGIN Handle include option
                             if (bot.size()>1) {
                                 if (bot.get(0).toString() == "include") {
@@ -527,7 +539,7 @@ public:
                                         }
                                     }
                                     if (bot.size()>2) {
-                                        ConstString subName, fname;
+                                        std::string subName, fname;
                                         if (bot.size()==3) {
                                             // [include section "filename"]
                                             subName = bot.get(1).toString();
@@ -536,12 +548,11 @@ public:
 
                                         } else if (bot.size()==4) {
                                             // [include type section "filename"]
-                                            ConstString key;
+                                            std::string key;
                                             key = bot.get(1).toString();
                                             subName = bot.get(2).toString();
                                             fname = bot.get(3).toString();
-                                            Bottle *target =
-                                                getBottle(key.c_str());
+                                            Bottle *target = getBottle(key);
                                             if (target==nullptr) {
                                                 Bottle init;
                                                 init.addString(key.c_str());
@@ -553,7 +564,7 @@ public:
                                             }
                                         } else {
                                             YARP_ERROR(Logger::get(),
-                                                       ConstString("bad include"));
+                                                       std::string("bad include"));
                                             return;
                                         }
 
@@ -564,10 +575,9 @@ public:
                                             //printf(">>> prior p %s\n",
                                             //     p.toString().c_str());
                                         }
-                                        p.fromConfigFile(fname.c_str(),
-                                                         env, false);
+                                        p.fromConfigFile(fname, env, false);
                                         accum.fromString(p.toString());
-                                        tag = subName.c_str();
+                                        tag = subName;
                                         //printf(">>> tag %s accum %s\n",
                                         //     tag.c_str(),
                                         //     accum.toString().c_str());
@@ -585,27 +595,26 @@ public:
                                         }
                                     } else {
                                         tag = "";
-                                        ConstString fname =
+                                        std::string fname =
                                             bot.get(1).toString();
                                         //printf("Including %s\n", fname.c_str());
-                                        fromConfigFile(fname.c_str(),
-                                                       env, false);
+                                        fromConfigFile(fname, env, false);
                                     }
                                 }
                             }
                             // END handle include option
                             // BEGIN handle group
                             if (bot.size()==2 && !including) {
-                                buf = bot.get(1).toString().c_str();
-                                ConstString key = bot.get(0).toString().c_str();
-                                Bottle *target = getBottle(key.c_str());
+                                buf = bot.get(1).toString();
+                                std::string key = bot.get(0).toString();
+                                Bottle *target = getBottle(key);
                                 if (target==nullptr) {
                                     Bottle init;
-                                    init.addString(key.c_str());
-                                    init.addString(buf.c_str());
+                                    init.addString(key);
+                                    init.addString(buf);
                                     putBottleCompat(key.c_str(), init);
                                 } else {
-                                    target->addString(buf.c_str());
+                                    target->addString(buf);
                                 }
                             }
                             // END handle group
@@ -618,14 +627,14 @@ public:
             }
             if (!isTag && !including) {
                 Bottle bot;
-                bot.fromString(buf.c_str());
+                bot.fromString(buf);
                 if (bot.size()>=1) {
                     if (tag=="") {
                         putBottleCompat(bot.get(0).toString().c_str(), bot);
                     } else {
                         if (bot.get(1).asString()=="=") {
                             Bottle& b = accum.addList();
-                            for (int i=0; i<bot.size(); i++) {
+                            for (size_t i=0; i<bot.size(); i++) {
                                 if (i!=1) {
                                     b.add(bot.get(i));
                                 }
@@ -645,11 +654,11 @@ public:
                 }
                 tag = buf;
                 accum.clear();
-                accum.addString(tag.c_str());
+                accum.addString(tag);
                 if (tag!="") {
-                    if (getBottle(tag.c_str())!=nullptr) {
+                    if (getBottle(tag)!=nullptr) {
                         // merge data
-                        accum.append(getBottle(tag.c_str())->tail());
+                        accum.append(getBottle(tag)->tail());
                         //printf("MERGE %s, got %s\n", tag.c_str(),
                         //     accum.toString().c_str());
                     }
@@ -662,7 +671,7 @@ public:
         if (wipe) {
             clear();
         }
-        for (int i=0; i<bot.size(); i++) {
+        for (size_t i=0; i<bot.size(); i++) {
             Value& bb = bot.get(i);
             if (bb.isList()) {
                 Bottle *sub = bb.asList();
@@ -671,10 +680,10 @@ public:
         }
     }
 
-    ConstString toString() {
+    std::string toString() const {
         Bottle bot;
-        for (std::map<ConstString, PropertyItem>::iterator it = data.begin(); it != data.end(); ++it) {
-            PropertyItem& rec = it->second;
+        for (const auto& it : data) {
+            const PropertyItem& rec = it.second;
             Bottle& sub = bot.addList();
             rec.flush();
             sub.copy(rec.bot);
@@ -683,16 +692,16 @@ public:
     }
 
     // expand any environment variables found
-    ConstString expand(const char *txt, Searchable& env, Searchable& env2) {
+    std::string expand(const char *txt, Searchable& env, Searchable& env2) {
         //printf("expanding %s\n", txt);
-        ConstString input = txt;
-        if (input.find('$')==ConstString::npos) {
+        std::string input = txt;
+        if (input.find('$')==std::string::npos) {
             // no variables present for sure
             return txt;
         }
         // check if variables present
-        ConstString output = "";
-        ConstString var = "";
+        std::string output;
+        std::string var;
         bool inVar = false;
         bool varHasParen = false;
         bool quoted = false;
@@ -735,27 +744,27 @@ public:
                     }
                     inVar = false;
                     //printf("VARIABLE %s\n", var.c_str());
-                    ConstString add = NetworkBase::getEnvironment(var.c_str()).c_str();
+                    std::string add = NetworkBase::getEnvironment(var.c_str());
                     if (add=="") {
-                        add = env.find(var.c_str()).toString().c_str();
+                        add = env.find(var).toString();
                     }
                     if (add=="") {
-                        add = env2.find(var.c_str()).toString().c_str();
+                        add = env2.find(var).toString();
                     }
                     if (add=="") {
                         if (var=="__YARP__") {
                             add = "1";
                         }
                     }
-                    if (add.find('\\')!=ConstString::npos) {
+                    if (add.find('\\')!=std::string::npos) {
                         // Specifically when reading from the command
                         // line, we will allow windows-style paths.
                         // Hence we have to break the "\" character
-                        ConstString buf = "";
-                        for (unsigned int i=0; i<add.length(); i++) {
-                            buf += add[i];
-                            if (add[i]=='\\') {
-                                buf += add[i];
+                        std::string buf;
+                        for (char i : add) {
+                            buf += i;
+                            if (i=='\\') {
+                                buf += i;
                             }
                         }
                         add = buf;
@@ -781,7 +790,7 @@ public:
                 }
             }
         }
-        return output.c_str();
+        return output;
     }
 
     void fromArguments(const char *command, bool wipe=true) {
@@ -915,45 +924,45 @@ const Property& Property::operator = (const Property& prop) {
 }
 
 
-void Property::put(const ConstString& key, const ConstString& value) {
+void Property::put(const std::string& key, const std::string& value) {
     summon();
     HELPER(implementation).put(key, value);
 }
 
-void Property::put(const ConstString& key, const Value& value) {
+void Property::put(const std::string& key, const Value& value) {
     summon();
     HELPER(implementation).put(key, value);
 }
 
 
-void Property::put(const ConstString& key, Value *value) {
+void Property::put(const std::string& key, Value *value) {
     summon();
     HELPER(implementation).put(key, value);
 }
 
-void Property::put(const ConstString& key, int value) {
+void Property::put(const std::string& key, int value) {
     summon();
-    put(key, Value::makeInt(value));
+    put(key, Value::makeInt32(value));
 }
 
-void Property::put(const ConstString& key, double value) {
+void Property::put(const std::string& key, double value) {
     summon();
-    put(key, Value::makeDouble(value));
+    put(key, Value::makeFloat64(value));
 }
 
-bool Property::check(const ConstString& key) const {
+bool Property::check(const std::string& key) const {
     if (!check()) return false;
     return HELPER(implementation).check(key);
 }
 
 
-void Property::unput(const ConstString& key) {
+void Property::unput(const std::string& key) {
     summon();
     HELPER(implementation).unput(key);
 }
 
 
-Value& Property::find(const ConstString& key) const {
+Value& Property::find(const std::string& key) const {
     if (!check()) return Value::getNullValue();
     return HELPER(implementation).get(key);
 }
@@ -965,14 +974,14 @@ void Property::clear() {
 }
 
 
-void Property::fromString(const ConstString& txt, bool wipe) {
+void Property::fromString(const std::string& txt, bool wipe) {
     summon();
     HELPER(implementation).fromString(txt, wipe);
 }
 
 
-ConstString Property::toString() const {
-    if (!check()) return "";
+std::string Property::toString() const {
+    if (!check()) return {};
     return HELPER(implementation).toString();
 }
 
@@ -996,19 +1005,19 @@ void Property::fromArguments(const char *arguments, bool wipe) {
     HELPER(implementation).fromArguments(arguments, wipe);
 }
 
-bool Property::fromConfigDir(const ConstString& dirname, const ConstString& section, bool wipe) {
+bool Property::fromConfigDir(const std::string& dirname, const std::string& section, bool wipe) {
     summon();
     return HELPER(implementation).fromConfigDir(dirname, section, wipe);
 }
 
-bool Property::fromConfigFile(const ConstString& fname, bool wipe) {
+bool Property::fromConfigFile(const std::string& fname, bool wipe) {
     summon();
     Property p;
     return fromConfigFile(fname, p, wipe);
 }
 
 
-bool Property::fromConfigFile(const ConstString& fname, Searchable& env, bool wipe) {
+bool Property::fromConfigFile(const std::string& fname, Searchable& env, bool wipe) {
     summon();
     return HELPER(implementation).fromConfigFile(fname, env, wipe);
 }
@@ -1036,14 +1045,14 @@ bool Property::read(ConnectionReader& reader) {
 }
 
 
-bool Property::write(ConnectionWriter& writer) {
+bool Property::write(ConnectionWriter& writer) const {
     // for now just delegate to Bottle
     Bottle b(toString());
     return b.write(writer);
 }
 
 
-Bottle& Property::findGroup(const ConstString& key) const {
+Bottle& Property::findGroup(const std::string& key) const {
     if (!check()) return Bottle::getNullBottle();
     Bottle *result = HELPER(implementation).getBottle(key);
     if (getMonitor()!=nullptr) {
@@ -1056,7 +1065,7 @@ Bottle& Property::findGroup(const ConstString& key) const {
         }
         reportToMonitor(report);
         if (result != nullptr) {
-            ConstString context = getMonitorContext();
+            std::string context = getMonitorContext();
             context += ".";
             context += key;
             result->setMonitor(getMonitor(),
@@ -1074,16 +1083,15 @@ void Property::fromQuery(const char *url, bool wipe) {
     if (wipe) {
         clear();
     }
-    ConstString str = url;
+    std::string str = url;
     str += "&";
-    ConstString buf = "";
-    ConstString key = "";
-    ConstString val = "";
+    std::string buf;
+    std::string key;
+    std::string val;
     int code = 0;
     int coding = 0;
 
-    for (unsigned int i=0; i<str.length(); i++) {
-        char ch = str[i];
+    for (char ch : str) {
         if (ch=='=') {
             key = buf;
             val = "";
@@ -1094,7 +1102,7 @@ void Property::fromQuery(const char *url, bool wipe) {
             val = buf;
             buf = "";
             if (key!="" && val!="") {
-                put(key.c_str(), val.c_str());
+                put(key, val);
             }
             key = "";
         } else if (ch=='?') {
@@ -1126,7 +1134,7 @@ void Property::fromQuery(const char *url, bool wipe) {
 }
 
 
-Property& yarp::os::Property::addGroup(const ConstString& key) {
+Property& yarp::os::Property::addGroup(const std::string& key) {
     summon();
     return HELPER(implementation).addGroup(key);
 }

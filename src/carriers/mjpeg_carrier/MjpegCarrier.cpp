@@ -1,10 +1,11 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <cstdio>
 
@@ -47,6 +48,7 @@ extern "C" {
 #include <yarp/sig/ImageNetworkHeader.h>
 #include <yarp/os/Name.h>
 #include <yarp/os/Bytes.h>
+#include <yarp/os/Route.h>
 
 #include "WireImage.h"
 
@@ -55,19 +57,20 @@ using namespace yarp::sig;
 
 #define dbg_printf if (0) printf
 
-typedef struct {
+struct net_destination_mgr
+{
     struct jpeg_destination_mgr pub;
 
     JOCTET *buffer;
     int bufsize;
     JOCTET cache[1000000];  // need to make this variable...
-} net_destination_mgr;
+};
 
-typedef net_destination_mgr *net_destination_ptr;
+using net_destination_ptr = net_destination_mgr*;
 
 void send_net_data(JOCTET *data, int len, void *client) {
     dbg_printf("Send %d bytes\n", len);
-    ConnectionState *p = (ConnectionState *)client;
+    auto* p = (ConnectionState *)client;
     char hdr[1000];
     sprintf(hdr,"\n");
     const char *brk = "\n";
@@ -99,7 +102,7 @@ Content-Length: %d%s%s", brk, len, brk, brk);
 
 static void init_net_destination(j_compress_ptr cinfo) {
     //printf("Initializing destination\n");
-    net_destination_ptr dest = (net_destination_ptr)cinfo->dest;
+    auto dest = (net_destination_ptr)cinfo->dest;
     dest->buffer = &(dest->cache[0]);
     dest->bufsize = sizeof(dest->cache);
     dest->pub.next_output_byte = dest->buffer;
@@ -107,7 +110,7 @@ static void init_net_destination(j_compress_ptr cinfo) {
 }
 
 static boolean empty_net_output_buffer(j_compress_ptr cinfo) {
-    net_destination_ptr dest = (net_destination_ptr)cinfo->dest;
+    auto dest = (net_destination_ptr)cinfo->dest;
     printf("Empty buffer - PROBLEM\n");
     send_net_data(dest->buffer,dest->bufsize-dest->pub.free_in_buffer,
                   cinfo->client_data);
@@ -117,7 +120,7 @@ static boolean empty_net_output_buffer(j_compress_ptr cinfo) {
 }
 
 static void term_net_destination(j_compress_ptr cinfo) {
-    net_destination_ptr dest = (net_destination_ptr)cinfo->dest;
+    auto dest = (net_destination_ptr)cinfo->dest;
     //printf("Terminating net %d %d\n", dest->bufsize,dest->pub.free_in_buffer);
     send_net_data(dest->buffer,dest->bufsize-dest->pub.free_in_buffer,
                   cinfo->client_data);
@@ -151,7 +154,7 @@ bool MjpegCarrier::write(ConnectionState& proto, SizedWriter& writer) {
     int w = img->width();
     int h = img->height();
     int row_stride = img->getRowSize();
-    JOCTET *data = (JOCTET*)img->getRawImage();
+    auto* data = (JOCTET*)img->getRawImage();
 
     JSAMPROW row_pointer[1];
 
@@ -163,8 +166,16 @@ bool MjpegCarrier::write(ConnectionState& proto, SizedWriter& writer) {
     jpeg_net_dest(&cinfo);
     cinfo.image_width = w;
     cinfo.image_height = h;
-    cinfo.input_components = 3;
-    cinfo.in_color_space = JCS_RGB;
+
+    if (img->getPixelCode() != VOCAB_PIXEL_MONO) {
+        cinfo.in_color_space = JCS_RGB;
+        cinfo.input_components = 3;
+    }
+    else {
+        cinfo.in_color_space = JCS_GRAYSCALE;
+        cinfo.input_components = 1;
+    }
+
     jpeg_set_defaults(&cinfo);
     //jpeg_set_quality(&cinfo, 85, TRUE);
     dbg_printf("Starting to compress...\n");
@@ -192,8 +203,8 @@ bool MjpegCarrier::reply(ConnectionState& proto, SizedWriter& writer) {
 
 bool MjpegCarrier::sendHeader(ConnectionState& proto) {
     Name n(proto.getRoute().getCarrierName() + "://test");
-    ConstString pathValue = n.getCarrierModifier("path");
-    ConstString target = "GET /?action=stream\n\n";
+    std::string pathValue = n.getCarrierModifier("path");
+    std::string target = "GET /?action=stream\n\n";
     if (pathValue!="") {
         target = "GET /";
         target += pathValue;

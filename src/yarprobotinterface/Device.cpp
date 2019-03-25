@@ -1,8 +1,19 @@
 /*
- * Copyright (C) 2012, 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "Device.h"
@@ -104,7 +115,7 @@ public:
         // stopThreads() must pass this semaphore, but in order to avoid to
         // stop an already deleted thread we need a second semaphore.
         reg_sem()->wait();
-        RobotInterface::ThreadList::iterator tit = thr()->begin();
+        auto tit = thr()->begin();
         while (tit != thr()->end()) {
             yarp::os::Thread *thread = *tit;
             thread->join();
@@ -119,8 +130,7 @@ public:
     inline void stopThreads() const
     {
         lst_sem()->wait();
-        for (RobotInterface::ThreadList::iterator tit = thr()->begin(); tit != thr()->end(); tit++) {
-            yarp::os::Thread *thread = *tit;
+        for (auto* thread : *thr()) {
             thread->stop();
         }
         lst_sem()->post();
@@ -353,7 +363,7 @@ bool RobotInterface::Device::calibrate(const RobotInterface::Device &target) con
         return false;
     }
 
-    yarp::dev::IControlCalibration2 *controlCalibrator;
+    yarp::dev::IControlCalibration *controlCalibrator;
     if (!target.driver()->view(controlCalibrator)) {
         yError() << target.name() << "is not a yarp::dev::IControlCalibration2, therefore it cannot have" << ActionTypeToString(ActionTypeCalibrate) << "actions";
         return false;
@@ -459,7 +469,7 @@ bool RobotInterface::Device::park(const Device &target) const
         return false;
     }
 
-    yarp::dev::IControlCalibration2 *controlCalibrator;
+    yarp::dev::IControlCalibration *controlCalibrator;
     if (!target.driver()->view(controlCalibrator)) {
         yError() << target.name() << "is not a yarp::dev::IControlCalibration2, therefore it cannot have" << ActionTypeToString(ActionTypePark) << "actions";
         return false;

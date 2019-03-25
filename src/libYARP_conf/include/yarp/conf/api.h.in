@@ -1,13 +1,17 @@
 /*
- * Copyright: (C) 2010 RobotCub Consortium
- * Author: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_CONF_API_H
 #define YARP_CONF_API_H
 
 #include <yarp/conf/compiler.h>
+#include <yarp/conf/system.h>
 
 /*
 
@@ -90,12 +94,49 @@ recommended usage of this header within YARP is:
 #  define YARP_DEPRECATED_MSG(X)
 #endif
 
+
+// Position for the attribute [[deprecated]] for typedef is different compared
+// to compiler-specific attributes
+#if defined(YARP_COMPILER_CXX_ATTRIBUTE_DEPRECATED) && YARP_COMPILER_CXX_ATTRIBUTE_DEPRECATED
+# define YARP_DEPRECATED_TYPEDEF YARP_DEPRECATED typedef
+# define YARP_DEPRECATED_TYPEDEF_MSG(x) YARP_DEPRECATED_MSG(x) typedef
+#else
+# define YARP_DEPRECATED_TYPEDEF typedef YARP_DEPRECATED
+# define YARP_DEPRECATED_TYPEDEF_MSG(x) typedef YARP_DEPRECATED_MSG(x)
+#endif
+
+
+// Due to a GCC bug, it is not a good idea to mix C++14 and compiler-specific attributes
+// For this reason, only for usage with visibility macro, we define the compiler-specific attributes
+// See https://github.com/robotology/yarp/issues/1531
+#if defined YARP_NO_DEPRECATED_WARNINGS
+#  define YARP_DEPRECATED_COMPILER_SPECIFIC
+#  define YARP_DEPRECATED_COMPILER_SPECIFIC_MSG(x)
+#elif YARP_COMPILER_IS_GNU || YARP_COMPILER_IS_Clang
+#  define YARP_DEPRECATED_COMPILER_SPECIFIC __attribute__((__deprecated__))
+#  define YARP_DEPRECATED_COMPILER_SPECIFIC_MSG(MSG) __attribute__((__deprecated__(MSG)))
+#elif YARP_COMPILER_IS_MSVC
+#  define YARP_DEPRECATED_COMPILER_SPECIFIC __declspec(deprecated)
+#  define YARP_DEPRECATED_COMPILER_SPECIFIC_MSG(MSG) __declspec(deprecated(MSG))
+#else
+#  define YARP_DEPRECATED_COMPILER_SPECIFIC
+#  define YARP_DEPRECATED_COMPILER_SPECIFIC_MSG(MSG)
+#endif
+
 #ifdef YARP_NO_DEPRECATED
 #  define YARP_DEPRECATED_API YARP_DEPRECATED
 #  define YARP_DEPRECATED_API_MSG(X) YARP_DEPRECATED_MSG(X)
 #else
-#  define YARP_DEPRECATED_API YARP_DEPRECATED YARP_OS_API
-#  define YARP_DEPRECATED_API_MSG(X) YARP_DEPRECATED_MSG(X) YARP_OS_API
+#  define YARP_DEPRECATED_API YARP_DEPRECATED_COMPILER_SPECIFIC YARP_OS_API
+#  define YARP_DEPRECATED_API_MSG(X) YARP_DEPRECATED_COMPILER_SPECIFIC_MSG(X) YARP_OS_API
+#endif
+
+#ifdef BUILDING_YARP
+#  define YARP_DEPRECATED_INTERNAL YARP_DEPRECATED
+#  define YARP_DEPRECATED_INTERNAL_MSG(X) YARP_DEPRECATED_MSG(X)
+#else
+#  define YARP_DEPRECATED_INTERNAL
+#  define YARP_DEPRECATED_INTERNAL_MSG(X)
 #endif
 
 // YARP_NODISCARD: print a warning if the result unused
@@ -107,6 +148,12 @@ recommended usage of this header within YARP is:
 #  define YARP_NODISCARD
 #endif
 
+// YARP_NORETURN
+#if YARP_COMPILER_CXX_ATTRIBUTES
+#  define YARP_NORETURN [[noreturn]]
+#else
+#  define YARP_NORETURN
+#endif
 
 // YARP_UNUSED: Suppress unused variable warnings
 #define YARP_UNUSED(var) (void)var

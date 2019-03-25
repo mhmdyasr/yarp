@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2009 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_RPCSERVER_H
@@ -10,10 +13,7 @@
 #include <yarp/os/AbstractContactable.h>
 
 namespace yarp {
-    namespace os {
-        class RpcServer;
-    }
-}
+namespace os {
 
 /**
  * \ingroup comm_class
@@ -23,12 +23,9 @@ namespace yarp {
  * those connections.
  *
  */
-class YARP_OS_API yarp::os::RpcServer : public AbstractContactable {
+class YARP_OS_API RpcServer : public AbstractContactable
+{
 public:
-#ifndef YARP_NO_DEPRECATED // since YARP 2.3.72
-    using AbstractContactable::open;
-#endif // YARP_NO_DEPRECATED
-
     /**
      * Constructor.
      */
@@ -40,25 +37,28 @@ public:
     virtual ~RpcServer();
 
     // documented in UnbufferedContactable
-    virtual bool write(PortWriter& writer,
-                       PortWriter *callback = nullptr) const override;
+    virtual bool write(const PortWriter& writer,
+                       const PortWriter* callback = nullptr) const override;
 
     // documented in UnbufferedContactable
-    virtual bool write(PortWriter& writer, PortReader& reader,
-                       PortWriter *callback = nullptr) const override;
+    virtual bool write(const PortWriter& writer,
+                       PortReader& reader,
+                       const PortWriter* callback = nullptr) const override;
 
     // documented in UnbufferedContactable
-    virtual bool read(PortReader& reader, bool willReply = true) override;
+    bool read(PortReader& reader, bool willReply = true) override;
 
-    virtual void setInputMode(bool expectInput) override;
-    virtual void setOutputMode(bool expectOutput) override;
-    virtual void setRpcMode(bool expectRpc) override;
+    void setInputMode(bool expectInput) override;
+    void setOutputMode(bool expectOutput) override;
+    void setRpcMode(bool expectRpc) override;
 
-    virtual Port& asPort() override {
+    Port& asPort() override
+    {
         return port;
     }
 
-    virtual const Port& asPort() const override {
+    const Port& asPort() const override
+    {
         return port;
     }
 
@@ -69,7 +69,10 @@ private:
     // forbid copy constructor and assignment operator by making them private
     // and not implementing them
     RpcServer(const RpcServer& alt);
-    const RpcServer& operator = (const RpcServer& alt);
+    const RpcServer& operator=(const RpcServer& alt);
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_RPCSERVER_H

@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2013 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_IDL_UNWRAPPED_H
@@ -12,46 +14,51 @@
 #include <yarp/os/idl/WireWriter.h>
 
 namespace yarp {
-    namespace os {
-        namespace idl {
-            template <class T> class Unwrapped;
-            template <class T> class UnwrappedView;
-        }
-    }
-}
+namespace os {
+namespace idl {
 
 template <class T>
-class yarp::os::idl::Unwrapped : public yarp::os::Portable {
+class Unwrapped : public yarp::os::Portable
+{
 public:
     T content;
 
-    virtual bool read(yarp::os::ConnectionReader& reader) {
+    bool read(yarp::os::ConnectionReader& reader) override
+    {
         WireReader wreader(reader);
         return content.read(wreader);
     }
 
-    virtual bool write(yarp::os::ConnectionWriter& writer) {
+    bool write(yarp::os::ConnectionWriter& writer) const override
+    {
         WireWriter wwriter(writer);
         return content.write(wwriter);
     }
 };
 
 template <class T>
-class yarp::os::idl::UnwrappedView : public yarp::os::Portable {
+class UnwrappedView : public yarp::os::Portable
+{
 public:
     T& content;
 
     UnwrappedView(T& content) : content(content) {}
 
-    virtual bool read(yarp::os::ConnectionReader& reader) {
+    bool read(yarp::os::ConnectionReader& reader) override
+    {
         WireReader wreader(reader);
         return content.read(wreader);
     }
 
-    virtual bool write(yarp::os::ConnectionWriter& writer) {
+    bool write(yarp::os::ConnectionWriter& writer) const override
+    {
         WireWriter wwriter(writer);
         return content.write(wwriter);
     }
 };
+
+} // namespace idl
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_IDL_UNWRAPPED_H

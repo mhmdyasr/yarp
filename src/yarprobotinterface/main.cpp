@@ -1,10 +1,20 @@
 /*
- * Copyright (C) 2012 Istituto Italiano di Tecnologia (IIT)
- * Authors: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
- *          Lorenzo Natale <lorenzo.natale@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #include "Module.h"
 #include <yarp/os/LogStream.h>
@@ -36,8 +46,6 @@ int main(int argc, char *argv[])
     //if( mlockall(MCL_CURRENT | MCL_FUTURE) != 0 )
     //    yWarning() << "Cannot lock memory swapping (check superuser permission)";
 #endif //ICUB_USE_REALTIME_LINUX
-
-    yarp::os::Time::turboBoost();
 
     yarp::os::ResourceFinder &rf(yarp::os::ResourceFinder::getResourceFinderSingleton());
     rf.setVerbose();

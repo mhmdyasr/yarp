@@ -1,29 +1,31 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_IMPL_SOCKETTWOWAYSTREAM_H
 #define YARP_OS_IMPL_SOCKETTWOWAYSTREAM_H
 
 #include <yarp/conf/system.h>
+#include <yarp/os/Bytes.h>
 #include <yarp/os/TwoWayStream.h>
 #include <yarp/os/impl/Logger.h>
 #include <yarp/os/impl/PlatformTime.h>
+#include <yarp/os/impl/TcpStream.h>
+#include <yarp/os/impl/TcpAcceptor.h>
 
-#ifdef YARP_HAS_ACE
-#  include <ace/config.h>
-#  include <ace/SOCK_Acceptor.h>
-#  include <ace/SOCK_Connector.h>
-#  include <ace/SOCK_Stream.h>
-#  include <ace/Log_Msg.h>
-#  include <ace/Time_Value.h>
+#ifdef YARP_HAS_ACE // For TCP_CORK definition
+# include <ace/os_include/netinet/os_tcp.h>
+// In one the ACE headers there is a definition of "main" for WIN32
+# ifdef main
+#  undef main
+# endif
 #else
-#  include <yarp/os/impl/TcpStream.h>
-#  include <yarp/os/impl/TcpAcceptor.h>
-#  define ACE_SOCK_Acceptor TcpAcceptor
-#  define ACE_SOCK_Stream TcpStream
+# include <netinet/tcp.h>
 #endif
 
 namespace yarp {
@@ -51,34 +53,34 @@ public:
 
     int open(const Contact& address);
 
-    int open(ACE_SOCK_Acceptor& acceptor);
+    int open(yarp::os::impl::TcpAcceptor& acceptor);
 
     virtual ~SocketTwoWayStream()
     {
         close();
     }
 
-    virtual InputStream& getInputStream() override
+    InputStream& getInputStream() override
     {
         return *this;
     }
 
-    virtual OutputStream& getOutputStream() override
+    OutputStream& getOutputStream() override
     {
         return *this;
     }
 
-    virtual const Contact& getLocalAddress() override
+    const Contact& getLocalAddress() const override
     {
         return localAddress;
     }
 
-    virtual const Contact& getRemoteAddress() override
+    const Contact& getRemoteAddress() const override
     {
         return remoteAddress;
     }
 
-    virtual void interrupt() override
+    void interrupt() override
     {
         YARP_DEBUG(Logger::get(), "^^^^^^^^^^^ interrupting socket");
         if (happy) {
@@ -92,17 +94,17 @@ public:
         }
     }
 
-    virtual void close() override
+    void close() override
     {
         stream.close();
         happy = false;
     }
 
     using yarp::os::InputStream::read;
-    virtual YARP_SSIZE_T read(const Bytes& b) override
+    yarp::conf::ssize_t read(Bytes& b) override
     {
         if (!isOk()) { return -1; }
-        YARP_SSIZE_T result;
+        yarp::conf::ssize_t result;
         if (haveReadTimeout) {
             result = stream.recv_n(b.get(), b.length(), &readTimeout);
         } else {
@@ -116,10 +118,10 @@ public:
         return result;
     }
 
-    virtual YARP_SSIZE_T partialRead(const Bytes& b) override
+    yarp::conf::ssize_t partialRead(Bytes& b) override
     {
         if (!isOk()) { return -1; }
-        YARP_SSIZE_T result;
+        yarp::conf::ssize_t result;
         if (haveReadTimeout) {
             result = stream.recv(b.get(), b.length(), &readTimeout);
         } else {
@@ -134,10 +136,10 @@ public:
     }
 
     using yarp::os::OutputStream::write;
-    virtual void write(const Bytes& b) override
+    void write(const Bytes& b) override
     {
         if (!isOk()) { return; }
-        YARP_SSIZE_T result;
+        yarp::conf::ssize_t result;
         if (haveWriteTimeout) {
             result = stream.send_n(b.get(), b.length(), &writeTimeout);
         } else {
@@ -149,29 +151,52 @@ public:
         }
     }
 
-    virtual void flush() override
+    void flush() override
     {
-        //stream.flush();
+#ifdef TCP_CORK
+        int status = 0;
+        int sizeInt = sizeof(int);
+        stream.get_option(IPPROTO_TCP, TCP_CORK, &status, &sizeInt);
+        if (status == 1)
+        {
+            // Remove CORK
+            int zero = 0;
+            stream.set_option(IPPROTO_TCP, TCP_CORK, &zero, sizeof(int));
+            // Set CORK
+            int one = 1;
+            stream.set_option(IPPROTO_TCP, TCP_CORK, &one, sizeof(int));
+        }
+#endif
     }
 
-    virtual bool isOk() override
+    bool isOk() const override
     {
         return happy;
     }
 
-    virtual void reset() override
+    void reset() override
     {
     }
 
-    virtual void beginPacket() override
+    void beginPacket() override
     {
+#ifdef TCP_CORK
+        // Set CORK
+        int one = 1;
+        stream.set_option(IPPROTO_TCP, TCP_CORK, &one, sizeof(int));
+#endif
     }
 
-    virtual void endPacket() override
+    void endPacket() override
     {
+#ifdef TCP_CORK
+        // Remove CORK
+        int zero = 0;
+        stream.set_option(IPPROTO_TCP, TCP_CORK, &zero, sizeof(int));
+#endif
     }
 
-    virtual bool setWriteTimeout(double timeout) override
+    bool setWriteTimeout(double timeout) override
     {
         if (timeout<1e-12) {
             haveWriteTimeout = false;
@@ -182,7 +207,7 @@ public:
         return true;
     }
 
-    virtual bool setReadTimeout(double timeout) override
+    bool setReadTimeout(double timeout) override
     {
         if (timeout<1e-12) {
             haveReadTimeout = false;
@@ -193,15 +218,15 @@ public:
         return true;
     }
 
-    virtual bool setTypeOfService(int tos) override;
-    virtual int getTypeOfService() override;
+    bool setTypeOfService(int tos) override;
+    int getTypeOfService() override;
 
 private:
-    ACE_SOCK_Stream stream;
+    yarp::os::impl::TcpStream stream;
     bool haveWriteTimeout;
     bool haveReadTimeout;
-    ACE_Time_Value writeTimeout;
-    ACE_Time_Value readTimeout;
+    YARP_timeval writeTimeout;
+    YARP_timeval readTimeout;
     Contact localAddress, remoteAddress;
     bool happy;
     void updateAddresses();

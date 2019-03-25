@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Authors: Alberto Cardellino <Alberto.Cardellino@iit.it>
- *          Andrea Ruzzenenti   <Andrea.Ruzzenenti@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "RGBDSensorWrapper.h"
@@ -11,7 +12,8 @@
 #include <cstring>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarpRosHelper.h>
+#include <yarp/dev/GenericVocabs.h>
+#include <yarp/rosmsg/impl/yarpRosHelper.h>
 #include "rosPixelCode.h"
 
 using namespace yarp::dev::RGBDImpl;
@@ -29,7 +31,8 @@ yarp::dev::DriverCreator *createRGBDSensorWrapper() {
     return new DriverCreatorOf<yarp::dev::RGBDSensorWrapper>("RGBDSensorWrapper", "RGBDSensorWrapper", "yarp::dev::RGBDSensorWrapper");
 }
 
-RGBDSensorParser::RGBDSensorParser() : iRGBDSensor(nullptr) {};
+RGBDSensorParser::RGBDSensorParser() : iRGBDSensor(nullptr)
+{}
 
 bool RGBDSensorParser::configure(IRGBDSensor *interface)
 {
@@ -45,6 +48,11 @@ bool RGBDSensorParser::configure(IRgbVisualParams *rgbInterface, IDepthVisualPar
     bool ret = rgbParser.configure(rgbInterface);
     ret &= depthParser.configure(depthInterface);
     return ret;
+}
+
+bool RGBDSensorParser::configure(IFrameGrabberControls *_fgCtrl)
+{
+    return fgCtrlParsers.configure(_fgCtrl);
 }
 
 bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
@@ -66,6 +74,13 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
         {
             // forwarding to the proper parser.
             ret = depthParser.respond(cmd, response);
+        }
+        break;
+
+        case VOCAB_FRAMEGRABBER_CONTROL:
+        {
+            // forwarding to the proper parser.
+            ret = fgCtrlParsers.respond(cmd, response);
         }
         break;
 
@@ -110,8 +125,8 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
                             response.addVocab(VOCAB_RGBD_SENSOR);
                             response.addVocab(VOCAB_RGBD_PROTOCOL_VERSION);
                             response.addVocab(VOCAB_IS);
-                            response.addInt(RGBD_INTERFACE_PROTOCOL_VERSION_MAJOR);
-                            response.addInt(RGBD_INTERFACE_PROTOCOL_VERSION_MINOR);
+                            response.addInt32(RGBD_INTERFACE_PROTOCOL_VERSION_MAJOR);
+                            response.addInt32(RGBD_INTERFACE_PROTOCOL_VERSION_MINOR);
                         }
                         break;
 
@@ -120,7 +135,7 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
                             response.addVocab(VOCAB_RGBD_SENSOR);
                             response.addVocab(VOCAB_STATUS);
                             response.addVocab(VOCAB_IS);
-                            response.addInt(iRGBDSensor->getSensorStatus());
+                            response.addInt32(iRGBDSensor->getSensorStatus());
                         }
                         break;
 
@@ -147,7 +162,7 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
         default:
         {
             yError() << "RGBD sensor wrapper received a command for a wrong interface " << yarp::os::Vocab::decode(interfaceType);
-            ret = false;
+            return DeviceResponder::respond(cmd,response);
         }
         break;
     }
@@ -156,11 +171,12 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
 
 
 RGBDSensorWrapper::RGBDSensorWrapper() :
-    RateThread(DEFAULT_THREAD_PERIOD),
+    PeriodicThread(DEFAULT_THREAD_PERIOD),
     rosNode(nullptr),
     nodeSeq(0),
-    rate(DEFAULT_THREAD_PERIOD),
+    period(DEFAULT_THREAD_PERIOD),
     sensor_p(nullptr),
+    fgCtrl(nullptr),
     sensorStatus(IRGBDSensor::RGBD_SENSOR_NOT_READY),
     verbose(4),
     use_YARP(true),
@@ -174,6 +190,7 @@ RGBDSensorWrapper::~RGBDSensorWrapper()
 {
     close();
     sensor_p = nullptr;
+    fgCtrl = nullptr;
 }
 
 /** Device driver interface */
@@ -190,7 +207,7 @@ bool RGBDSensorWrapper::open(yarp::os::Searchable &config)
 
     if(!fromConfig(config))
     {
-        yError() << "Device RGBDSensorWrapper failed to open, check previous log for error messsages.\n";
+        yError() << "Device RGBDSensorWrapper failed to open, check previous log for error messages.\n";
         return false;
     }
 
@@ -232,16 +249,16 @@ bool RGBDSensorWrapper::fromConfig(yarp::os::Searchable &config)
     if (!config.check("period", "refresh period of the broadcasted values in ms"))
     {
         if(verbose >= 3)
-            yInfo() << "RGBDSensorWrapper: using default 'period' parameter of " << DEFAULT_THREAD_PERIOD << "ms";
+            yInfo() << "RGBDSensorWrapper: using default 'period' parameter of " << DEFAULT_THREAD_PERIOD << "s";
     }
     else
-        rate = config.find("period").asInt();
+        period = config.find("period").asInt32() / 1000.0;
 
     Bottle &rosGroup = config.findGroup("ROS");
     if(rosGroup.isNull())
     {
         if(verbose >= 3)
-            yInfo() << "RGBDSensorWrapper: ROS configuration paramters are not set, skipping ROS topic initialization.";
+            yInfo() << "RGBDSensorWrapper: ROS configuration parameters are not set, skipping ROS topic initialization.";
         use_ROS  = false;
         use_YARP = true;
     }
@@ -250,10 +267,11 @@ bool RGBDSensorWrapper::fromConfig(yarp::os::Searchable &config)
         //if(verbose >= 2)
         //    yWarning() << "RGBDSensorWrapper: ROS topic support is not yet implemented";
 
-        string confUseRos = "";
+        string confUseRos;
 
         if (!rosGroup.check("use_ROS"))
         {
+            yError()<<"RGBDSensorWrapper: missing use_ROS parameter";
             return false;
         }
 
@@ -281,12 +299,12 @@ bool RGBDSensorWrapper::fromConfig(yarp::os::Searchable &config)
         std::vector<param<string> >     rosStringParam;
         param<string>*                  prm;
 
-        rosStringParam.push_back(param<string>(nodeName,       nodeName_param          ));
-        rosStringParam.push_back(param<string>(rosFrameId,     frameId_param           ));
-        rosStringParam.push_back(param<string>(colorTopicName, colorTopicName_param    ));
-        rosStringParam.push_back(param<string>(depthTopicName, depthTopicName_param    ));
-        rosStringParam.push_back(param<string>(cInfoTopicName, depthInfoTopicName_param));
-        rosStringParam.push_back(param<string>(dInfoTopicName, colorInfoTopicName_param));
+        rosStringParam.emplace_back(nodeName,       nodeName_param          );
+        rosStringParam.emplace_back(rosFrameId,     frameId_param           );
+        rosStringParam.emplace_back(colorTopicName, colorTopicName_param    );
+        rosStringParam.emplace_back(depthTopicName, depthTopicName_param    );
+        rosStringParam.emplace_back(cInfoTopicName, colorInfoTopicName_param);
+        rosStringParam.emplace_back(dInfoTopicName, depthInfoTopicName_param);
 
         for (i = 0; i < rosStringParam.size(); i++)
         {
@@ -300,7 +318,7 @@ bool RGBDSensorWrapper::fromConfig(yarp::os::Searchable &config)
                 use_ROS = false;
                 return false;
             }
-            *(prm->var) = rosGroup.find(prm->parname).asString().c_str();
+            *(prm->var) = rosGroup.find(prm->parname).asString();
         }
 
         if (rosGroup.check("forceInfoSync"))
@@ -311,8 +329,8 @@ bool RGBDSensorWrapper::fromConfig(yarp::os::Searchable &config)
 
     if(use_YARP)
     {
-        yarp::os::ConstString rootName;
-        rootName = config.check("name",Value("/"), "starting '/' if needed.").asString().c_str();
+        std::string rootName;
+        rootName = config.check("name",Value("/"), "starting '/' if needed.").asString();
 
         if (!config.check("name", "Prefix name of the ports opened by the RGBD wrapper."))
         {
@@ -322,7 +340,7 @@ bool RGBDSensorWrapper::fromConfig(yarp::os::Searchable &config)
         }
         else
         {
-            rootName = config.find("name").asString().c_str();
+            rootName = config.find("name").asString();
             rpcPort_Name  = rootName + "/rpc:i";
             colorFrame_StreamingPort_Name = rootName + "/rgbImage:o";
             depthFrame_StreamingPort_Name = rootName + "/depthImage:o";
@@ -348,13 +366,13 @@ bool RGBDSensorWrapper::openAndAttachSubDevice(Searchable& prop)
 {
     Property p;
     subDeviceOwned = new PolyDriver;
-    p.fromString(prop.toString().c_str());
+    p.fromString(prop.toString());
 
     p.setMonitor(prop.getMonitor(), "subdevice"); // pass on any monitoring
     p.unput("device");
     p.put("device",prop.find("subdevice").asString());  // subdevice was already checked before
 
-    // if error occour during open, quit here.
+    // if errors occurred during open, quit here.
     yDebug("opening IRGBDSensor subdevice\n");
     subDeviceOwned->open(p);
 
@@ -367,21 +385,6 @@ bool RGBDSensorWrapper::openAndAttachSubDevice(Searchable& prop)
     if(!attach(subDeviceOwned))
         return false;
 
-    if(!parser.configure(sensor_p) )
-    {
-        yError() << "RGBD wrapper: error configuring interfaces for parsers";
-        return false;
-    }
-    /*
-    bool conf = rgbParser.configure(rgbVis_p);
-    conf &= depthParser.configure(depthVis_p);
-
-    if(!conf)
-    {
-        yError() << "RGBD wrapper: error configuring interfaces for parsers";
-        return false;
-    }
-    */
     return true;
 }
 
@@ -399,6 +402,7 @@ bool RGBDSensorWrapper::close()
             subDeviceOwned=nullptr;
         }
         sensor_p = nullptr;
+        fgCtrl = nullptr;
         isSubdeviceOwned = false;
     }
 
@@ -437,19 +441,19 @@ bool RGBDSensorWrapper::initialize_YARP(yarp::os::Searchable &params)
     // Open ports
     bool bRet;
     bRet = true;
-    if(!rpcPort.open(rpcPort_Name.c_str()))
+    if(!rpcPort.open(rpcPort_Name))
     {
         yError() << "RGBDSensorWrapper: unable to open rpc Port" << rpcPort_Name.c_str();
         bRet = false;
     }
-    rpcPort.setReader(parser);
+    rpcPort.setReader(rgbdParser);
 
-    if(!colorFrame_StreamingPort.open(colorFrame_StreamingPort_Name.c_str()))
+    if(!colorFrame_StreamingPort.open(colorFrame_StreamingPort_Name))
     {
         yError() << "RGBDSensorWrapper: unable to open color streaming Port" << colorFrame_StreamingPort_Name.c_str();
         bRet = false;
     }
-    if(!depthFrame_StreamingPort.open(depthFrame_StreamingPort_Name.c_str()))
+    if(!depthFrame_StreamingPort.open(depthFrame_StreamingPort_Name))
     {
         yError() << "RGBDSensorWrapper: unable to open depth streaming Port" << depthFrame_StreamingPort_Name.c_str();
         bRet = false;
@@ -528,17 +532,18 @@ bool RGBDSensorWrapper::attachAll(const PolyDriverList &device2attach)
     }
 
     Idevice2attach->view(sensor_p);
+    Idevice2attach->view(fgCtrl);
     if(!attach(sensor_p))
         return false;
 
-    RateThread::setRate(rate);
-    return RateThread::start();
+    PeriodicThread::setPeriod(period);
+    return PeriodicThread::start();
 }
 
 bool RGBDSensorWrapper::detachAll()
 {
-    if (yarp::os::RateThread::isRunning())
-        yarp::os::RateThread::stop();
+    if (yarp::os::PeriodicThread::isRunning())
+        yarp::os::PeriodicThread::stop();
 
     //check if we already instantiated a subdevice previously
     if (isSubdeviceOwned)
@@ -556,19 +561,31 @@ bool RGBDSensorWrapper::attach(yarp::dev::IRGBDSensor *s)
         return false;
     }
     sensor_p = s;
-    if(!parser.configure(sensor_p) )
+    if(!rgbdParser.configure(sensor_p))
     {
         yError() << "RGBD wrapper: error configuring interfaces for parsers";
         return false;
     }
-    RateThread::setRate(rate);
-    return RateThread::start();
+    if (fgCtrl)
+    {
+        if(!rgbdParser.configure(fgCtrl))
+        {
+            yError() << "RGBD wrapper: error configuring interfaces for parsers";
+            return false;
+        }
+    }
+
+    PeriodicThread::setPeriod(period);
+    return PeriodicThread::start();
 }
 
 bool RGBDSensorWrapper::attach(PolyDriver* poly)
 {
     if(poly)
+    {
         poly->view(sensor_p);
+        poly->view(fgCtrl);
+    }
 
     if(sensor_p == nullptr)
     {
@@ -576,13 +593,19 @@ bool RGBDSensorWrapper::attach(PolyDriver* poly)
         return false;
     }
 
-    if(!parser.configure(sensor_p) )
+    if(!rgbdParser.configure(sensor_p))
     {
-        yError() << "RGBD wrapper: error configuring interfaces for parsers";
+        yError() << "RGBD wrapper: error configuring IRGBD interface";
         return false;
     }
-    RateThread::setRate(rate);
-    return RateThread::start();
+
+    if (!rgbdParser.configure(fgCtrl))
+    {
+        yWarning() <<"RGBDWrapper: interface IFrameGrabberControl not implemented by the device";
+    }
+
+    PeriodicThread::setPeriod(period);
+    return PeriodicThread::start();
 }
 
 bool RGBDSensorWrapper::detach()
@@ -658,11 +681,11 @@ void RGBDSensorWrapper::shallowCopyImages(const ImageOf<PixelFloat>& src, ImageO
 
 
 
-void RGBDSensorWrapper::deepCopyImages(const yarp::sig::FlexImage& src,
-                                       sensor_msgs_Image&          dest,
-                                       const string&               frame_id,
-                                       const TickTime&             timeStamp,
-                                       const UInt&                 seq)
+void RGBDSensorWrapper::deepCopyImages(const yarp::sig::FlexImage&       src,
+                                       yarp::rosmsg::sensor_msgs::Image& dest,
+                                       const string&                     frame_id,
+                                       const yarp::rosmsg::TickTime&     timeStamp,
+                                       const UInt&                       seq)
 {
     dest.data.resize(src.getRawImageSize());
     dest.width           = src.width();
@@ -676,11 +699,11 @@ void RGBDSensorWrapper::deepCopyImages(const yarp::sig::FlexImage& src,
     dest.is_bigendian    = 0;
 }
 
-void RGBDSensorWrapper::deepCopyImages(const DepthImage&  src,
-                                       sensor_msgs_Image& dest,
-                                       const string&      frame_id,
-                                       const TickTime&    timeStamp,
-                                       const UInt&        seq)
+void RGBDSensorWrapper::deepCopyImages(const DepthImage&                 src,
+                                       yarp::rosmsg::sensor_msgs::Image& dest,
+                                       const string&                     frame_id,
+                                       const yarp::rosmsg::TickTime&     timeStamp,
+                                       const UInt&                       seq)
 {
     dest.data.resize(src.getRawImageSize());
 
@@ -697,7 +720,7 @@ void RGBDSensorWrapper::deepCopyImages(const DepthImage&  src,
     dest.is_bigendian    = 0;
 }
 
-bool RGBDSensorWrapper::setCamInfo(sensor_msgs_CameraInfo& cameraInfo, const string& frame_id, const UInt& seq, const SensorType& sensorType)
+bool RGBDSensorWrapper::setCamInfo(yarp::rosmsg::sensor_msgs::CameraInfo& cameraInfo, const string& frame_id, const UInt& seq, const SensorType& sensorType)
 {
     double                  fx, fy, cx, cy, k1, k2, t1, t2, k3, stamp;
     string                  distModel, currentSensor;
@@ -732,16 +755,16 @@ bool RGBDSensorWrapper::setCamInfo(sensor_msgs_CameraInfo& cameraInfo, const str
     //std::vector<param<string> >     rosStringParam;
     //rosStringParam.push_back(param<string>(nodeName, "asd"));
 
-    parVector.push_back(param<double>(fx,"focalLengthX"));
-    parVector.push_back(param<double>(fy,"focalLengthY"));
-    parVector.push_back(param<double>(cx,"principalPointX"));
-    parVector.push_back(param<double>(cy,"principalPointY"));
-    parVector.push_back(param<double>(k1,"k1"));
-    parVector.push_back(param<double>(k2,"k2"));
-    parVector.push_back(param<double>(t1,"t1"));
-    parVector.push_back(param<double>(t2,"t2"));
-    parVector.push_back(param<double>(k3,"k3"));
-    parVector.push_back(param<double>(stamp,"stamp"));
+    parVector.emplace_back(fx,"focalLengthX");
+    parVector.emplace_back(fy,"focalLengthY");
+    parVector.emplace_back(cx,"principalPointX");
+    parVector.emplace_back(cy,"principalPointY");
+    parVector.emplace_back(k1,"k1");
+    parVector.emplace_back(k2,"k2");
+    parVector.emplace_back(t1,"t1");
+    parVector.emplace_back(t2,"t2");
+    parVector.emplace_back(k3,"k3");
+    parVector.emplace_back(stamp,"stamp");
     for(i = 0; i < parVector.size(); i++)
     {
         par = &parVector[i];
@@ -751,12 +774,12 @@ bool RGBDSensorWrapper::setCamInfo(sensor_msgs_CameraInfo& cameraInfo, const str
             yWarning() << "RGBSensorWrapper: driver has not the param:" << par->parname;
             return false;
         }
-        *par->var = camData.find(par->parname).asDouble();
+        *par->var = camData.find(par->parname).asFloat64();
     }
 
     cameraInfo.header.frame_id    = frame_id;
     cameraInfo.header.seq         = seq;
-    cameraInfo.header.stamp       = normalizeSecNSec(stamp);
+    cameraInfo.header.stamp       = stamp;
     cameraInfo.width              = sensorType == COLOR_SENSOR ? sensor_p->getRgbWidth() : sensor_p->getDepthWidth();
     cameraInfo.height             = sensorType == COLOR_SENSOR ? sensor_p->getRgbHeight() : sensor_p->getDepthHeight();
     cameraInfo.distortion_model   = distModel;
@@ -843,14 +866,14 @@ bool RGBDSensorWrapper::writeData()
     }
     if (use_ROS)
     {
-        sensor_msgs_Image&      rColorImage     = rosPublisherPort_color.prepare();
-        sensor_msgs_Image&      rDepthImage     = rosPublisherPort_depth.prepare();
-        sensor_msgs_CameraInfo& camInfoC        = rosPublisherPort_colorCaminfo.prepare();
-        sensor_msgs_CameraInfo& camInfoD        = rosPublisherPort_depthCaminfo.prepare();
-        TickTime                cRosStamp, dRosStamp;
+        yarp::rosmsg::sensor_msgs::Image&      rColorImage     = rosPublisherPort_color.prepare();
+        yarp::rosmsg::sensor_msgs::Image&      rDepthImage     = rosPublisherPort_depth.prepare();
+        yarp::rosmsg::sensor_msgs::CameraInfo& camInfoC        = rosPublisherPort_colorCaminfo.prepare();
+        yarp::rosmsg::sensor_msgs::CameraInfo& camInfoD        = rosPublisherPort_depthCaminfo.prepare();
+        yarp::rosmsg::TickTime                 cRosStamp, dRosStamp;
 
-        cRosStamp = normalizeSecNSec(colorStamp.getTime());
-        dRosStamp = normalizeSecNSec(depthStamp.getTime());
+        cRosStamp = colorStamp.getTime();
+        dRosStamp = depthStamp.getTime();
 
         deepCopyImages(colorImage, rColorImage, rosFrameId, cRosStamp, nodeSeq);
         deepCopyImages(depthImage, rDepthImage, rosFrameId, dRosStamp, nodeSeq);

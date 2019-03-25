@@ -1,11 +1,18 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "plotter.h"
@@ -13,6 +20,7 @@
 #include "yarp/os/Time.h"
 #include "yarp/os/Stamp.h"
 #include <QDebug>
+#include <utility>
 
 /*! \brief Constructor of the class.
  *
@@ -54,7 +62,7 @@ Plotter::Plotter(const QString &title, int gridx, int gridy, int hspan, int vspa
     customPlot.axisRect()->axis(QCPAxis::atBottom)->setRange(0,size);
     customPlot.axisRect()->axis(QCPAxis::atLeft)->setRange(minval, maxval);
     customPlot.setInteractions( QCP::iRangeDrag | QCP::iRangeZoom  );
-    QCPItemText *textLabel = new QCPItemText(&customPlot);
+    auto* textLabel = new QCPItemText(&customPlot);
     customPlot.addItem(textLabel);
     textLabel->setPositionAlignment(Qt::AlignTop|Qt::AlignHCenter);
     textLabel->position->setType(QCPItemPosition::ptAxisRectRatio);
@@ -77,7 +85,7 @@ void Plotter::onInteract()
 Plotter::~Plotter()
 {
     for (int i=0;i<graphList.count(); i++) {
-        Graph *idx = (Graph*)graphList.at(i);
+        auto* idx = (Graph*)graphList.at(i);
         if (idx) {
             delete idx;
             idx = nullptr;
@@ -116,8 +124,8 @@ Graph * Plotter::addGraph(QString remotePort,QString localPort,int index, QStrin
 
 
     for(int i=0;i<graphList.count();i++) {
-        Graph *g = (Graph *)graphList.at(i);
-        Connection *con = g->getConnetion();
+        auto* g = (Graph *)graphList.at(i);
+        Connection *con = g->getConnection();
         if(!con){
             continue;
         }
@@ -170,7 +178,7 @@ void Plotter::onTimeout()
 
     int c = graphList.count();
     for (int j=0;j < c; j++) {
-        Graph *graph = (Graph*)graphList.at(j);
+        auto* graph = (Graph*)graphList.at(j);
         yarp::os::Bottle *b;
         if(graph->deleteConnection){
             b = graph->curr_connection->localPort->read(false);
@@ -188,13 +196,13 @@ void Plotter::onTimeout()
             yarp::os::Stamp stmp;
             graph->curr_connection->localPort->getEnvelope(stmp);
 
-            if (b->size() - 1 < graph->index) {
+            if (b->size() - 1 < (size_t) graph->index) {
                 qWarning() << "bottle size =" << b->size() << " requested index =" << graph->index;
                 continue;
             }
 
 
-            double y = (float)(b->get(graph->index).asDouble());
+            double y = (float)(b->get(graph->index).asFloat64());
 
             float t;
             if (graph->curr_connection->realTime && stmp.isValid()) {
@@ -213,7 +221,7 @@ void Plotter::onTimeout()
     // if the user did not interact with the plotter, it remains aligned to the right
     // else, there is no alignment and the user has the freedom to pan and zoom it
     if(!interact){
-        Graph *graph = (Graph*)graphList.at(0);
+        auto* graph = (Graph*)graphList.at(0);
         if(graph){
             customPlot.xAxis->setRange(graph->lastX+5, size, Qt::AlignRight);
         }
@@ -228,7 +236,7 @@ void Plotter::onTimeout()
 void Plotter::clear()
 {
     for (int j=0;j < graphList.count(); j++) {
-        Graph *graph = (Graph*)graphList.at(j);
+        auto* graph = (Graph*)graphList.at(j);
         graph->clearData();
     }
     customPlot.replot();
@@ -250,10 +258,10 @@ Graph::Graph(int index, QString title, QString color, QString type, int size, do
     buffer_size(buffer_size),
     numberAcquiredData(0),
     lastIndex(0),
-    type(type),
-    color(color),
+    type(std::move(type)),
+    color(std::move(color)),
     lineSize(size),
-    title(title)
+    title(std::move(title))
 {}
 
 
@@ -285,7 +293,7 @@ Graph::~Graph()
     }
     clearData();
 }
-Connection *Graph::getConnetion()
+Connection *Graph::getConnection()
 {
     return curr_connection;
 }
@@ -405,11 +413,7 @@ Connection::Connection(QString remotePortName,  QString localPortName, QObject *
 
 Connection::~Connection()
 {
-
-
-    yarp::os::Network::disconnect(remotePortName.toLatin1().data(), localPort->getName().c_str(), style);
-    delete localPort;
-
+    freeResources();
 }
 
 /*! \brief Connect local port to remote port */
@@ -440,4 +444,12 @@ void Connection::connect(const yarp::os::ContactStyle &style) {
     }
 }
 
-
+void Connection::freeResources()
+{
+    if(localPort)
+    {
+        yarp::os::Network::disconnect(remotePortName.toLatin1().data(), localPort->getName(), style);
+        delete localPort;
+        localPort = nullptr;
+    }
+}

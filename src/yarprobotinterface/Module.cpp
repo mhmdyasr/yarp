@@ -1,8 +1,19 @@
 /*
- * Copyright (C) 2012, 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "Action.h"
@@ -39,9 +50,7 @@ RobotInterface::Module::Private::Private(Module *parent) :
 {
 }
 
-RobotInterface::Module::Private::~Private()
-{
-}
+RobotInterface::Module::Private::~Private() = default;
 
 
 RobotInterface::Module::Module() :
@@ -60,11 +69,13 @@ bool RobotInterface::Module::configure(yarp::os::ResourceFinder &rf)
         yFatal() << "Missing \"config\" argument";
     }
 
-    const yarp::os::ConstString &filename = rf.findFile("config");
+    const std::string &filename = rf.findFile("config");
     yTrace() << "Reading robot config file" << filename;
 
+    bool verbosity = rf.check("verbose");
     RobotInterface::XMLReader reader;
-    mPriv->robot = reader.getRobot(filename.c_str());
+    reader.setVerbose(verbosity);
+    mPriv->robot = reader.getRobot(filename);
     // yDebug() << mPriv->robot;
 
     // User can use YARP_PORT_PREFIX environment variable to override
@@ -72,10 +83,10 @@ bool RobotInterface::Module::configure(yarp::os::ResourceFinder &rf)
     // argument
     setName(mPriv->robot.portprefix().c_str());
 
-    mPriv->robot.setVerbose(rf.check("verbose"));
+    mPriv->robot.setVerbose(verbosity);
     mPriv->robot.setAllowDeprecatedDevices(rf.check("allow-deprecated-devices"));
 
-    yarp::os::ConstString rpcPortName("/" + getName() + "/yarprobotinterface");
+    std::string rpcPortName("/" + getName() + "/yarprobotinterface");
     mPriv->rpcPort.open(rpcPortName);
     attach(mPriv->rpcPort);
 

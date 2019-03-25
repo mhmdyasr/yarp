@@ -1,8 +1,20 @@
 /*
-* Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
-* Author: Marco Randazzo <marco.randazzo@iit.it>
-* CopyPolicy: Released under the terms of the GPLv2 or later, see GPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #define _USE_MATH_DEFINES
 
@@ -47,9 +59,9 @@ bool LaserFromDepth::open(yarp::os::Searchable& config)
         yarp::os::Searchable& general_config = config.findGroup("SUBDEVICE");
         m_clip_max_enable = general_config.check("clip_max");
         m_clip_min_enable = general_config.check("clip_min");
-        if (m_clip_max_enable) { m_max_distance = general_config.find("clip_max").asDouble(); }
-        if (m_clip_min_enable) { m_min_distance = general_config.find("clip_min").asDouble(); }
-        m_do_not_clip_infinity_enable = (general_config.find("allow_infinity").asInt()!=0);
+        if (m_clip_max_enable) { m_max_distance = general_config.find("clip_max").asFloat64(); }
+        if (m_clip_min_enable) { m_min_distance = general_config.find("clip_min").asFloat64(); }
+        m_do_not_clip_infinity_enable = (general_config.find("allow_infinity").asInt32()!=0);
     }
     else
     {
@@ -69,8 +81,8 @@ bool LaserFromDepth::open(yarp::os::Searchable& config)
             for (size_t s = 1; s < s_maxs; s++)
             {
                 Range_t range;
-                range.max = maxs.get(s).asDouble();
-                range.min = mins.get(s).asDouble();
+                range.max = maxs.get(s).asFloat64();
+                range.min = mins.get(s).asFloat64();
                 if (range.max >= 0 && range.max <= 360 &&
                     range.min >= 0 && range.min <= 360 &&
                     range.max > range.min)
@@ -86,8 +98,6 @@ bool LaserFromDepth::open(yarp::os::Searchable& config)
         }
 
     }
-
-    Time::turboBoost();
 
     Property prop;
     if(!config.check("RGBD_SENSOR_CLIENT"))
@@ -121,7 +131,7 @@ bool LaserFromDepth::open(yarp::os::Searchable& config)
     m_laser_data.resize(m_sensorsNum, 0.0);
     m_max_angle = +hfov / 2;
     m_min_angle = -hfov / 2;
-    RateThread::start();
+    PeriodicThread::start();
 
     yInfo("Sensor ready");
     return true;
@@ -129,7 +139,7 @@ bool LaserFromDepth::open(yarp::os::Searchable& config)
 
 bool LaserFromDepth::close()
 {
-    RateThread::stop();
+    PeriodicThread::stop();
 
     if(driver.isValid())
         driver.close();
@@ -263,7 +273,7 @@ void LaserFromDepth::run()
     }
 
 
-    float* pointer = (float*)m_depth_image.getPixelAddress(0, m_depth_height / 2);
+    auto* pointer = (float*)m_depth_image.getPixelAddress(0, m_depth_height / 2);
     double angle, distance, infinity, angleShift;
     size_t i;
 
@@ -316,7 +326,7 @@ void LaserFromDepth::threadRelease()
     return;
 }
 
-bool LaserFromDepth::getDeviceInfo(yarp::os::ConstString &device_info)
+bool LaserFromDepth::getDeviceInfo(std::string &device_info)
 {
     LockGuard guard(mutex);
     device_info = m_info;

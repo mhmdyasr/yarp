@@ -1,11 +1,20 @@
 /*
-* Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
-* Author: Marco Randazzo
-* Date: June 2015
-* email:   marco.randazzo@iit.it
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
-
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
@@ -57,8 +66,8 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    yarp::dev::IBattery*   ibat = 0;
-    yarp::dev::PolyDriver* drv = 0;
+    yarp::dev::IBattery*   ibat = nullptr;
+    yarp::dev::PolyDriver* drv = nullptr;
 
     std::string robot_name = "icub";
     if (rf.check("robot"))
@@ -80,10 +89,10 @@ int main(int argc, char *argv[])
     std::string remotePort = "/" + robot_name + "/battery:o";
 
     yarp::os::Property options;
-    options.put("robot", robot_name.c_str());
+    options.put("robot", robot_name);
     options.put("device", "batteryClient");
-    options.put("local", localPort.c_str());
-    options.put("remote", remotePort.c_str());
+    options.put("local", localPort);
+    options.put("remote", remotePort);
     options.put("period", 10);
 
     drv = new yarp::dev::PolyDriver(options);
@@ -95,7 +104,7 @@ int main(int argc, char *argv[])
     }
 
     drv->view(ibat);
-    if (ibat == 0)
+    if (ibat == nullptr)
     {
         yError("Problems viewing the battery interface");
         drv->close();
@@ -103,7 +112,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    MainWindow w(rf, ibat, NULL);
+    MainWindow w(rf, ibat, nullptr);
     w.show();
     int ret = a.exec();
 

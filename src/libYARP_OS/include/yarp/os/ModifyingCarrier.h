@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2012 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_MODIFYINGCARRIER_H
@@ -10,33 +12,33 @@
 #include <yarp/os/AbstractCarrier.h>
 
 namespace yarp {
-    namespace os {
-        class ModifyingCarrier;
-    }
-}
+namespace os {
 
 /**
  * A starter class for implementing simple modifying carriers.
  * These are not standalone carriers, they just tweak payload data
  * in custom ways.
  */
-class YARP_OS_API yarp::os::ModifyingCarrier : public AbstractCarrier {
+class YARP_OS_API ModifyingCarrier : public AbstractCarrier
+{
 public:
+    Carrier* create() const override = 0;
 
-    virtual Carrier *create() override = 0;
+    std::string getName() const override = 0;
 
-    virtual ConstString getName() override = 0;
-
-    virtual bool checkHeader(const yarp::os::Bytes &header) override;
-    virtual void getHeader(const yarp::os::Bytes &header) override;
-    virtual bool respondToHeader(yarp::os::ConnectionState& proto) override;
-    virtual bool modifiesIncomingData() override;
-    virtual bool modifiesOutgoingData() override;
-    virtual bool modifiesReply() override;
-    virtual void setCarrierParams(const yarp::os::Property& params) override;
-    virtual void getCarrierParams(yarp::os::Property& params) override;
-    virtual bool configureFromProperty(yarp::os::Property& prop) override;
+    bool checkHeader(const yarp::os::Bytes& header) override;
+    void getHeader(yarp::os::Bytes& header) const override;
+    bool respondToHeader(yarp::os::ConnectionState& proto) override;
+    bool modifiesIncomingData() const override;
+    bool modifiesOutgoingData() const override;
+    bool modifiesReply() const override;
+    void setCarrierParams(const yarp::os::Property& params) override;
+    void getCarrierParams(yarp::os::Property& params) const override;
+    bool configureFromProperty(yarp::os::Property& prop) override;
     // only remains to implement modifyIncomingData()
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_MODIFYINGCARRIER_H

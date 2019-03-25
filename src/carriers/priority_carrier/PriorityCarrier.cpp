@@ -1,12 +1,18 @@
 /*
- * Copyright (C) 2012 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan and Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
+#include "PriorityCarrier.h"
+
 #include <yarp/os/Log.h>
-#include <yarp/os/ConstString.h>
+#include <yarp/os/ConnectionState.h>
+#include <yarp/os/ConnectionState.h>
+#include <yarp/os/Route.h>
+#include <string>
 
 #ifdef WITH_YARPMATH
 #include <yarp/math/Math.h>
@@ -14,17 +20,9 @@
 using namespace yarp::math;
 #endif
 
-#include "PriorityCarrier.h"
 
 
 using namespace yarp::os;
-
-#ifdef _MSC_VER
-#define safe_printf sprintf_s
-#else
-#define safe_printf snprintf
-#endif
-
 
 /**
  * Class PriorityCarrier
@@ -62,17 +60,17 @@ bool PriorityCarrier::configure(yarp::os::ConnectionState& proto) {
     if (!group) return false;
 
     Property options;
-    options.fromString(proto.getSenderSpecifier().c_str());
+    options.fromString(proto.getSenderSpecifier());
 
-    timeConstant = fabs(options.check("tc",Value(1.0)).asDouble());
-    timeResting = fabs(options.check("tr",Value(0.0)).asDouble());
-    stimulation = fabs(options.check("st",Value(STIMUL_THRESHOLD*10)).asDouble());
+    timeConstant = fabs(options.check("tc",Value(1.0)).asFloat64());
+    timeResting = fabs(options.check("tr",Value(0.0)).asFloat64());
+    stimulation = fabs(options.check("st",Value(STIMUL_THRESHOLD*10)).asFloat64());
     // Zero stimulation is undefined and will be interpreted as S=Thresould.
     if(stimulation == 0)
         stimulation = STIMUL_THRESHOLD*10;
     stimulation /= 10.0;
 
-    baias = options.check("bs",Value(STIMUL_THRESHOLD*10)).asDouble();
+    baias = options.check("bs",Value(STIMUL_THRESHOLD*10)).asFloat64();
     baias /= 10.0;
 
     excitation = options.findGroup("ex");
@@ -81,43 +79,43 @@ bool PriorityCarrier::configure(yarp::os::ConnectionState& proto) {
 #ifdef WITH_PRIORITY_DEBUG
     if(options.check("debug"))
     {
-        yarp::os::ConstString msg;
+        std::string msg;
         char dummy[1024];
-        safe_printf(dummy, 1024, "\n%s:\n", sourceName.c_str());
+        std::snprintf(dummy, 1024, "\n%s:\n", sourceName.c_str());
         msg+= dummy;
-        safe_printf(dummy, 1024, "   stimulation: %.2f\n", stimulation);
+        std::snprintf(dummy, 1024, "   stimulation: %.2f\n", stimulation);
         msg+= dummy;
-        safe_printf(dummy, 1024, "   bias: %.2f\n", baias);
+        std::snprintf(dummy, 1024, "   bias: %.2f\n", baias);
         msg+= dummy;
-        safe_printf(dummy, 1024, "   tc: %.2fs\n", timeConstant);
+        std::snprintf(dummy, 1024, "   tc: %.2fs\n", timeConstant);
         msg+= dummy;
-        safe_printf(dummy, 1024, "   tr: %.2fs\n", timeResting);
+        std::snprintf(dummy, 1024, "   tr: %.2fs\n", timeResting);
         msg+= dummy;
-        safe_printf(dummy, 1024, "   ex: ");
+        std::snprintf(dummy, 1024, "   ex: ");
         msg+= dummy;
-        for(int i=0; i<excitation.size(); i++)
+        for(size_t i=0; i<excitation.size(); i++)
         {
             Value v = excitation.get(i);
             if(v.isList() && (v.asList()->size()>=2))
             {
                 Bottle* b = v.asList();
-                safe_printf(dummy, 1024, "(%s, %.2f) ",
+                std::snprintf(dummy, 1024, "(%s, %.2f) ",
                                 b->get(0).asString().c_str(),
-                                b->get(1).asDouble()/10.0 );
+                                b->get(1).asFloat64()/10.0 );
                 msg+= dummy;
             }
         }
-        //safe_printf(dummy, 1024, "\n");
+        //std::snprintf(dummy, 1024, "\n");
         msg+= "\n";
-        safe_printf(dummy, 1024, "   virtual: %s\n",
+        std::snprintf(dummy, 1024, "   virtual: %s\n",
                             (isVirtual)?"yes":"no");
         msg+= dummy;
-        int rate = options.check("rate", Value(10)).asInt();
-        safe_printf(dummy, 1024, "   db.rate: %dms\n", rate);
+        double rate = options.check("rate", Value(10)).asInt32() / 1000.0;
+        std::snprintf(dummy, 1024, "   db.rate: %fs\n", rate);
         msg+= dummy;
         yInfo("%s", msg.c_str());
         debugger.stop();
-        debugger.setRate(rate);
+        debugger.setPeriod(rate);
         debugger.start();
     }
 #endif
@@ -200,20 +198,20 @@ double PriorityCarrier::getActualInput(double t)
         return 0.0;
 
     double E = 0;
-    for (PriorityGroup::iterator it = group->peerSet.begin(); it!=group->peerSet.end(); it++)
+    for (auto& it : group->peerSet)
     {
-        PriorityCarrier *peer = it->first;
+        PriorityCarrier *peer = it.first;
         if(peer != this)
         {
-            for(int i=0; i<peer->excitation.size(); i++)
+            for(size_t i=0; i<peer->excitation.size(); i++)
             {
                 Value v = peer->excitation.get(i);
                 if(v.isList() && (v.asList()->size()>=2))
                 {
                     Bottle* b = v.asList();
                     // an exitatory to this priority carrier
-                    if(sourceName == b->get(0).asString().c_str())
-                        E += peer->getActualInput(t) * (b->get(1).asDouble()/10.0);
+                    if(sourceName == b->get(0).asString())
+                        E += peer->getActualInput(t) * (b->get(1).asFloat64()/10.0);
                 }
             }
 
@@ -234,7 +232,7 @@ bool PriorityGroup::recalculate(double t)
 #ifdef WITH_YARPMATH
     //TODO: find the correct way to get the size of peerSet
     int nConnections = 0;
-    for(PriorityGroup::iterator it=peerSet.begin(); it!=peerSet.end(); it++)
+    for(auto it=peerSet.begin(); it!=peerSet.end(); it++)
         nConnections++;
 
     // calculate matrices X, B, InvA and Y
@@ -245,9 +243,9 @@ bool PriorityGroup::recalculate(double t)
     InvA.eye();
 
     int row = 0;
-    for(PriorityGroup::iterator rowItr=peerSet.begin(); rowItr!=peerSet.end(); rowItr++)
+    for(auto& rowItr : peerSet)
     {
-        PriorityCarrier *peer = rowItr->first;
+        PriorityCarrier* peer = rowItr.first;
         // call 'getActualStimulation' to update 'isActive'
         peer->getActualStimulation(t);
         double xi = (peer->isActive) ? STIMUL_THRESHOLD : 0.0;
@@ -255,18 +253,18 @@ bool PriorityGroup::recalculate(double t)
         X(row,0) = xi;
 
         int col = 0;
-        for(PriorityGroup::iterator colItr=peerSet.begin(); colItr!=peerSet.end(); colItr++)
+        for(auto& it : peerSet)
         {
-            PriorityCarrier *peerCol = colItr->first;
-            for(int i=0; i<peerCol->excitation.size(); i++)
+            PriorityCarrier *peerCol = it.first;
+            for(size_t i=0; i<peerCol->excitation.size(); i++)
             {
                 Value v = peerCol->excitation.get(i);
                 if(v.isList() && (v.asList()->size()>=2))
                 {
                     Bottle* b = v.asList();
                     // an exitatory link to this connection
-                    if(peer->sourceName == b->get(0).asString().c_str())
-                        InvA(row,col) = -(b->get(1).asDouble()/10.0)*xi;
+                    if(peer->sourceName == b->get(0).asString())
+                        InvA(row,col) = -(b->get(1).asFloat64()/10.0)*xi;
                 }
             }
             col++;
@@ -284,7 +282,7 @@ bool PriorityGroup::recalculate(double t)
         return false;
     }
 
-    // inverting the weigth matrix
+    // inverting the weight matrix
     InvA = yarp::math::luinv(InvA);
     Y = InvA * B;
 
@@ -315,9 +313,9 @@ bool PriorityGroup::acceptIncomingData(yarp::os::ConnectionReader& reader,
     int row = 0;
     PriorityCarrier *maxPeer = nullptr;
     double maxStimuli = 0.0;
-    for(PriorityGroup::iterator it=peerSet.begin(); it!=peerSet.end(); it++)
+    for(auto& it : peerSet)
     {
-        PriorityCarrier *peer = it->first;
+        PriorityCarrier *peer = it.first;
         double output = Y(row,0) * X(row,0);
         peer->yi = output;      // only for debug purpose
 
@@ -339,9 +337,9 @@ bool PriorityGroup::acceptIncomingData(yarp::os::ConnectionReader& reader,
     accept = (actualInput > 0);
     if(accept)
     {
-        for (PriorityGroup::iterator it = peerSet.begin(); it!=peerSet.end(); it++)
+        for (auto& it : peerSet)
         {
-            PriorityCarrier *peer = it->first;
+            PriorityCarrier *peer = it.first;
             if(peer != source)
             {
                 if(actualInput < peer->getActualInput(tNow))
@@ -368,7 +366,7 @@ bool PriorityGroup::acceptIncomingData(yarp::os::ConnectionReader& reader,
  */
 
 #ifdef WITH_PRIORITY_DEBUG
-PriorityDebugThread::PriorityDebugThread(PriorityCarrier* carrier) : RateThread(10)
+PriorityDebugThread::PriorityDebugThread(PriorityCarrier* carrier) : PeriodicThread(0.01)
 {
     pcarrier = carrier;
     count = 0;
@@ -397,8 +395,8 @@ void PriorityDebugThread::run()
 
 bool PriorityDebugThread::threadInit()
 {
-    debugPortName = pcarrier->portName + pcarrier->sourceName + ConstString(":debug");
-    return debugPort.open(debugPortName.c_str());
+    debugPortName = pcarrier->portName + pcarrier->sourceName + std::string(":debug");
+    return debugPort.open(debugPortName);
 }
 
 void PriorityDebugThread::threadRelease()

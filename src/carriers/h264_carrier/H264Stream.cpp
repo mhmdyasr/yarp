@@ -1,9 +1,10 @@
 /*
- * Copyright: (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Author: Valentina Gaggero <valentina.gaggero@iit.it>
- * Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/Log.h>
 #include <yarp/sig/Image.h>
@@ -27,27 +28,27 @@ using namespace yarp::sig;
 using namespace std;
 
 H264Stream::H264Stream(h264Decoder_cfgParamters &config) :
-        delegate(NULL),
+        delegate(nullptr),
+        blobHeader{0,0,0},
         phase(0),
-        cursor(NULL),
+        cursor(nullptr),
         remaining(0),
+        decoder(nullptr),
         cfg(config)
-{
-    ;
-}
+{}
 
 H264Stream::~H264Stream()
 {
-    if (decoder!=NULL)
+    if (decoder!=nullptr)
     {
         delete decoder;
-        decoder = NULL;
+        decoder = nullptr;
     }
 
-    if (delegate!=NULL)
+    if (delegate!=nullptr)
     {
         delete delegate;
-        delegate = NULL;
+        delegate = nullptr;
     }
 }
 
@@ -63,7 +64,7 @@ bool H264Stream::setStream(yarp::os::impl::DgramTwoWayStream *stream)
     return true;
 }
 
-void H264Stream::start (void)
+void H264Stream::start()
 {
     decoder = new H264Decoder(this->cfg);
     decoder->init();
@@ -90,7 +91,7 @@ bool H264Stream::setReadEnvelopeCallback(InputStream::readEnvelopeCallbackType c
     return true;
 }
 
-YARP_SSIZE_T H264Stream::read(const Bytes& b)
+yarp::conf::ssize_t H264Stream::read(Bytes& b)
 {
 
 #ifdef debug_time

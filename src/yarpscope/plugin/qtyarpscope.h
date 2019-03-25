@@ -1,13 +1,19 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 
 #ifndef QTYARPSCOPE_H
 #define QTYARPSCOPE_H
@@ -18,16 +24,16 @@
 #include "plotmanager.h"
 #include <QTimer>
 #include <QMutex>
-#include "qcustomplot.h"
+#include <qcustomplot.h>
 
 /*! \class QtYARPScope
     \brief The plugin Core class
 
-    this is the plugin core class wich acts as bridge between the QML and c++.
+    this is the plugin core class which acts as bridge between the QML and c++.
     in the C++ code is implemented the backend logic, instead in the QML is
     implemented the Visual part.
     This Core plugin derived from QQuickPaintedItem and has the flag ItemHasContents
-    setted to true, so it can paint itself what it needs.
+    set to true, so it can paint itself what it needs.
 */
 class QtYARPScope : public QQuickPaintedItem
 {
@@ -52,11 +58,11 @@ protected:
     void routeMouseEvents( QMouseEvent* event);
     void routeMouseEvents( QWheelEvent* event);
 
-    virtual void mousePressEvent( QMouseEvent* event) override;
-    virtual void mouseReleaseEvent( QMouseEvent* event) override;
-    virtual void mouseMoveEvent( QMouseEvent* event) override;
-    virtual void mouseDoubleClickEvent( QMouseEvent* event) override;
-    virtual void wheelEvent(QWheelEvent* event) override;
+    void mousePressEvent( QMouseEvent* event) override;
+    void mouseReleaseEvent( QMouseEvent* event) override;
+    void mouseMoveEvent( QMouseEvent* event) override;
+    void mouseDoubleClickEvent( QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
 
 private:
     //QCustomPlot m_CustomPlot;

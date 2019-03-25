@@ -1,24 +1,25 @@
 /*
- * Copyright (C) 2013 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick <paulfitz@alum.mit.edu>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_SHAREDLIBRARYFACTORY_H
 #define YARP_OS_SHAREDLIBRARYFACTORY_H
 
 #include <yarp/os/api.h>
-#include <yarp/os/Vocab.h>
+
 #include <yarp/os/SharedLibrary.h>
 #include <yarp/os/SharedLibraryClassApi.h>
-#include <yarp/os/ConstString.h>
+#include <yarp/os/Vocab.h>
+
+#include <string>
 
 
 namespace yarp {
-    namespace os {
-        class SharedLibraryFactory;
-    }
-}
+namespace os {
 
 /**
  * A wrapper for a named factory method in a named shared library.
@@ -26,7 +27,8 @@ namespace yarp {
  * indeed behave like a YARP plugin hook before offering access to it.
  * This is to avoid accidents, it is not a security mechanism.
  */
-class YARP_OS_API yarp::os::SharedLibraryFactory {
+class YARP_OS_API SharedLibraryFactory
+{
 public:
     /**
      * The status of a factory can be:
@@ -37,13 +39,14 @@ public:
      *  - STATUS_FACTORY_NOT_FOUND: Named method wasn't present in library
      *  - STATUS_FACTORY_NOT_FUNCTIONAL: Named method is not working right
      */
-    enum {
+    enum
+    {
         STATUS_NONE,                                         //!< Not configured yet.
-        STATUS_OK = VOCAB2('o', 'k'),                         //!< Present and sane.
-        STATUS_LIBRARY_NOT_FOUND = VOCAB4('f', 'o', 'u', 'n'),  //!< Named shared library was not found.
-        STATUS_LIBRARY_NOT_LOADED = VOCAB4('l', 'o', 'a', 'd'), //!< Named shared library failed to load.
-        STATUS_FACTORY_NOT_FOUND = VOCAB4('f', 'a', 'c', 't'),  //!< Named method wasn't present in library.
-        STATUS_FACTORY_NOT_FUNCTIONAL = VOCAB3('r', 'u', 'n')  //!< Named method is not working right.
+        STATUS_OK = yarp::os::createVocab('o', 'k'),                         //!< Present and sane.
+        STATUS_LIBRARY_NOT_FOUND = yarp::os::createVocab('f', 'o', 'u', 'n'),  //!< Named shared library was not found.
+        STATUS_LIBRARY_NOT_LOADED = yarp::os::createVocab('l', 'o', 'a', 'd'), //!< Named shared library failed to load.
+        STATUS_FACTORY_NOT_FOUND = yarp::os::createVocab('f', 'a', 'c', 't'),  //!< Named method wasn't present in library.
+        STATUS_FACTORY_NOT_FUNCTIONAL = yarp::os::createVocab('r', 'u', 'n')  //!< Named method is not working right.
     };
 
     /**
@@ -57,8 +60,8 @@ public:
      * @param dll_name name/path of shared library.
      * @param fn_name name of factory method, a symbol within the shared library.
      */
-    SharedLibraryFactory(const char *dll_name,
-                         const char *fn_name = nullptr);
+    SharedLibraryFactory(const char* dll_name,
+                         const char* fn_name = nullptr);
 
     /**
      * Destructor
@@ -72,7 +75,7 @@ public:
      * @param fn_name name of factory method, a symbol within the shared library.
      * @return true on success.
      */
-    bool open(const char *dll_name, const char *fn_name = nullptr);
+    bool open(const char* dll_name, const char* fn_name = nullptr);
 
     /**
      * Check if factory is configured and present.
@@ -93,7 +96,7 @@ public:
      *
      * @return the latest error.
      */
-    ConstString getError() const;
+    std::string getError() const;
 
     /**
      * Get the factory API, which has creation/deletion methods.
@@ -128,21 +131,21 @@ public:
      *
      * @return the name associated with this factory.
      */
-    ConstString getName() const;
+    std::string getName() const;
 
     /**
      * Get the type associated with this factory.
      *
      * @return the type associated with this factory.
      */
-    ConstString getClassName() const;
+    std::string getClassName() const;
 
     /**
      * Get the base type associated with this factory.
      *
      * @return the base type associated with this factory.
      */
-    ConstString getBaseClassName() const;
+    std::string getBaseClassName() const;
 
     /**
      *
@@ -153,18 +156,21 @@ public:
      * @result true on success.
      *
      */
-    bool useFactoryFunction(void *factory);
+    bool useFactoryFunction(void* factory);
+
 private:
     SharedLibrary lib;
     int status;
     SharedLibraryClassApi api;
     int returnValue;
-    int rct;
-    ConstString name;
-    ConstString className;
-    ConstString baseClassName;
-    ConstString error;
+    int rct; // FIXME Remove this reference counter and use a shared_ptr instead.
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) name;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) className;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) baseClassName;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) error;
 };
 
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_SHAREDLIBRARYFACTORY_H

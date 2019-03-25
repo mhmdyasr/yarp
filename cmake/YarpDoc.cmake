@@ -1,6 +1,9 @@
-# Copyright: (C) 2009 RobotCub Consortium
-# Authors: Paul Fitzpatrick
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2010 RobotCub Consortium
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 include(CMakeDependentOption)
 
@@ -14,6 +17,17 @@ if(NOT DOXYGEN_PLANTUM_JAR)
 endif()
 
 if(DOXYGEN_FOUND)
+
+  if("${DOXYGEN_VERSION}" MATCHES "([0-9]+)\.([0-9]+)\.([0-9]+)")
+    set(DOXYGEN_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(DOXYGEN_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(DOXYGEN_VERSION_PATCH ${CMAKE_MATCH_3})
+  else()
+    set(DOXYGEN_VERSION_MAJOR 0)
+    set(DOXYGEN_VERSION_MINOR 0)
+    set(DOXYGEN_VERSION_PATCH 0)
+  endif()
+
   option(YARP_DOXYGEN_HTML "Generate doxygen HTML output" ON)
   cmake_dependent_option(YARP_DOXYGEN_HTML_DOCSET "Generate doxygen docset output (for Apple's Xcode 3)" OFF
                          YARP_DOXYGEN_HTML OFF)

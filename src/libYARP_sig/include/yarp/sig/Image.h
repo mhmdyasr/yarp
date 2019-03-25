@@ -1,16 +1,20 @@
 /*
- * Copyright (C) 2006, 2008 RobotCub Consortium
- * Authors: Paul Fitzpatrick, Giorgio Metta
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_SIG_IMAGE_H
 #define YARP_SIG_IMAGE_H
 
 #include <yarp/conf/system.h>
-#include <yarp/os/Portable.h>
-#include <yarp/os/Vocab.h>
 #include <yarp/os/NetUint16.h>
+#include <yarp/os/Portable.h>
+#include <yarp/os/Type.h>
+#include <yarp/os/Vocab.h>
 #include <yarp/sig/api.h>
 #include <map>
 
@@ -29,8 +33,8 @@ namespace yarp {
          * @param pad is the desired padding (e.g. 8 bytes)
          * @return the number of extra bytes to add at the end of the image row
          */
-        inline int PAD_BYTES (int len, int pad) {
-            const int rem = len % pad;
+        inline size_t PAD_BYTES (size_t len, size_t pad) {
+            const size_t rem = len % pad;
             return (rem != 0) ? (pad - rem) : rem;
         }
     }
@@ -41,32 +45,32 @@ namespace yarp {
 enum YarpVocabPixelTypesEnum
 {
     VOCAB_PIXEL_INVALID = 0,
-    VOCAB_PIXEL_MONO = VOCAB4('m','o','n','o'),
-    VOCAB_PIXEL_MONO16 = VOCAB4('m','o','1','6'),
-    VOCAB_PIXEL_RGB = VOCAB3('r','g','b'),
-    VOCAB_PIXEL_RGBA = VOCAB4('r','g','b','a'),
-    VOCAB_PIXEL_BGRA = VOCAB4(98/*'b'*/,'g','r','a'), /* SWIG BUG */
-    VOCAB_PIXEL_INT = VOCAB3('i','n','t'),
-    VOCAB_PIXEL_HSV = VOCAB3('h','s','v'),
-    VOCAB_PIXEL_BGR = VOCAB3(98/*'b'*/,'g','r'), /* SWIG BUG */
-    VOCAB_PIXEL_MONO_SIGNED = VOCAB4('s','i','g','n'),
-    VOCAB_PIXEL_RGB_SIGNED = VOCAB4('r','g','b','-'),
-    VOCAB_PIXEL_RGB_INT = VOCAB4('r','g','b','i'),
-    VOCAB_PIXEL_MONO_FLOAT = VOCAB3('d','e','c'),
-    VOCAB_PIXEL_RGB_FLOAT = VOCAB4('r','g','b','.'),
-    VOCAB_PIXEL_HSV_FLOAT = VOCAB4('h','s','v','.'),
-    VOCAB_PIXEL_ENCODING_BAYER_GRBG8 = VOCAB4('g', 'r', 'b', 'g'),   //grbg8
-    VOCAB_PIXEL_ENCODING_BAYER_GRBG16 = VOCAB4('g', 'r', '1', '6'),  //grbg16
-    VOCAB_PIXEL_ENCODING_BAYER_BGGR8 = VOCAB4(98/*'b'*/, 'g', 'g', 'r'),     //bggr8
-    VOCAB_PIXEL_ENCODING_BAYER_BGGR16 = VOCAB4(98/*'b'*/, 'g', '1', '6'),  //bggr16
-    VOCAB_PIXEL_ENCODING_BAYER_GBRG8 = VOCAB4('g', 'b', 'r', 'g'),  //gbrg8
-    VOCAB_PIXEL_ENCODING_BAYER_GBRG16 = VOCAB4('g', 'b', '1', '6'),  //gbrg16
-    VOCAB_PIXEL_ENCODING_BAYER_RGGB8 = -VOCAB4('r', 'g', 'g', 'b'),   //rggb8
-    VOCAB_PIXEL_ENCODING_BAYER_RGGB16 = VOCAB4('r', 'g', '1', '6'),  //rggb16
-    VOCAB_PIXEL_YUV_420 = VOCAB4('y','u','v','a'),
-    VOCAB_PIXEL_YUV_444 = VOCAB4('y','u','v','b'),
-    VOCAB_PIXEL_YUV_422 = VOCAB4('y','u','v','c'),
-    VOCAB_PIXEL_YUV_411 = VOCAB4('y','u','v','d')
+    VOCAB_PIXEL_MONO = yarp::os::createVocab('m','o','n','o'),
+    VOCAB_PIXEL_MONO16 = yarp::os::createVocab('m','o','1','6'),
+    VOCAB_PIXEL_RGB = yarp::os::createVocab('r','g','b'),
+    VOCAB_PIXEL_RGBA = yarp::os::createVocab('r','g','b','a'),
+    VOCAB_PIXEL_BGRA = yarp::os::createVocab('b','g','r','a'),
+    VOCAB_PIXEL_INT = yarp::os::createVocab('i','n','t'),
+    VOCAB_PIXEL_HSV = yarp::os::createVocab('h','s','v'),
+    VOCAB_PIXEL_BGR = yarp::os::createVocab('b','g','r'),
+    VOCAB_PIXEL_MONO_SIGNED = yarp::os::createVocab('s','i','g','n'),
+    VOCAB_PIXEL_RGB_SIGNED = yarp::os::createVocab('r','g','b','-'),
+    VOCAB_PIXEL_RGB_INT = yarp::os::createVocab('r','g','b','i'),
+    VOCAB_PIXEL_MONO_FLOAT = yarp::os::createVocab('d','e','c'),
+    VOCAB_PIXEL_RGB_FLOAT = yarp::os::createVocab('r','g','b','.'),
+    VOCAB_PIXEL_HSV_FLOAT = yarp::os::createVocab('h','s','v','.'),
+    VOCAB_PIXEL_ENCODING_BAYER_GRBG8 = yarp::os::createVocab('g', 'r', 'b', 'g'),   //grbg8
+    VOCAB_PIXEL_ENCODING_BAYER_GRBG16 = yarp::os::createVocab('g', 'r', '1', '6'),  //grbg16
+    VOCAB_PIXEL_ENCODING_BAYER_BGGR8 = yarp::os::createVocab('b', 'g', 'g', 'r'),     //bggr8
+    VOCAB_PIXEL_ENCODING_BAYER_BGGR16 = yarp::os::createVocab('b', 'g', '1', '6'),  //bggr16
+    VOCAB_PIXEL_ENCODING_BAYER_GBRG8 = yarp::os::createVocab('g', 'b', 'r', 'g'),  //gbrg8
+    VOCAB_PIXEL_ENCODING_BAYER_GBRG16 = yarp::os::createVocab('g', 'b', '1', '6'),  //gbrg16
+    VOCAB_PIXEL_ENCODING_BAYER_RGGB8 = yarp::os::createVocab('r', 'g', 'g', 'b'),   //rggb8
+    VOCAB_PIXEL_ENCODING_BAYER_RGGB16 = yarp::os::createVocab('r', 'g', '1', '6'),  //rggb16
+    VOCAB_PIXEL_YUV_420 = yarp::os::createVocab('y','u','v','a'),
+    VOCAB_PIXEL_YUV_444 = yarp::os::createVocab('y','u','v','b'),
+    VOCAB_PIXEL_YUV_422 = yarp::os::createVocab('y','u','v','c'),
+    VOCAB_PIXEL_YUV_411 = yarp::os::createVocab('y','u','v','d')
 };
 
 /**
@@ -124,26 +128,26 @@ public:
      * @param w target width for image
      * @param h target height for image
      */
-    bool copy(const Image& alt, int w, int h);
+    bool copy(const Image& alt, size_t w, size_t h);
 
 
     /**
      * Gets width of image in pixels.
      * @return the width of the image in pixels (0 if no image present)
      */
-    inline int width() const { return imgWidth; }
+    inline size_t width() const { return imgWidth; }
 
     /**
      * Gets height of image in pixels.
      * @return the height of the image in pixels (0 if no image present)
      */
-    inline int height() const { return imgHeight; }
+    inline size_t height() const { return imgHeight; }
 
     /**
      * Gets pixel size in memory in bytes.
      * @return the size of the pixels stored in the image, in bytes
      */
-    virtual int getPixelSize() const;
+    virtual size_t getPixelSize() const;
 
     /**
      * Gets pixel type identifier.
@@ -157,22 +161,22 @@ public:
      * Size of the underlying image buffer rows.
      * @return size of the underlying image buffer rows in bytes.
      */
-    inline int getRowSize() const { return imgRowSize; }
+    inline size_t getRowSize() const { return imgRowSize; }
 
 
     /**
      * The size of a row is constrained to be a multiple of the "quantum".
      * @return size of the current quantum (0 means no constraint)
      */
-    inline int getQuantum() const { return imgQuantum; }
+    inline size_t getQuantum() const { return imgQuantum; }
 
    /**
      * Returns the number of padding bytes.
      * @return number of bytes of the row padding.
      */
-    inline int getPadding() const
+    inline size_t getPadding() const
     {
-        const int ret=imgRowSize-imgWidth*imgPixelSize;
+        const size_t ret=imgRowSize-imgWidth*imgPixelSize;
         return ret;
     }
 
@@ -181,7 +185,7 @@ public:
      * @param r row number (starting from 0)
      * @return address of the r-th row
      */
-    inline unsigned char *getRow(int r)
+    inline unsigned char *getRow(size_t r)
     {
         // should we check limits?
         return (unsigned char *)(data[r]);
@@ -193,7 +197,7 @@ public:
      * @param r row number (starting from 0)
      * @return address of the r-th row
      */
-    inline const unsigned char *getRow(int r) const
+    inline const unsigned char *getRow(size_t r) const
     {
         // should we check limits?
         return (const unsigned char *)(data[r]);
@@ -205,7 +209,7 @@ public:
      * @param y y coordinate
      * @return address of pixel in memory
      */
-    inline unsigned char *getPixelAddress(int x, int y) const {
+    inline unsigned char *getPixelAddress(size_t x, size_t y) const {
         return (unsigned char *)(data[y] + x*imgPixelSize);
     }
 
@@ -215,8 +219,8 @@ public:
      * @param y y coordinate
      * @return true iff there is a pixel at the given coordinate
      */
-    inline bool isPixel(int x, int y) const {
-        return (x>=0 && y>=0 && x<imgWidth && y<imgHeight);
+    inline bool isPixel(size_t x, size_t y) const {
+        return (x<imgWidth && y<imgHeight);
     }
 
     /**
@@ -233,7 +237,7 @@ public:
      * @param imgWidth the desired width (the number of possible x values)
      * @param imgHeight the desired height (the number of possible y values)
      */
-    void resize(int imgWidth, int imgHeight);
+    void resize(size_t imgWidth, size_t imgHeight);
 
     /**
      * Reallocate the size of the image to match another, throwing
@@ -249,7 +253,7 @@ public:
      * Make sure to that pixel type and padding quantum are
      * synchronized (you can set these in the FlexImage class).
      */
-    void setExternal(const void *data, int imgWidth, int imgHeight);
+    void setExternal(const void *data, size_t imgWidth, size_t imgHeight);
 
     /**
     * Access to the internal image buffer.
@@ -261,7 +265,7 @@ public:
     * Access to the internal buffer size information (this is how much memory has been allocated for the image).
     * @return size of the internal buffer in bytes including padding.
     */
-    int getRawImageSize() const;
+    size_t getRawImageSize() const;
 
     /**
      * Returns IPL/OpenCV view of image, if possible.
@@ -299,15 +303,15 @@ public:
      * Read image from a connection.
      * @return true iff image was read correctly
      */
-    virtual bool read(yarp::os::ConnectionReader& connection) override;
+    bool read(yarp::os::ConnectionReader& connection) override;
 
     /**
      * Write image to a connection.
      * @return true iff image was written correctly
      */
-    virtual bool write(yarp::os::ConnectionWriter& connection) override;
+    bool write(yarp::os::ConnectionWriter& connection) const override;
 
-    void setQuantum(int imgQuantum);
+    void setQuantum(size_t imgQuantum);
 
     /**
      * @return true if image has origin at top left (default); in other
@@ -338,7 +342,7 @@ public:
         return data;
     }
 
-    virtual yarp::os::Type getReadType() override {
+    yarp::os::Type getReadType() const override {
         return yarp::os::Type::byName("yarp/image");
     }
 
@@ -349,12 +353,14 @@ protected:
     //pixelCode and pixelsSize should be linked together consistently.
     //since setPixelCode set also the corresponding pixelSize setPixelSize should not be used at all except for
     //setting an arbitrary pixelSize with no corresponding pixel code (in that case the pixelCode will be set to -pixelSize).
-    void setPixelSize(int imgPixelSize);
+    void setPixelSize(size_t imgPixelSize);
 
 
 private:
-    static const std::map<YarpVocabPixelTypesEnum, unsigned int> pixelCode2Size;
-    int imgWidth, imgHeight, imgPixelSize, imgRowSize, imgPixelCode, imgQuantum;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING
+    static const std::map<YarpVocabPixelTypesEnum, size_t> pixelCode2Size;
+    size_t imgWidth, imgHeight, imgPixelSize, imgRowSize, imgQuantum;
+    int imgPixelCode;
     bool topIsLow;
 
     char **data;
@@ -363,9 +369,9 @@ private:
     void synchronize();
     void initialize();
 
-    void copyPixels(const unsigned char *src, int id1,
-                    unsigned char *dest, int id2, int w, int h,
-                    int imageSize, int quantum1, int quantum2,
+    void copyPixels(const unsigned char *src, size_t id1,
+                    unsigned char *dest, size_t id2, size_t w, size_t h,
+                    size_t imageSize, size_t quantum1, size_t quantum2,
                     bool topIsLow1, bool topIsLow2);
 };
 
@@ -382,14 +388,14 @@ public:
     }
 
 
-    void setPixelSize(int imgPixelSize) {
+    void setPixelSize(size_t imgPixelSize) {
         Image::setPixelSize(imgPixelSize);
     //pixelCode and pixelsSize should be linked together consistently.
     //since setPixelCode set also the corresponding pixelSize setPixelSize should not be used at all except for
     //setting an arbitrary pixelSize with no corresponding pixel code (in that case the pixelCode will be set to -pixelSize).
     }
 
-    void setQuantum(int imgQuantum) {
+    void setQuantum(size_t imgQuantum) {
         Image::setQuantum(imgQuantum);
     }
 
@@ -560,38 +566,40 @@ class yarp::sig::ImageOf : public Image
 private:
     T nullPixel;
 public:
-    ImageOf() : Image() {
+    ImageOf() : Image(),
+        nullPixel()
+    {
         setPixelCode(getPixelCode());
     }
 
-    virtual int getPixelSize() const override {
+    size_t getPixelSize() const override {
         return sizeof(T);
     }
 
-    virtual int getPixelCode() const override;
+    int getPixelCode() const override;
 
-    inline T& pixel(int x, int y) {
+    inline T& pixel(size_t x, size_t y) {
         return *(reinterpret_cast<T*>(getPixelAddress(x,y)));
     }
 
-    inline T& pixel(int x, int y) const {
+    inline T& pixel(size_t x, size_t y) const {
         return *(reinterpret_cast<T*>(getPixelAddress(x,y)));
     }
 
-    inline const T& operator()(int x, int y) const {
+    inline const T& operator()(size_t x, size_t y) const {
         return pixel(x,y);
     }
 
-    inline T& operator()(int x, int y) {
+    inline T& operator()(size_t x, size_t y) {
         return pixel(x,y);
     }
 
-    inline T& safePixel(int x, int y) {
+    inline T& safePixel(size_t x, size_t y) {
         if (!isPixel(x,y)) { return nullPixel; }
         return *(reinterpret_cast<T*>(getPixelAddress(x,y)));
     }
 
-    inline const T& safePixel(int x, int y) const {
+    inline const T& safePixel(size_t x, size_t y) const {
         if (!isPixel(x,y)) { return nullPixel; }
         return *(reinterpret_cast<T*>(getPixelAddress(x,y)));
     }

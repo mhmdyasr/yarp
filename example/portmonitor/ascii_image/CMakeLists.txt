@@ -1,8 +1,10 @@
-# Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
-# Authors: Ali Paikan
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 
 find_package(YARP REQUIRED)
 
@@ -24,7 +26,7 @@ yarp_add_plugin(yarp_pm_asciiimage
                 AsciiImage.h)
 target_link_libraries(yarp_pm_asciiimage ${YARP_LIBRARIES})
 yarp_install(TARGETS yarp_pm_asciiimage
-             EXPORT YARP
+             EXPORT yarp_pm_asciiimage
              COMPONENT runtime
              LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
              ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})

@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo <marco.randazzo@iit.it>
- *         Francesco Nori <francesco.nori@iit.it>
- *         Davide Perrone <dperrone@aitek.it>
- * CopyPolicy: Released under the terms of the GPLv2 or later, see GPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #include "mainwindow.h"
 #include "log.h"
@@ -140,8 +149,7 @@ int main(int argc, char *argv[])
             desc_driver_options.put("device", "robotDescriptionClient");
             desc_driver_options.put("local", descLocalName);
             desc_driver_options.put("remote", "/robotDescription");
-            desc_driver->open(desc_driver_options);
-            if (desc_driver && desc_driver->isValid())
+            if (desc_driver && desc_driver->open(desc_driver_options))
             {
                 IRobotDescription* idesc = nullptr;
                 desc_driver->view(idesc);
@@ -151,12 +159,18 @@ int main(int argc, char *argv[])
                     std::vector<DeviceDescription> wrappers_list;
                     wrappers_list.reserve(cbw2_list.size());
                     wrappers_list.insert(wrappers_list.end(), cbw2_list.begin(), cbw2_list.end());
-                    for (size_t i = 0; i < wrappers_list.size(); i++)
+                    for (auto& i : wrappers_list)
                     {
-                        yDebug() << wrappers_list[i].device_name;
-                        pParts.addString(wrappers_list[i].device_name);
+                        yDebug() << i.device_name;
+                        pParts.addString(i.device_name);
                     }
                 }
+            }
+
+            if (desc_driver)
+            {
+                desc_driver->close();
+                delete desc_driver;
             }
         }
         else
@@ -187,7 +201,7 @@ int main(int argc, char *argv[])
         if (b_name != nullptr && b_part == nullptr)
         {
             //check port names from config file
-            for (int i = 0; i < b_name->size(); i++)
+            for (size_t i = 0; i < b_name->size(); i++)
             {
                 pParts.addString(b_name->get(i).asString());
             }
@@ -195,12 +209,12 @@ int main(int argc, char *argv[])
         else if (robotName != "" && b_part != nullptr)
         {
             //check parts from config file
-            for (int i = 0; i < b_part->size(); i++)
+            for (size_t i = 0; i < b_part->size(); i++)
             {
                 string ss = b_part->get(i).asString();
                 if (ss.at(0) != '/')
                 {
-                    ss = "/" + robotName + "/" + ss;
+                    ss.insert(0, "/" + robotName + "/");
                 }
                 else
                 {
@@ -228,12 +242,12 @@ int main(int argc, char *argv[])
     }
 
     //Check 1 in the panel
-    for(int n = 0; n < pParts.size(); n++)
+    for(size_t n = 0; n < pParts.size(); n++)
     {
         QString part = QString("%1").arg(pParts.get(n).asString().c_str());
         if (b_part_skip)
         {
-            if (b_part_skip->check(part.toStdString().c_str())) continue;
+            if (b_part_skip->check(part.toStdString())) continue;
         }
         yDebug("Appending %s", part.toUtf8().constData());
         partsName.append(part);

@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_PROFILER_GRAP_H
@@ -191,7 +192,7 @@ public:
         }
         virtual ~PortVertex(){}
 
-        virtual bool operator == (const yarp::profiler::graph::Vertex &v1) const override {
+        bool operator == (const yarp::profiler::graph::Vertex &v1) const override {
             return property.find("name").asString() == v1.property.find("name").asString();
         }
 
@@ -206,9 +207,9 @@ public:
         }
         virtual ~ProcessVertex(){}
 
-        virtual bool operator == (const yarp::profiler::graph::Vertex &v1) const override {
+        bool operator == (const yarp::profiler::graph::Vertex &v1) const override {
             return property.find("hostname").asString() == v1.property.find("hostname").asString() &&
-                   property.find("pid").asInt() == v1.property.find("pid").asInt();
+                   property.find("pid").asInt32() == v1.property.find("pid").asInt32();
         }
 
 };
@@ -222,7 +223,7 @@ public:
         }
         virtual ~MachineVertex() {}
 
-        virtual bool operator == (const yarp::profiler::graph::Vertex &v1) const override {
+        bool operator == (const yarp::profiler::graph::Vertex &v1) const override {
             return property.find("hostname").asString() == v1.property.find("hostname").asString() &&
                    property.find("os").asString() == v1.property.find("os").asString() &&
                    property.find("type").asString() == v1.property.find("type").asString() ;

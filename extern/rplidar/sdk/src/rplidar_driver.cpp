@@ -426,17 +426,17 @@ void     RPlidarDriverSerialImpl::_capsuleToNormal(const rplidar_response_capsul
 
         int angleInc_q16 = (diffAngle_q8 << 3);
         int currentAngle_raw_q16 = (prevStartAngle_q8 << 8);
-        for (size_t pos = 0; pos < _countof(_cached_previous_capsuledata.cabins); ++pos)
+        for (auto& cabin : _cached_previous_capsuledata.cabins)
         {
             int dist_q2[2];
             int angle_q6[2];
             int syncBit[2];
 
-            dist_q2[0] = (_cached_previous_capsuledata.cabins[pos].distance_angle_1 & 0xFFFC);
-            dist_q2[1] = (_cached_previous_capsuledata.cabins[pos].distance_angle_2 & 0xFFFC);
+            dist_q2[0] = (cabin.distance_angle_1 & 0xFFFC);
+            dist_q2[1] = (cabin.distance_angle_2 & 0xFFFC);
 
-            int angle_offset1_q3 = ( (_cached_previous_capsuledata.cabins[pos].offset_angles_q3 & 0xF) | ((_cached_previous_capsuledata.cabins[pos].distance_angle_1 & 0x3)<<4));
-            int angle_offset2_q3 = ( (_cached_previous_capsuledata.cabins[pos].offset_angles_q3 >> 4) | ((_cached_previous_capsuledata.cabins[pos].distance_angle_2 & 0x3)<<4));
+            int angle_offset1_q3 = ( (cabin.offset_angles_q3 & 0xF) | ((cabin.distance_angle_1 & 0x3)<<4));
+            int angle_offset2_q3 = ( (cabin.offset_angles_q3 >> 4) | ((cabin.distance_angle_2 & 0x3)<<4));
 
             angle_q6[0] = ((currentAngle_raw_q16 - (angle_offset1_q3<<13))>>10);
             syncBit[0] =  (( (currentAngle_raw_q16 + angleInc_q16) % (360<<16)) < angleInc_q16 )?1:0;
@@ -525,7 +525,11 @@ u_result RPlidarDriverSerialImpl::grabScanData(rplidar_response_measurement_node
 {
     switch (_dataEvt.wait(timeout))
     {
-    case rp::hal::Event::EVENT_TIMEOUT:
+    // This static cast is necessary for the compilation
+    // because the return value of "wait(..)"
+    // is unsigned but EVENT_TIMEOUT = -1. We will keep
+    // it until they will fix the bug in the sdk.
+    case static_cast<unsigned long> (rp::hal::Event::EVENT_TIMEOUT):
         count = 0;
         return RESULT_OPERATION_TIMEOUT;
     case rp::hal::Event::EVENT_OK:
@@ -784,7 +788,7 @@ u_result RPlidarDriverSerialImpl::_waitCapsuledNode(rplidar_response_capsule_mea
 u_result RPlidarDriverSerialImpl::_sendCommand(_u8 cmd, const void * payload, size_t payloadsize)
 {
     _u8 pkt_header[10];
-    rplidar_cmd_packet_t * header = reinterpret_cast<rplidar_cmd_packet_t * >(pkt_header);
+    auto* header = reinterpret_cast<rplidar_cmd_packet_t * >(pkt_header);
     _u8 checksum = 0;
 
     if (!_isConnected) return RESULT_OPERATION_FAIL;

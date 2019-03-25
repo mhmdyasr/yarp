@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_IMPL_STREAMCONNECTIONREADER_H
@@ -16,9 +19,13 @@
 #include <yarp/os/impl/Logger.h>
 #include <yarp/os/Route.h>
 #include <yarp/os/Contact.h>
-#include <yarp/os/impl/PlatformSize.h>
 #include <yarp/os/Bottle.h>
+#include <yarp/os/NetInt8.h>
+#include <yarp/os/NetInt16.h>
+#include <yarp/os/NetInt32.h>
 #include <yarp/os/NetInt64.h>
+#include <yarp/os/NetFloat32.h>
+#include <yarp/os/NetFloat64.h>
 
 namespace yarp {
     namespace os {
@@ -38,326 +45,54 @@ namespace yarp {
 class YARP_OS_impl_API yarp::os::impl::StreamConnectionReader : public ConnectionReader
 {
 public:
-    StreamConnectionReader() :
-        ConnectionReader(),
-        writer(nullptr),
-        in(nullptr),
-        str(nullptr),
-        protocol(nullptr),
-        messageLen(0),
-        textMode(false),
-        bareMode(false),
-        valid(false),
-        err(false),
-        shouldDrop(false),
-        writePending(false),
-        ref(nullptr),
-        convertedTextMode(false),
-        pushedIntFlag(false),
-        pushedInt(-1),
-        parentConnectionReader(nullptr)
-    {
-    }
-
+    StreamConnectionReader();
     virtual ~StreamConnectionReader();
 
     void reset(yarp::os::InputStream& in, TwoWayStream *str, const Route& route,
-               size_t len, bool textMode, bool bareMode = false)
-    {
-        this->in = &in;
-        this->str = str;
-        this->route = route;
-        this->messageLen = len;
-        this->textMode = textMode;
-        this->bareMode = bareMode;
-        this->valid = true;
-        ref = nullptr;
-        err = false;
-        convertedTextMode = false;
-        pushedIntFlag = false;
-    }
+               size_t len, bool textMode, bool bareMode = false);
+    void setProtocol(Protocol *protocol);
+    void suppressReply();
+    bool dropRequested();
 
-    virtual bool setSize(size_t len) override
-    {
-        reset(*in, str, route, len, textMode, bareMode);
-        return true;
-    }
-
-    void setProtocol(Protocol *protocol)
-    {
-        this->protocol = protocol;
-    }
-
-    virtual bool expectBlock(const yarp::os::Bytes& b)
-    {
-        if (!isGood()) {
-            return false;
-        }
-        yAssert(in!=nullptr);
-        size_t len = b.length();
-        if (len==0) {
-            return true;
-        }
-        //if (len<0) len = messageLen;
-        if (len>0) {
-            YARP_SSIZE_T rlen = in->readFull(b);
-            if (rlen>=0) {
-                messageLen -= len;
-                return true;
-            }
-        }
-        err = true;
-        return false;
-    }
-
-    virtual bool pushInt(int x) override
-    {
-        if (pushedIntFlag) {
-            return false;
-        }
-        pushedIntFlag = true;
-        pushedInt = x;
-        return true;
-    }
-
-    virtual int expectInt() override
-    {
-        if (pushedIntFlag) {
-            pushedIntFlag = false;
-            return pushedInt;
-        }
-        if (!isGood()) {
-            return 0;
-        }
-        NetInt32 x = 0;
-        yarp::os::Bytes b((char*)(&x), sizeof(x));
-        yAssert(in!=nullptr);
-        YARP_SSIZE_T r = in->read(b);
-        if (r<0 || (size_t)r<b.length()) {
-            err = true;
-            return 0;
-        }
-        messageLen -= b.length();
-        return x;
-    }
-
-    virtual YARP_INT64 expectInt64() override
-    {
-        if (!isGood()) {
-            return 0;
-        }
-        NetInt64 x = 0;
-        yarp::os::Bytes b((char*)(&x), sizeof(x));
-        yAssert(in!=nullptr);
-        YARP_SSIZE_T r = in->read(b);
-        if (r<0 || (size_t)r<b.length()) {
-            err = true;
-            return 0;
-        }
-        messageLen -= b.length();
-        return x;
-    }
-
-    virtual double expectDouble() override
-    {
-        if (!isGood()) {
-            return 0;
-        }
-        NetFloat64 x = 0;
-        yarp::os::Bytes b((char*)(&x), sizeof(x));
-        yAssert(in!=nullptr);
-        YARP_SSIZE_T r = in->read(b);
-        if (r<0 || (size_t)r<b.length()) {
-            err = true;
-            return 0;
-        }
-        messageLen -= b.length();
-        return x;
-    }
-
-    virtual ConstString expectString(int len)
-    {
-        if (!isGood()) {
-            return "";
-        }
-        char *buf = new char[len];
-        yarp::os::Bytes b(buf, len);
-        yAssert(in!=nullptr);
-        YARP_SSIZE_T r = in->read(b);
-        if (r<0 || (size_t)r<b.length()) {
-            err = true;
-            delete[] buf;
-            return "";
-        }
-        messageLen -= b.length();
-        ConstString s = buf;
-        delete[] buf;
-        return s;
-    }
-
-    virtual ConstString expectLine()
-    {
-        if (!isGood()) {
-            return "";
-        }
-        yAssert(in!=nullptr);
-        bool success = false;
-        ConstString result = in->readLine('\n', &success);
-        if (!success) {
-            err = true;
-            return "";
-        }
-        messageLen -= result.length()+1;
-        return result;
-    }
-
-    virtual bool isTextMode() override
-    {
-        return textMode;
-    }
-
-    virtual bool isBareMode() override
-    {
-        return bareMode;
-    }
-
-    virtual bool convertTextMode() override;
-
-    virtual size_t getSize() override
-    {
-        return messageLen + (pushedIntFlag?sizeof(yarp::os::NetInt32):0);
-    }
-
-    /*
-    virtual OutputStream *getReplyStream() override
-    {
-        if (str==nullptr) {
-            return nullptr;
-        }
-        return &(str->getOutputStream());
-    }
-    */
-
-    virtual yarp::os::ConnectionWriter *getWriter() override;
-
-    void suppressReply()
-    {
-        str = nullptr;
-    }
-
+    virtual bool expectBlock(yarp::os::Bytes& b);
+    virtual std::string expectString(int len);
+    virtual std::string expectLine();
     virtual void flushWriter();
+    virtual void setReference(yarp::os::Portable *obj);
 
-    // virtual TwoWayStream *getStreams() override
-    // {
-    // return str;
-    // }
-
-    virtual yarp::os::Contact getRemoteContact() override
-    {
-        if (str!=nullptr) {
-            Contact remote = str->getRemoteAddress();
-            remote.setName(route.getFromName());
-            return remote;
-        }
-        Contact remote = yarp::os::Contact(route.getFromName(), route.getCarrierName());
-        return remote;
-    }
-
-    virtual yarp::os::Contact getLocalContact() override
-    {
-        if (str!=nullptr) {
-            Contact local = str->getLocalAddress();
-            local.setName(route.getToName());
-            return local;
-        }
-        return yarp::os::Contact();
-    }
-
-
-
-    virtual bool expectBlock(const char *data, size_t len) override
-    {
-        return expectBlock(yarp::os::Bytes((char*)data, len));
-    }
-
-    virtual ::yarp::os::ConstString expectText(int terminatingChar) override
-    {
-        if (!isGood()) {
-            return "";
-        }
-        yAssert(in!=nullptr);
-        bool lsuccess = false;
-        ConstString result = in->readLine(terminatingChar, &lsuccess);
-        if (lsuccess) {
-            messageLen -= result.length()+1;
-        }
-        return ::yarp::os::ConstString(result.c_str());
-    }
-
-    virtual bool isValid() override
-    {
-        return valid;
-    }
-
-    virtual bool isError() override
-    {
-        if (err) {
-            return true;
-        }
-        return !isActive();
-    }
-
-    virtual bool isActive() override
-    {
-        if (shouldDrop) {
-            return false;
-        }
-        if (!isValid()) {
-            return false;
-        }
-        if (in!=nullptr) {
-            if (in->isOk()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    virtual yarp::os::Portable *getReference() override
-    {
-        return ref;
-    }
-
-    virtual void setReference(yarp::os::Portable *obj)
-    {
-        ref = obj;
-    }
-
-    virtual yarp::os::Bytes readEnvelope() override;
-
-    virtual void requestDrop() override
-    {
-        shouldDrop = true;
-    }
-
-    bool dropRequested()
-    {
-        return shouldDrop;
-    }
-
-    virtual yarp::os::Searchable& getConnectionModifiers() override;
-
-    virtual void setParentConnectionReader(ConnectionReader *parentConnectionReader) override
-    {
-        this->parentConnectionReader = parentConnectionReader;
-    }
+    /**** OVERRIDES ****/
+    bool setSize(size_t len) override;
+    size_t getSize() const override;
+    bool pushInt(int x) override;
+    std::int8_t expectInt8() override;
+    std::int16_t expectInt16() override;
+    std::int32_t expectInt32() override;
+    std::int64_t expectInt64() override;
+    yarp::conf::float32_t expectFloat32() override;
+    yarp::conf::float64_t expectFloat64() override;
+    bool expectBlock(char *data, size_t len) override;
+    std::string expectText(int terminatingChar) override;
+    bool isTextMode() const override;
+    bool isBareMode() const override;
+    bool convertTextMode() override;
+    yarp::os::ConnectionWriter *getWriter() override;
+    yarp::os::Contact getRemoteContact() const override;
+    yarp::os::Contact getLocalContact() const override;
+    bool isValid() const override;
+    bool isError() const override;
+    bool isActive() const override;
+    yarp::os::Portable *getReference() const override;
+    yarp::os::Bytes readEnvelope() override;
+    void requestDrop() override;
+    const yarp::os::Searchable& getConnectionModifiers() const override;
+    void setParentConnectionReader(ConnectionReader *parentConnectionReader) override;
 
 private:
 
-    bool isGood()
-    {
-        return isActive()&&isValid()&&!isError();
-    }
+    bool isGood();
+
+    template <typename T, typename NetT>
+    T expectType();
 
     BufferedConnectionWriter *writer;
     StringInputStream altStream;

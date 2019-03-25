@@ -1,10 +1,28 @@
+/*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "newapplicationwizard.h"
 #include <QGridLayout>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
 
-#include <yarp/manager/ymm-dir.h>
+#include <dirent.h>
 #include <yarp/os/Network.h>
 
 using namespace std;
@@ -26,7 +44,7 @@ inline bool absolute(const char *path) {  //copied from yarp_OS ResourceFinder.c
 
 NewApplicationWizard::NewApplicationWizard(yarp::os::Property *config, bool _saveAs):alreadyExists(false), saveAs(_saveAs)
 {
-    CustomWizardPage *page = new CustomWizardPage;
+    auto* page = new CustomWizardPage;
 
     this->m_config = config;
     page->setTitle("Application Properties");
@@ -76,7 +94,7 @@ NewApplicationWizard::NewApplicationWizard(yarp::os::Property *config, bool _sav
 
 
 
-    QGridLayout *layout = new QGridLayout;
+    auto* layout = new QGridLayout;
     layout->addWidget(nameLbl,0,0);
     layout->addWidget(nameEdit,0,1);
 
@@ -103,15 +121,15 @@ NewApplicationWizard::NewApplicationWizard(yarp::os::Property *config, bool _sav
 
 
 
-    const yarp::os::ConstString directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
     if(m_config->check("apppath")){
-        string basepath=m_config->check("ymanagerini_dir", yarp::os::Value("")).asString().c_str();
-        string appPaths(m_config->find("apppath").asString().c_str());
+        string basepath=m_config->check("ymanagerini_dir", yarp::os::Value("")).asString();
+        string appPaths(m_config->find("apppath").asString());
         string strPath;
 
         do
         {
-            string::size_type pos=appPaths.find(";");
+            string::size_type pos=appPaths.find(';');
             strPath=appPaths.substr(0, pos);
             trimString(strPath);
             if (!absolute(strPath.c_str()))
@@ -129,8 +147,8 @@ NewApplicationWizard::NewApplicationWizard(yarp::os::Property *config, bool _sav
         while (appPaths!="");
     }
     if (m_config->check("yarpdatahome")){
-       string appPaths(m_config->find("apppath").asString().c_str());
-       string homePath=m_config->find("yarpdatahome").asString().c_str();
+       string appPaths(m_config->find("apppath").asString());
+       string homePath=m_config->find("yarpdatahome").asString();
 
        homePath +=  string(directorySeparator) + string("applications");
 
@@ -245,7 +263,7 @@ void NewApplicationWizard::accept()
     if (alreadyExists)
     {
         QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(this, "Quit", "The file choosen already exists, do you want to overwrite it?", QMessageBox::Yes|QMessageBox::No);
+        reply = QMessageBox::question(this, "Quit", "The file chosen already exists, do you want to overwrite it?", QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::No)
         {
             QDialog::reject();

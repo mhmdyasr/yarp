@@ -1,9 +1,11 @@
 /*
-* Copyright (C) 2010 RobotCub Consortium
-* Author: Lorenzo Natale
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
-
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 /**
  * \infile Tests for SVD.
@@ -29,7 +31,7 @@ const double TOL = 1e-8;
 
 class SVDTest : public UnitTest {
 public:
-    virtual ConstString getName() override { return "SVDTest"; }
+    virtual std::string getName() const override { return "svdTest"; }
 
     // Assert that 2 matrices are equal
     void assertEqual(const Matrix &A, const Matrix &B, string testName, bool verbose=false)
@@ -38,8 +40,8 @@ public:
             if(verbose) printf("A != B: %s != %s\n", A.toString(3).c_str(), B.toString(3).c_str());
             checkTrue(false, testName.c_str());
         }
-        for(int r=0; r<A.rows(); r++){
-            for(int c=0; c<A.cols(); c++){
+        for(size_t r=0; r<A.rows(); r++){
+            for(size_t c=0; c<A.cols(); c++){
                 if(fabs(A(r,c)-B(r,c))>TOL){
                     if(verbose) printf("A != B: %s != %s\n", A.toString(3).c_str(), B.toString(3).c_str());
                     checkTrue(false, testName.c_str());
@@ -56,8 +58,8 @@ public:
             checkTrue(true, testName.c_str());
             return;
         }
-        for(int r=0; r<A.rows(); r++)
-            for(int c=0; c<A.cols(); c++)
+        for(size_t r=0; r<A.rows(); r++)
+            for(size_t c=0; c<A.cols(); c++)
                 if(fabs(A(r,c)-B(r,c))>TOL){
                     checkTrue(true, testName.c_str());
                     return;
@@ -87,7 +89,7 @@ public:
     {
         report(0,"checking that SVD resizes the output matrices");
 
-        int m=6, n=5;
+        size_t m=6, n=5;
         Matrix U, V;
         Vector s;
 
@@ -97,7 +99,7 @@ public:
 
         checkEqual(U.rows(), m, "Number of Rows of U matrix is correct");
         checkEqual(U.cols(), n, "Number of Cols of U matrix is correct");
-        checkEqual(s.size(), n, "Size of s vector is correct");
+        checkEqual(s.size(), (size_t) n, "Size of s vector is correct");
         checkEqual(V.rows(), n, "Number of Rows of V matrix is correct");
         checkEqual(V.cols(), n, "Number of Cols of V matrix is correct");
     }
@@ -216,61 +218,61 @@ public:
     void projMat()
     {
         report(0, "checking projection matrix");
-        int m=7, n=3, nTest=1;
-        Matrix M, Mp;
-        Matrix U(m,n), V(n,n);
+        int m=7;
+        int n=3;
+        int nTest=1;
+        Matrix M;
+        Matrix Mp;
+        Matrix U(m, n);
+        Matrix V(n, n);
         Vector s(n);
-        for(int i=0; i<nTest; i++)
-        {
-            do
-            {
-                M = Rand::matrix(m,n)*100;  // skinny full rank matrix
+        for(int i = 0; i < nTest; i++) {
+            do {
+                M = Rand::matrix(m, n) * 100;  // skinny full rank matrix
                 SVD(M, U, s, V);
-            }while(s[n-1] < TOL);
+            } while(s[n-1] < TOL);
             Mp = projectionMatrix(M, TOL);
             assertEqual(Mp*M, M, "projection matrix of full-rank skinny matrix");
         }
 
-        for(int i=0; i<nTest; i++)
-        {
-            do
-            {
-                M = Rand::matrix(n,m)*100;  // fat full rank matrix
+        for(int i = 0; i < nTest; i++) {
+            do {
+                M = Rand::matrix(n, m) * 100;  // fat full rank matrix
                 SVD(M, U, s, V);
-            }while(s[n-1] < TOL);
+            } while(s[n-1] < TOL);
             Mp = projectionMatrix(M, TOL);
             assertEqual(Mp, eye(n), "projection matrix of full-rank fat matrix");
         }
     }
 
-     void nullspaceMat()
+    void nullspaceMat()
     {
         report(0, "checking nullspace projection matrix");
-        int m=7, n=3, nTest=1;
-        Matrix M, N;
-        Matrix U(m,n), V(n,n);
+        int m=7;
+        int n=3;
+        int nTest=1;
+        Matrix M;
+        Matrix N;
+        Matrix U(m, n);
+        Matrix V(n, n);
         Vector s(n);
-        for(int i=0; i<nTest; i++)
-        {
-            do
-            {
-                M = Rand::matrix(m,n)*100;  // skinny full rank matrix
+        for(int i = 0; i < nTest; i++) {
+            do {
+                M = Rand::matrix(m, n) * 100;  // skinny full rank matrix
                 SVD(M, U, s, V);
-            }while(s[n-1] < TOL);
+            } while(s[n-1] < TOL);
             N = nullspaceProjection(M, TOL);
             assertEqual(N, zeros(n,n), "nullspace projection matrix of full-rank skinny matrix is zero");
         }
 
-        for(int i=0; i<nTest; i++)
-        {
-            do
-            {
-                M = Rand::matrix(n,m)*100;  // fat full rank matrix
+        for(int i = 0; i < nTest; i++) {
+            do {
+                M = Rand::matrix(n, m) * 100;  // fat full rank matrix
                 SVD(M, U, s, V);
-            }while(s[n-1] < TOL);
+            } while(s[n-1] < TOL);
             N = nullspaceProjection(M, TOL);
-            assertNotEqual(N, zeros(m,m), "nullspace projection matrix of full-rank fat matrix is not zero");
-            assertEqual(M*N, zeros(n,m), "nullspace projection matrix of full-rank fat matrix");
+            assertNotEqual(N, zeros(m, m), "nullspace projection matrix of full-rank fat matrix is not zero");
+            assertEqual(M * N, zeros(n, m), "nullspace projection matrix of full-rank fat matrix");
         }
     }
 

@@ -1,52 +1,44 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_NETWORKCLOCK_H
 #define YARP_OS_NETWORKCLOCK_H
 
+#include <yarp/os/api.h>
+
 #include <yarp/os/Clock.h>
-#include <yarp/os/BufferedPort.h>
-#include <yarp/os/NetInt32.h>
-#include <yarp/conf/numeric.h>
-#include <yarp/os/Semaphore.h>
-#include <yarp/os/Mutex.h>
+
+#include <string>
 
 namespace yarp {
-    namespace os {
-        class NetworkClock;
-    }
-}
+namespace os {
 
-
-class YARP_OS_API yarp::os::NetworkClock : public Clock, PortReader {
+class YARP_OS_API NetworkClock : public Clock
+{
 public:
     NetworkClock();
     virtual ~NetworkClock();
 
-    bool open(const ConstString& clockSourcePortName, ConstString localPortName="");
+    bool open(const std::string& clockSourcePortName, std::string localPortName = "");
 
-    virtual double now() override;
-    virtual void delay(double seconds) override;
-    virtual bool isValid() const override;
+    double now() override;
+    void delay(double seconds) override;
+    bool isValid() const override;
 
-    virtual bool read(ConnectionReader& reader) override;
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 private:
-
-    ConstString clockName;
-    void *pwaiters;
-    Port port;
-
-    Mutex listMutex;
-    Mutex timeMutex;
-
-    YARP_INT32 sec;
-    YARP_INT32 nsec;
-    double _time;
-    bool closing;
-    bool initted;
+    class Private;
+    Private* mPriv;
+#endif // DOXYGEN_SHOULD_SKIP_THIS
 };
+
+} // namespace os
+} // namespace yarp
+
 
 #endif // YARP_OS_NETWORKCLOCK_H

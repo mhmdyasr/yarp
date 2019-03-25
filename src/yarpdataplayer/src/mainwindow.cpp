@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "include/mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QFileDialog>
@@ -8,6 +26,7 @@
 #include <QMessageBox>
 #include "include/log.h"
 #include <csignal>
+#include <yarp/conf/version.h>
 
 #if defined(_WIN32)
     #pragma warning (disable : 4099)
@@ -30,10 +49,6 @@
 
 #ifndef APP_NAME
  #define APP_NAME "yarpdataplayer"
-#endif
-
-#ifndef APP_VERSION
- #define APP_VERSION "1.0"
 #endif
 
 using namespace std;
@@ -60,7 +75,7 @@ MainWindow::MainWindow(yarp::os::ResourceFinder &rf, QWidget *parent) :
 
     if (rf.check("withExtraTimeCol")){
         withExtraTimeCol = true;
-        column = rf.check("withExtraTimeCol",Value(1)).asInt();
+        column = rf.check("withExtraTimeCol",Value(1)).asInt32();
 
         if (column < 1 || column > 2 ){
             column = 1;
@@ -192,7 +207,7 @@ void MainWindow::onInternalGetFrame(const string &name, int *frame)
 /**********************************************************/
 bool MainWindow::load(const string &path)
 {
-    string cmdPath = path.c_str();
+    string cmdPath = path;
     QString sPath = QString("%1").arg(path.c_str());
 
     size_t slashErr = cmdPath.find('/');
@@ -289,9 +304,9 @@ bool MainWindow::updateFrameNumber(const char* part, int frameNum)
         //if (frameNum == 0)
             //frameNum = 1;
 
-        for (std::map<const char*,int>::iterator itr=partMap.begin(); itr != partMap.end(); itr++){
-            utilities->masterThread->virtualTime = utilities->partDetails[(*itr).second].timestamp[utilities->partDetails[(*itr).second].currFrame];
-            utilities->partDetails[(*itr).second].currFrame = frameNum;
+        for (auto& itr : partMap){
+            utilities->masterThread->virtualTime = utilities->partDetails[itr.second].timestamp[utilities->partDetails[itr.second].currFrame];
+            utilities->partDetails[itr.second].currFrame = frameNum;
         }
         utilities->masterThread->virtualTime = utilities->partDetails[0].timestamp[utilities->partDetails[0].currFrame];
         return true;
@@ -304,9 +319,9 @@ bool MainWindow::updateFrameNumber(const char* part, int frameNum)
 void MainWindow::getFrameCmd( const char* part , int *frame)
 {
     if (subDirCnt > 0){
-        for (std::map<const char*,int>::iterator itr=partMap.begin(); itr != partMap.end(); itr++){
-            if (strcmp (part,(*itr).first) == 0){
-                *frame = utilities->partDetails[(*itr).second].currFrame;
+        for (auto& itr : partMap) {
+            if (strcmp (part, itr.first) == 0) {
+                *frame = utilities->partDetails[itr.second].currFrame;
             }
         }
     }
@@ -568,9 +583,9 @@ void MainWindow::onInitDone(int subDirCount)
 void MainWindow::addPart(const char* szName, const char* type, int frames, const char* portName, const char* szFileName )
 {
     partMap[szName] = itr;
-    QTreeWidgetItem *item = new QTreeWidgetItem();
+    auto* item = new QTreeWidgetItem();
     ui->mainWidget->addTopLevelItem(item);
-    QCheckBox *checkBox = new QCheckBox();
+    auto* checkBox = new QCheckBox();
     checkBox->setChecked(true);
     ui->mainWidget->setItemWidget(item,ACTIVE,checkBox);
     if(szName){
@@ -589,7 +604,7 @@ void MainWindow::addPart(const char* szName, const char* type, int frames, const
         ui->mainWidget->resizeColumnToContents(PORT);
     }
 
-    QProgressBar *progress = new QProgressBar();
+    auto* progress = new QProgressBar();
     progress->setMaximum(100);
     progress->setValue(0);
     progress->setAlignment(Qt::AlignCenter);
@@ -710,10 +725,10 @@ void MainWindow::onErrorMessage(QString msg)
 /**********************************************************/
 void MainWindow::onMenuHelpAbout()
 {
-    QString copyright = "2014 (C) Istituto Italiano di Tecnologia (IIT)";
+    QString copyright = "Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)";
     QString name = APP_NAME;
-    QString version = APP_VERSION;
-    AboutDlg dlg(name,version,copyright,"http://www.icub.org/");
+    QString version = YARP_VERSION;
+    AboutDlg dlg(name,version,copyright,"https://www.iit.it/");
     dlg.exec();
 }
 

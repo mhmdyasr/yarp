@@ -1,21 +1,20 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo
- * email:  marco.randazzo@iit.it
- * website: www.robotcub.org
- * Permission is granted to copy, distribute, and/or modify this program
- * under the terms of the GNU General Public License, version 2 or any
- * later version published by the Free Software Foundation.
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * A copy of the license can be found at
- * http://www.robotcub.org/icub/license/gpl.txt
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
- * Public License for more details
-*/
-
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #define _USE_MATH_DEFINES
 
@@ -147,15 +146,15 @@ void drawNav(const yarp::os::Bottle *display, IplImage *img, double scale)
         yError ("wrong image format!");
         return;
     }
-    double c0 = display->get(0).asDouble();
-//     double c1 = display->get(1).asDouble();
-//     double c2 = display->get(2).asDouble();
-    double angle_f = display->get(3).asDouble();
-//     double angle_t = display->get(4).asDouble();
-//     double w_f = display->get(5).asDouble();
-//     double w_t = display->get(6).asDouble();
-    double max_obs_dist = display->get(7).asDouble();
-    double angle_g = display->get(8).asDouble();
+    double c0 = display->get(0).asFloat64();
+//     double c1 = display->get(1).asFloat64();
+//     double c2 = display->get(2).asFloat64();
+    double angle_f = display->get(3).asFloat64();
+//     double angle_t = display->get(4).asFloat64();
+//     double w_f = display->get(5).asFloat64();
+//     double w_t = display->get(6).asFloat64();
+    double max_obs_dist = display->get(7).asFloat64();
+    double angle_g = display->get(8).asFloat64();
 
     CvPoint center;
     center.x = (int)(img->width/2  );
@@ -199,7 +198,7 @@ void drawLaser(const Vector *comp, vector<yarp::dev::LaserMeasurementData> *las,
 
     static double old_time = 0;
 
-    if (las==NULL || comp==NULL)
+    if (las==nullptr || comp==nullptr)
     {
         return;
     }
@@ -295,16 +294,16 @@ int main(int argc, char *argv[])
         display_help();
         return 0;
     }
-    double scale = rf.check("scale", Value(100), "global scale factor").asDouble();
-    double robot_radius = rf.check("robot_radius", Value(0.001), "robot radius [m]").asDouble();
-    double sens_position_x = rf.check("sens_position_x", Value(0), "sens_position_x [m]").asDouble();
-    double sens_position_y = rf.check("sens_position_y", Value(0), "sens_position_y [m]").asDouble();
-    double sens_position_t = rf.check("sens_position_theta", Value(0), "sens_position_theta [m]").asDouble();
+    double scale = rf.check("scale", Value(100), "global scale factor").asFloat64();
+    double robot_radius = rf.check("robot_radius", Value(0.001), "robot radius [m]").asFloat64();
+    double sens_position_x = rf.check("sens_position_x", Value(0), "sens_position_x [m]").asFloat64();
+    double sens_position_y = rf.check("sens_position_y", Value(0), "sens_position_y [m]").asFloat64();
+    double sens_position_t = rf.check("sens_position_theta", Value(0), "sens_position_theta [m]").asFloat64();
     bool verbose = rf.check("verbose", Value(false), "verbose [0/1]").asBool();
     bool absolute = rf.check("absolute", Value(false), "absolute [0/1]").asBool();
     bool compass = rf.check("compass", Value(true), "compass [0/1]").asBool();
-    int period = rf.check("period",Value(50),"period [ms]").asInt(); //ms
-    int aspect = rf.check("aspect", Value(0), "0 draw lines, 1 draw points").asInt();
+    int period = rf.check("period",Value(50),"period [ms]").asInt32(); //ms
+    int aspect = rf.check("aspect", Value(0), "0 draw lines, 1 draw points").asInt32();
     string laserport = rf.check("sens_port", Value("/laser:o"), "laser port name").asString();
 
     string laser_map_port_name;
@@ -317,7 +316,7 @@ int main(int argc, char *argv[])
     int width = 600;
     int height = 600;
 
-    yarp::dev::PolyDriver* drv = new yarp::dev::PolyDriver;
+    auto* drv = new yarp::dev::PolyDriver;
     Property   lasOptions;
     lasOptions.put("device", "Rangefinder2DClient");
     lasOptions.put("local", "/laserScannerGui/laser:i");
@@ -330,9 +329,9 @@ int main(int argc, char *argv[])
         delete drv;
         return 0;
     }
-    yarp::dev::IRangefinder2D* iLas = 0;
+    yarp::dev::IRangefinder2D* iLas = nullptr;
     drv->view(iLas);
-    if (iLas == 0)
+    if (iLas == nullptr)
     {
         yError() << "Unable to get IRangefinder2D interface";
         delete drv;
@@ -349,11 +348,11 @@ int main(int argc, char *argv[])
     std::vector<yarp::dev::LaserMeasurementData> laser_data;
 
     BufferedPort<yarp::os::Bottle> laserMapInPort;
-    laserMapInPort.open(laser_map_port_name.c_str());
+    laserMapInPort.open(laser_map_port_name);
     BufferedPort<yarp::sig::Vector> compassInPort;
-    compassInPort.open(compass_port_name.c_str());
+    compassInPort.open(compass_port_name);
     BufferedPort<yarp::os::Bottle> navDisplayInPort;
-    navDisplayInPort.open(nav_display.c_str());
+    navDisplayInPort.open(nav_display);
 
     IplImage *img  = cvCreateImage(cvSize(width,height),IPL_DEPTH_8U,3);
     IplImage *img2 = cvCreateImage(cvSize(width,height),IPL_DEPTH_8U,3);
@@ -368,7 +367,7 @@ int main(int argc, char *argv[])
     while(!exit)
     {
         void *v = cvGetWindowHandle("Laser Scanner GUI");
-        if (v == 0)
+        if (v == nullptr)
         {
             exit = true;
             break;
@@ -389,8 +388,8 @@ int main(int argc, char *argv[])
             for (unsigned int i=0; i<1080; i++)
             {
                 Bottle* b = las_map->get(i).asList();
-                lasermap_data[i].x = b->get(0).asDouble();
-                lasermap_data[i].y = b->get(1).asDouble();
+                lasermap_data[i].x = b->get(0).asFloat64();
+                lasermap_data[i].y = b->get(1).asFloat64();
             }
         }*/
 
@@ -415,7 +414,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    drawLaser(&compass_data, &laser_data, 0, img, angle_tot, scans, sens_position_x, sens_position_y, sens_position_t, scale, absolute, verbose, aspect);
+                    drawLaser(&compass_data, &laser_data, nullptr, img, angle_tot, scans, sens_position_x, sens_position_y, sens_position_t, scale, absolute, verbose, aspect);
                 }
 
             }

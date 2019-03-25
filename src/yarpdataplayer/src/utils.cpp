@@ -1,19 +1,20 @@
 /*
- * Copyright (C) 2011 Istituto Italiano di Tecnologia (IIT)
- * Author: Vadim Tikhanoff
- * email:  vadim.tikhanoff@iit.it
- * Permission is granted to copy, distribute, and/or modify this program
- * under the terms of the GNU General Public License, version 2 or any
- * later version published by the Free Software Foundation.
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * A copy of the license can be found at
- * http://www.robotcub.org/icub/license/gpl.txt
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
- * Public License for more details
-*/
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #if defined(_WIN32)
     #pragma warning (disable : 4099)
@@ -21,14 +22,14 @@
     #pragma warning (disable : 4520)
 #endif
 
+#include <dirent.h>
+
 #if defined(_WIN32)
-    #include "include/msvc/dirent.h"
     #undef max                  /*conflict with pango lib coverage.h*/
     #include <direct.h>
     #define GetCurrentDir _getcwd
 #else
     #include <unistd.h>
-    #include <dirent.h>
     #include <cerrno>
     #include <sys/stat.h>
     #define GetCurrentDir getcwd
@@ -39,6 +40,7 @@
 #include "include/utils.h"
 
 #include <iostream>
+#include <utility>
 #include "include/mainwindow.h"
 #include "include/log.h"
 
@@ -66,7 +68,7 @@ Utilities::~Utilities()
 /**********************************************************/
 Utilities::Utilities(string name, bool _add_prefix, QObject *parent) : QObject(parent),
     dir_count(0),
-    moduleName(name),
+    moduleName(std::move(name)),
     add_prefix(_add_prefix),
     partDetails(nullptr),
     speed(1.0),
@@ -169,14 +171,14 @@ int Utilities::getRecSubDirList(string dir, vector<string> &names, vector<string
                     LOG(" %s IS present adding it to the gui\n",filename);
 
                     if (recursiveName.empty()){
-                        names.push_back( string( direntp->d_name) );//pass also previous subDir name
+                        names.emplace_back( direntp->d_name );//pass also previous subDir name
                     } else {
-                        names.push_back( string(recursiveName + "_" + direntp->d_name) );//pass only subDir name
+                        names.emplace_back(recursiveName + "_" + direntp->d_name );//pass only subDir name
                     }
 
-                    info.push_back( string(dir + "/" + direntp->d_name + "/info.log") );
-                    logs.push_back( string(dir + "/" + direntp->d_name + "/data.log") );
-                    paths.push_back( string(dir + "/" + direntp->d_name + "/") ); //pass full path
+                    info.emplace_back(dir + "/" + direntp->d_name + "/info.log" );
+                    logs.emplace_back(dir + "/" + direntp->d_name + "/data.log" );
+                    paths.emplace_back(dir + "/" + direntp->d_name + "/" ); //pass full path
                     dir_count++;
                 } else {
                     if (!checkLog){
@@ -231,7 +233,7 @@ bool Utilities::checkLogValidity(const char *filename)
         string line;
         int itr = 0;
         while( getline( str, line ) && itr < 3){
-            Bottle b( line.c_str() );
+            Bottle b( line );
             if (itr >= 0){
                 if ( b.size() < 1){
                     check = false;
@@ -259,13 +261,13 @@ bool Utilities::setupDataFromParts(partsData &part)
         string line;
         int itr = 0;
         while( getline( str, line ) && (itr <= 1) ){
-            Bottle b( line.c_str() );
+            Bottle b( line );
             if (itr == 0){
-                part.type = b.get(1).toString().c_str();
+                part.type = b.get(1).toString();
                 part.type.erase(part.type.size() -1 );      // remove the ";" character
             }
             if (itr == 1){
-                part.portName = b.get(1).toString().c_str();
+                part.portName = b.get(1).toString();
                 LOG( "the name of the port is %s\n",part.portName.c_str());
             }
             itr++;
@@ -284,14 +286,14 @@ bool Utilities::setupDataFromParts(partsData &part)
         string line;
         int itr = 0;
         while( getline( str, line ) ){
-            Bottle b( line.c_str() );
+            Bottle b( line );
             part.bot.addList() = b;
             int timeStampCol = 1;
             if (withExtraColumn){
                 timeStampCol = column;
             }
 
-            part.timestamp.push_back( b.get(timeStampCol).asDouble() );
+            part.timestamp.push_back( b.get(timeStampCol).asFloat64() );
             itr++;
         }
         allTimeStamps.push_back( part.timestamp[0] );   //save all first timeStamps dumped for later ease of use
@@ -363,18 +365,18 @@ bool Utilities::configurePorts(partsData &part)
     }
 
     if (strcmp (part.type.c_str(),"Bottle") == 0){
-        if ( !yarp::os::Network::exists(tmp_port_name.c_str()) ){
+        if ( !yarp::os::Network::exists(tmp_port_name) ){
             LOG("need to create new port %s for %s\n",part.type.c_str(), part.name.c_str());
             part.bottlePort.close();
             LOG("creating and opening %s port for part %s\n",part.type.c_str(), part.name.c_str());
-            part.bottlePort.open(tmp_port_name.c_str());
+            part.bottlePort.open(tmp_port_name);
         }
     } else if (strcmp (part.type.c_str(),"Image:ppm") == 0 || strcmp (part.type.c_str(),"Image") == 0){
-        if ( !yarp::os::Network::exists(tmp_port_name.c_str()) ){
+        if ( !yarp::os::Network::exists(tmp_port_name) ){
             LOG("need to create new port %s for %s\n",part.type.c_str(), part.name.c_str());
             part.imagePort.close();
             LOG("creating and opening image port for part %s\n",part.name.c_str());
-            part.imagePort.open(tmp_port_name.c_str());
+            part.imagePort.open(tmp_port_name);
         }
     }
     else {

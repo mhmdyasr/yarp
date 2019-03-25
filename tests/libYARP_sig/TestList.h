@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_TESTS_SIG_TESTLIST_H
@@ -21,8 +24,10 @@ namespace yarp {
 // method.
 extern yarp::os::impl::UnitTest& getImageTest();
 extern yarp::os::impl::UnitTest& getVectorTest();
+extern yarp::os::impl::UnitTest& getVectorOfTest();
 extern yarp::os::impl::UnitTest& getSoundTest();
 extern yarp::os::impl::UnitTest& getMatrixTest();
+extern yarp::os::impl::UnitTest& getPointCloudTest();
 
 class yarp::sig::impl::TestList {
 public:
@@ -30,8 +35,10 @@ public:
         yarp::os::impl::UnitTest& root = yarp::os::impl::UnitTest::getRoot();
         root.add(getImageTest());
         root.add(getVectorTest());
+        root.add(getVectorOfTest());
         root.add(getMatrixTest());
         root.add(getSoundTest());
+        root.add(getPointCloudTest());
     }
 };
 

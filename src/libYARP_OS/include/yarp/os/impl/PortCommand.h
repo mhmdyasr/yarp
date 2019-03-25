@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_IMPL_PORTCOMMAND_H
@@ -11,7 +14,7 @@
 #include <yarp/os/ConnectionReader.h>
 #include <yarp/os/ConnectionWriter.h>
 #include <yarp/os/ManagedBytes.h>
-#include <yarp/os/ConstString.h>
+#include <string>
 
 namespace yarp {
     namespace os {
@@ -34,30 +37,30 @@ public:
         str = "";
     }
 
-    PortCommand(char ch, const ConstString& str) :
+    PortCommand(char ch, const std::string& str) :
             header(8)
     {
         this->ch = ch;
         this->str = str;
     }
 
-    virtual bool write(yarp::os::ConnectionWriter& writer) override;
-    virtual bool read(yarp::os::ConnectionReader& reader) override;
+    bool write(yarp::os::ConnectionWriter& writer) const override;
+    bool read(yarp::os::ConnectionReader& reader) override;
 
     char getKey()
     {
         return ch;
     }
 
-    ConstString getText()
+    std::string getText()
     {
         return str;
     }
 
 public:
     char ch;
-    ConstString str;
-    yarp::os::ManagedBytes header;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) str;
+    mutable yarp::os::ManagedBytes header;
 };
 
 #endif // YARP_OS_IMPL_PORTCOMMAND_H

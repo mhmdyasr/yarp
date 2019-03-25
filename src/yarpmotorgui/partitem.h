@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo <marco.randazzo@iit.it>
- *         Francesco Nori <francesco.nori@iit.it>
- *         Davide Perrone <dperrone@aitek.it>
- * CopyPolicy: Released under the terms of the GPLv2 or later, see GPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #ifndef PARTITEM_H
 #define PARTITEM_H
@@ -37,9 +46,7 @@ using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::os;
 
-#define     MAX_WIDTH_JOINT 240
-
-
+#define     MAX_WIDTH_JOINT 320
 
 class PartItem : public QWidget
 {
@@ -121,10 +128,14 @@ private:
     double* m_torques;
     double* m_positions;
     double* m_speeds;
+    double* m_currents;
     double* m_motorPositions;
+    double* m_dutyCycles;
     bool*   m_done;
     bool    m_part_speedVisible;
     bool    m_part_motorPositionVisible;
+    bool    m_part_dutyVisible;
+    bool    m_part_currentVisible;
     yarp::dev::InteractionModeEnum* m_interactionModes;
 
     ResourceFinder* m_finder;
@@ -133,9 +144,9 @@ private:
     Port            m_sequence_port;
     bool            m_interfaceError;
 
-    IPositionControl2  *m_iPos;
+    IPositionControl   *m_iPos;
     IPositionDirect    *m_iDir;
-    IVelocityControl2  *m_iVel;
+    IVelocityControl  *m_iVel;
     IRemoteVariables   *m_iVar;
     IEncoders          *m_iencs;
     IMotorEncoders     *m_iMot;
@@ -146,9 +157,9 @@ private:
     ITorqueControl     *m_iTrq;
     IImpedanceControl  *m_iImp;
     IAxisInfo         *m_iinfo;
-    IControlLimits2          *m_iLim;
-    IControlCalibration2     *m_ical;
-    IControlMode2           *m_ictrlmode2;
+    IControlLimits          *m_iLim;
+    IControlCalibration    *m_ical;
+    IControlMode           *m_ictrlmode;
     IInteractionMode        *m_iinteract;
     IRemoteCalibrator   *m_iremCalib;
     int m_slow_k;
@@ -169,6 +180,8 @@ public slots:
     bool updatePart();
     void onViewSpeedValues(bool);
     void onViewMotorPositions(bool);
+    void onViewDutyCycles(bool);
+    void onViewCurrentValues(bool);
     void onSetPosSliderOptionPI(int mode, double step);
     void onSetVelSliderOptionPI(int mode, double step);
     void onSetTrqSliderOptionPI(int mode, double step);
@@ -221,6 +234,7 @@ private slots:
     void onSendStiffness(int jointIdex, double stiff, double damp, double force);
     void onSendPWM(int jointIndex, double dutyVal);
     void onRefreshPids(int jointIndex);
+    void onDumpAllRemoteVariables();
 
 
 };

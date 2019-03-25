@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2010 Daniel Krieg
- * Author: Daniel Krieg <krieg@fias.uni-frankfurt.de>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2010 Daniel Krieg <krieg@fias.uni-frankfurt.de>
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/MpiCarrier.h>
@@ -15,19 +18,21 @@ using namespace yarp::os;
 using yarp::os::impl::Logger;
 #endif
 
-MpiCarrier::MpiCarrier() : stream(NULL), comm(NULL) {
+MpiCarrier::MpiCarrier() : stream(nullptr), comm(nullptr) {
     #ifdef MPI_DEBUG
     Logger::get().setVerbosity(1);
     #endif
 }
 
+#ifdef MPI_DEBUG
 MpiCarrier::~MpiCarrier() {
-    #ifdef MPI_DEBUG
     printf("[MpiCarrier @ %s] Destructor called \n", route.c_str() );
-    #endif
 }
+#else
+MpiCarrier::~MpiCarrier() = default;
+#endif
 
-void  MpiCarrier::getHeader(const Bytes& header) {
+void  MpiCarrier::getHeader(Bytes& header) const {
     for (size_t i=0; i<8 && i<header.length(); i++) {
         header.get()[i] = target.c_str()[i];
     }
@@ -120,7 +125,7 @@ bool MpiCarrier::expectSenderSpecifier(ConnectionState& proto) {
     if (! MpiControl->isRunning())
         return false;
 
-    ConstString other_id = proto.is().readLine();
+    std::string other_id = proto.is().readLine();
     bool notLocal = comm->notLocal(other_id);
 
     port = proto.is().readLine();

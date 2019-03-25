@@ -1,6 +1,9 @@
-# Copyright: (C) 2009 RobotCub Consortium
-# Authors: Paul Fitzpatrick, Arjan Gijsberts, Lorenzo Natale, Fabien Benureau, Stephane Lallee, Ali Paikan, Francesco Romano
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2010 RobotCub Consortium
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 # this is set in the parent directory, but for some reason it does not get inherited
 set_source_files_properties(${SWIG_BINDINGS_SOURCE_FILE} PROPERTIES CPLUSPLUS ON)
@@ -14,13 +17,6 @@ swig_add_library(yarp_lua
                  LANGUAGE lua
                  SOURCES ${SWIG_BINDINGS_SOURCE_FILE})
 swig_link_libraries(yarp_lua ${LUA_LIBRARY} ${SWIG_YARP_LIBRARIES})
-
-if(NOT MSVC)
-  check_cxx_compiler_flag("-Wno-maybe-uninitialized" CXX_HAS_WNO_MAYBE_UNINITIALIZED)
-  if(CXX_HAS_WNO_MAYBE_UNINITIALIZED)
-    target_compile_options(${SWIG_MODULE_yarp_lua_REAL_NAME} PRIVATE "-Wno-maybe-uninitialized")
-  endif()
-endif()
 
 set(_CMAKE_INSTALL_LUADIR "${CMAKE_INSTALL_LIBDIR}/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
 set(CMAKE_INSTALL_LUADIR ${_CMAKE_INSTALL_LUADIR} CACHE PATH "lua bindings (${_CMAKE_INSTALL_LUADIR})")

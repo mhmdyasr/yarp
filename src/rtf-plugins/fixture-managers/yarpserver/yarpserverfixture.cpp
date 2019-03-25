@@ -1,7 +1,9 @@
 /*
- * Copyright: (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Authors: Andrea Ruzzenenti <andrea.ruzzenenti@iit.it>
- * Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <iostream>
@@ -27,12 +29,12 @@ class yarpServerThread : public yarp::os::Thread
     int    argc;
     char** argv;
 
-    virtual void run() override
+    void run() override
     {
         ys.run(argc, argv);
     }
 
-    virtual void onStop() override
+    void onStop() override
     {
         ys.stop();
     }
@@ -53,7 +55,7 @@ public:
     virtual ~YarpNameServer(){ yServer.stop(); }
 
 
-    virtual bool setup(int argc, char** argv) override
+    bool setup(int argc, char** argv) override
     {
 
         yServer.configure(argc, argv);
@@ -66,12 +68,12 @@ public:
         return net.checkNetwork();
     }
 
-    virtual bool check() override
+    bool check() override
     {
         return net.checkNetwork();
     }
 
-    virtual void tearDown() override
+    void tearDown() override
     {
 
     }

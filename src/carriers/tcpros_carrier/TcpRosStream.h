@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef TCPROSSTREAM_INC
@@ -12,7 +13,7 @@
 #include <yarp/os/OutputStream.h>
 #include <yarp/os/TwoWayStream.h>
 #include <yarp/os/ManagedBytes.h>
-#include <yarp/os/ConstString.h>
+#include <string>
 #include "BlobNetworkHeader.h"
 #include "WireTwiddler.h"
 
@@ -42,7 +43,7 @@ private:
     int phase;
     bool expectTwiddle;
     WireTwiddler twiddler;
-    yarp::os::ConstString kind;
+    std::string kind;
     WireTwiddlerReader twiddlerReader;
     bool initiative;
     bool setInitiative;
@@ -75,46 +76,46 @@ public:
         }
     }
 
-    virtual yarp::os::InputStream& getInputStream() override { return *this; }
-    virtual yarp::os::OutputStream& getOutputStream() override { return *this; }
+    yarp::os::InputStream& getInputStream() override { return *this; }
+    yarp::os::OutputStream& getOutputStream() override { return *this; }
 
 
-    virtual const yarp::os::Contact& getLocalAddress() override {
+    const yarp::os::Contact& getLocalAddress() const override {
         return delegate->getLocalAddress();
     }
 
-    virtual const yarp::os::Contact& getRemoteAddress() override {
+    const yarp::os::Contact& getRemoteAddress() const override {
         return delegate->getRemoteAddress();
     }
 
-    virtual bool isOk() override {
+    bool isOk() const override {
         return delegate->isOk();
     }
 
-    virtual void reset() override {
+    void reset() override {
         delegate->reset();
     }
 
-    virtual void close() override {
+    void close() override {
         delegate->close();
     }
 
-    virtual void beginPacket() override {
+    void beginPacket() override {
         twiddlerReader.reset();
         delegate->beginPacket();
     }
 
-    virtual void endPacket() override {
+    void endPacket() override {
         delegate->endPacket();
     }
 
     using yarp::os::OutputStream::write;
-    virtual void write(const Bytes& b) override;
+    void write(const Bytes& b) override;
 
     using yarp::os::InputStream::read;
-    virtual YARP_SSIZE_T read(const Bytes& b) override;
+    yarp::conf::ssize_t read(Bytes& b) override;
 
-    virtual void interrupt() override {
+    void interrupt() override {
         delegate->getInputStream().interrupt();
     }
 

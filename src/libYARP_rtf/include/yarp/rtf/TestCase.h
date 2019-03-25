@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan <ali.paikan@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_RTF_YARPTESTCASE_H
@@ -20,7 +22,7 @@ namespace rtf {
  * settings which are developed for YARP.
  *
  * The class simply looks for test configuration file given using "--from"
- * paramter to the test case and loads it into a yarp::os::Property object.
+ * parameter to the test case and loads it into a yarp::os::Property object.
  *
  * If any environment property is given using "testrunner -e" or using
  * \<environment> \</environment> tag within suite XML file, that will be used

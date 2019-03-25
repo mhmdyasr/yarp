@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006, 2008 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_THREAD_H
@@ -10,19 +13,17 @@
 #include <yarp/os/api.h>
 
 namespace yarp {
-    namespace os {
-        class Thread;
-    }
-}
+namespace os {
+
 
 /**
  * \ingroup key_class
  *
  * An abstraction for a thread of execution.
  */
-class YARP_OS_API yarp::os::Thread {
+class YARP_OS_API Thread
+{
 public:
-
     /**
      * Constructor.  Thread begins in a dormant state.  Call Thread::start
      * to get things going.
@@ -105,7 +106,9 @@ public:
      * same thread that is executing the "start" method.
      */
     virtual bool threadInit()
-    { return true;}
+    {
+        return true;
+    }
 
     /**
      * Release method. The thread executes this function once when
@@ -113,8 +116,7 @@ public:
      * resources that were initialized in threadInit() (release memory,
      * and device driver resources).
      */
-    virtual void threadRelease()
-    {}
+    virtual void threadRelease() {}
 
 
     /**
@@ -130,14 +132,6 @@ public:
      * @return true iff the thread is running
      */
     bool isRunning();
-
-    /**
-     * Set the stack size for the new thread.  Must be called before
-     * Thread::start
-     * @param stackSize the desired stack size in bytes (if 0, uses
-     *                  a reasonable default)
-     */
-    void setOptions(int stackSize = 0);
 
     /**
      * Check how many threads are running.
@@ -162,7 +156,7 @@ public:
      * @param priority the new priority of the thread.
      * @param policy the scheduling policy of the thread
      * @return -1 if the priority cannot be set.
-     * @note The thread plolicy is highly OS dependant and a right combination of
+     * @note The thread policy is highly OS dependent and a right combination of
      * priority and policy should be used. In some platform changing thread priorities
      * is subject to having the right permission. For example, the following combinations
      * are supported on most Linux platforms:
@@ -170,7 +164,7 @@ public:
      * SCHED_FIFO  : policy=1, priority=[1 .. 99]
      * SCHED_RR    : policy=2, priority=[1 .. 99]
      */
-    int setPriority(int priority, int policy=-1);
+    int setPriority(int priority, int policy = -1);
 
     /**
      * Query the current priority of the thread, if the OS supports that.
@@ -181,16 +175,9 @@ public:
 
     /**
      * @brief Query the current scheduling policy of the thread, if the OS supports that.
-     * @return the scheduling policy of the theread.
+     * @return the scheduling policy of the thread.
      */
     int getPolicy();
-
-    /**
-     * Set the default stack size for all threads created after this
-     * point.  A value of 0 will use a reasonable default.
-     * @param stackSize the desired stack size in bytes.
-     */
-    static void setDefaultStackSize(int stackSize);
 
     /**
      * The function returns when the thread execution has completed.
@@ -207,9 +194,36 @@ public:
      */
     static void yield();
 
+
+#ifndef YARP_NO_DEPRECATED // since YARP 3.0.0
+    /**
+     * Set the stack size for the new thread.  Must be called before
+     * Thread::start
+     * @param stackSize the desired stack size in bytes (if 0, uses
+     *                  a reasonable default)
+     * @deprecated since YARP 3.0.0
+     */
+    YARP_DEPRECATED
+    void setOptions(int stackSize = 0) {};
+
+    /**
+     * Set the default stack size for all threads created after this
+     * point.  A value of 0 will use a reasonable default.
+     * @param stackSize the desired stack size in bytes.
+     */
+    YARP_DEPRECATED
+    static void setDefaultStackSize(int stackSize) {};
+#endif // YARP_NO_DEPRECATED
+
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 private:
-    void *implementation;
-    bool stopping;
+    class Private;
+    Private* const mPriv;
+#endif
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_THREAD_H

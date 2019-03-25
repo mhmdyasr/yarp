@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_MANAGER_DATA
 #define YARP_MANAGER_DATA
@@ -30,7 +29,7 @@ public:
     InputData(const char* szName);
     InputData(const InputData &input);
     virtual ~InputData();
-    virtual Node* clone(void) override;
+    Node* clone(void) override;
     void setName(const char* szName) {
         if(szName){
             strName = szName;
@@ -52,7 +51,7 @@ public:
     void setOwner(Node* owner) { modOwner = owner; }
     Node* owner(void) { return modOwner; }
 
-    bool operator==(const InputData& input) {
+    bool operator==(const InputData& input) const {
         return (strName == input.strName);
     }
 
@@ -77,7 +76,7 @@ public:
     OutputData(const char* szName);
     OutputData(const OutputData &input);
     virtual ~OutputData();
-    virtual Node* clone(void) override;
+    Node* clone(void) override;
     void setName(const char* szName) {
         if(szName){
             strName = szName;
@@ -97,7 +96,7 @@ public:
     Node* owner(void) { return modOwner; }
 
 
-    bool operator==(const OutputData& output) {
+    bool operator==(const OutputData& output) const {
         return (strName == output.strName);
     }
 

@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/Network.h>
@@ -407,7 +408,7 @@ bool MonitorLua::canAccept()
 
     /**
      * following piece of code replaces each event symbolic name
-     * with a boolean value based on their existance in MonitorEventRecord
+     * with a boolean value based on their existence in MonitorEventRecord
      */
     string strConstraint = constraint;
     string strDummy = strConstraint;
@@ -507,7 +508,7 @@ int MonitorLua::setConstraint(lua_State* L)
             return 0;
         }
 
-        MonitorLua* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
+        auto* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
         yAssert(owner);
         owner->setAcceptConstraint(cst);
     }
@@ -523,7 +524,7 @@ int MonitorLua::getConstraint(lua_State* L)
         return 0;
     }
 
-    MonitorLua* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
+    auto* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
     yAssert(owner);
     lua_pushstring(L, owner->getAcceptConstraint());
     return 0;
@@ -555,7 +556,7 @@ int MonitorLua::setEvent(lua_State* L)
             yError("Cannot get PortMonitor_Owner");
             return 0;
         }
-        MonitorLua* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
+        auto* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
         yAssert(owner);
         if(owner->isKeyword(event_name))
             return 0;
@@ -578,7 +579,7 @@ int MonitorLua::unsetEvent(lua_State* L)
             yError("Cannot get PortMonitor_Owner");
             return 0;
         }
-        MonitorLua* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
+        auto* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
         yAssert(owner);
         if(owner->isKeyword(event_name))
             return 0;
@@ -614,7 +615,7 @@ int MonitorLua::setTrigInterval(lua_State* L)
         return 0;
     }
 
-    MonitorLua* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
+    auto* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
     yAssert(owner);
 
     // start the trigger thread (MonitorTrigger) if it is not running

@@ -1,12 +1,20 @@
 /*
- * Copyright (C) 2010 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-// ********************************************************
-// *** THIS FILE IS CURRENTLY UNDER DEVELOPMENT / DEBUG ***
-// ********************************************************
 
 #ifndef LASERHOKUYO_THREAD_H
 #define LASERHOKUYO_THREAD_H
@@ -14,7 +22,7 @@
 //#include <cstdio>
 #include <string>
 
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Mutex.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/IRangefinder2D.h>
@@ -25,7 +33,7 @@
 using namespace yarp::os;
 using namespace yarp::dev;
 
-class laserHokuyo : public RateThread, public yarp::dev::IRangefinder2D, public DeviceDriver
+class laserHokuyo : public PeriodicThread, public yarp::dev::IRangefinder2D, public DeviceDriver
 {
 protected:
     PolyDriver driver;
@@ -34,7 +42,7 @@ protected:
     yarp::os::Mutex mutex;
 
     int cardId;
-    int period;
+    double period;
     int sensorsNum;
     int start_position;
     int end_position;
@@ -74,7 +82,7 @@ protected:
     yarp::sig::Vector laser_data;
 
 public:
-    laserHokuyo(int period=20) : RateThread(period),
+    laserHokuyo(double period = 0.02) : PeriodicThread(period),
         pSerial(nullptr),
         mutex(),
         cardId(0),
@@ -96,26 +104,26 @@ public:
     {
     }
 
-    virtual bool open(yarp::os::Searchable& config) override;
-    virtual bool close() override;
-    virtual bool threadInit() override;
-    virtual void threadRelease() override;
-    virtual void run() override;
+    bool open(yarp::os::Searchable& config) override;
+    bool close() override;
+    bool threadInit() override;
+    void threadRelease() override;
+    void run() override;
 
 public:
     //IRangefinder2D interface
-    virtual bool getRawData(yarp::sig::Vector &data) override;
-    virtual bool getLaserMeasurement(std::vector<LaserMeasurementData> &data) override;
-    virtual bool getDeviceStatus     (Device_status &status) override;
-    virtual bool getDeviceInfo       (yarp::os::ConstString &device_info) override;
-    virtual bool getDistanceRange    (double& min, double& max) override;
-    virtual bool setDistanceRange    (double min, double max) override;
-    virtual bool getScanLimits        (double& min, double& max) override;
-    virtual bool setScanLimits        (double min, double max) override;
-    virtual bool getHorizontalResolution      (double& step) override;
-    virtual bool setHorizontalResolution      (double step) override;
-    virtual bool getScanRate         (double& rate) override;
-    virtual bool setScanRate         (double rate) override;
+    bool getRawData(yarp::sig::Vector &data) override;
+    bool getLaserMeasurement(std::vector<LaserMeasurementData> &data) override;
+    bool getDeviceStatus     (Device_status &status) override;
+    bool getDeviceInfo       (std::string &device_info) override;
+    bool getDistanceRange    (double& min, double& max) override;
+    bool setDistanceRange    (double min, double max) override;
+    bool getScanLimits        (double& min, double& max) override;
+    bool setScanLimits        (double min, double max) override;
+    bool getHorizontalResolution      (double& step) override;
+    bool setHorizontalResolution      (double step) override;
+    bool getScanRate         (double& rate) override;
+    bool setScanRate         (double rate) override;
 
 private:
     //laser methods

@@ -1,11 +1,19 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "qtyarpview.h"
@@ -43,7 +51,7 @@ QtYARPView::~QtYARPView()
 
 /*! \brief Freeze the video stream.
  *
- *  \param check a bool parameter that enbales or disables the freeze state
+ *  \param check a bool parameter that enables or disables the freeze state
  */
 void QtYARPView::freeze(bool check)
 {
@@ -274,34 +282,34 @@ void QtYARPView::setOptions(yarp::os::Searchable& options) {
         qsnprintf(_options.m_outNetworkName, 256, "%s", val->asString().c_str());
     }
     if (options.check("RefreshTime",val)||options.check("p",val)) {
-        _options.m_refreshTime = val->asInt();
+        _options.m_refreshTime = val->asInt32();
         sigHandler.changeRefreshInterval(_options.m_refreshTime);
         emit refreshIntervalChanged();
     }
     if (options.check("PosX",val)||options.check("x",val)) {
-        _options.m_posX = val->asInt();
+        _options.m_posX = val->asInt32();
         emit posXChanged();
     }
     if (options.check("PosY",val)||options.check("y",val)) {
-        _options.m_posY = val->asInt();
+        _options.m_posY = val->asInt32();
         emit posYChanged();
     }
     if (options.check("Width",val)||options.check("w",val)) {
-        _options.m_windWidth = val->asInt();
+        _options.m_windWidth = val->asInt32();
         emit widthChanged();
     }
     if (options.check("Height",val)||options.check("h",val)) {
-        _options.m_windHeight = val->asInt();
+        _options.m_windHeight = val->asInt32();
         emit heightChanged();
     }
     if (options.check("OutputEnabled",val)) {
-        _options.m_outputEnabled = val->asInt();
+        _options.m_outputEnabled = val->asInt32();
     }
     if (options.check("out",val)) {
         _options.m_outputEnabled = true;
     }
     if (options.check("SaveOptions",val)||options.check("saveoptions",val)) {
-        _options.m_outputEnabled = val->asInt();
+        _options.m_outputEnabled = val->asInt32();
     }
     if (options.check("synch"))
     {
@@ -457,10 +465,10 @@ void QtYARPView::clickCoords_4(int start_x, int start_y, int end_x, int end_y)
         if (_pOutPort != nullptr) {
             yarp::os::Bottle& bot = _pOutPort->prepare();
             bot.clear();
-            bot.addInt(start_x);
-            bot.addInt(start_y);
-            bot.addInt(end_x);
-            bot.addInt(end_y);
+            bot.addInt32(start_x);
+            bot.addInt32(start_y);
+            bot.addInt32(end_x);
+            bot.addInt32(end_y);
             //_pOutPort->Content() = _outBottle;
             _pOutPort->write();
         }
@@ -483,8 +491,8 @@ void QtYARPView::clickCoords_2(int x,int y)
         if (_pOutPort!=nullptr) {
             yarp::os::Bottle& bot = _pOutPort->prepare();
             bot.clear();
-            bot.addInt(x);
-            bot.addInt(y);
+            bot.addInt32(x);
+            bot.addInt32(y);
             //_pOutPort->Content() = _outBottle;
             _pOutPort->write();
         }

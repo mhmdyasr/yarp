@@ -1,11 +1,16 @@
 /*
- * Copyright (C) 2010 Daniel Krieg
- * Author: Daniel Krieg <krieg@fias.uni-frankfurt.de>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2010 Daniel Krieg <krieg@fias.uni-frankfurt.de>
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/MpiStream.h>
 #include <yarp/os/Log.h>
+
+#include <utility>
 
 using namespace yarp::os;
 
@@ -13,27 +18,29 @@ using namespace yarp::os;
 /* --------------------------------------- */
 /* MpiStream */
 
-MpiStream::MpiStream(ConstString n, MpiComm* c)
-    : terminate(false), name(n), comm(c) {
-    readBuffer = NULL;
+MpiStream::MpiStream(std::string n, MpiComm* c)
+    : terminate(false), name(std::move(n)), comm(c) {
+    readBuffer = nullptr;
     resetBuffer();
 
 }
+#ifdef MPI_DEBUG
 MpiStream::~MpiStream() {
-    #ifdef MPI_DEBUG
     printf("[MpiStream @ %s] Destructor\n", name.c_str());
-    #endif
 }
+#else
+MpiStream::~MpiStream() = default;
+#endif
 
 void MpiStream::resetBuffer() {
     // reset buffer
     readAt = 0;
     readAvail = 0;
     delete [] readBuffer;
-    readBuffer = NULL;
+    readBuffer = nullptr;
 }
 
-bool MpiStream::isOk() {
+bool MpiStream::isOk() const {
     return !terminate;
 }
 
@@ -53,11 +60,11 @@ InputStream& MpiStream::getInputStream() {
 yarp::os::OutputStream& MpiStream::getOutputStream() {
     return *this;
 }
-const yarp::os::Contact& MpiStream::getLocalAddress() {
+const yarp::os::Contact& MpiStream::getLocalAddress() const {
     // left undefined
     return local;
 }
-const yarp::os::Contact& MpiStream::getRemoteAddress() {
+const yarp::os::Contact& MpiStream::getRemoteAddress() const {
     // left undefined
     return remote;
 }

@@ -1,30 +1,37 @@
 /*
-* Copyright (C) 2009 The RobotCub consortium
-* Author: Lorenzo Natale, Anne van Rossum, Paul Fitzpatrick
-* Based on code by Paul Fitzpatrick 2007.
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #include <yarp/os/Bottle.h>
-#include <yarp/os/ConstString.h>
+#include <yarp/os/ConnectionWriter.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/Os.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Time.h>
+#include <yarp/os/Thread.h>
 #include <yarp/os/Vocab.h>
 
 #include <yarp/os/impl/PlatformTime.h>
 #include <yarp/os/impl/PlatformSignal.h>
+#include <yarp/os/impl/Terminal.h>
 
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 
 using namespace yarp::os;
 using namespace yarp::os::impl;
 
 
-class RFModuleRespondHandler : public yarp::os::PortReader, public Thread {
+class RFModuleRespondHandler : public yarp::os::PortReader,
+                               public yarp::os::Thread
+{
 private:
     RFModule& owner;
     bool attachedToPort;
@@ -37,26 +44,26 @@ public:
      * @param connection a network connection to a port
      * @return true if the message was read successfully
      */
-    virtual bool read(yarp::os::ConnectionReader& connection) override;
+    bool read(yarp::os::ConnectionReader& connection) override;
 
 
     RFModuleRespondHandler(RFModule& owner) : owner(owner), attachedToPort(false), attachedTerminal(false) {}
 
 
-    virtual void run() override {
+    void run() override {
         yInfo("Listening to terminal (type \"quit\" to stop module).");
         bool isEof = false;
         while (!(isEof || isStopping() || owner.isStopping())) {
-            ConstString str = NetworkBase::readString(&isEof);
+            std::string str = yarp::os::impl::Terminal::readString(&isEof);
             if (!isEof) {
-                Bottle cmd(str.c_str());
+                Bottle cmd(str);
                 Bottle reply;
                 bool ok = owner.safeRespond(cmd, reply);
                 if (ok) {
                     //printf("ALL: %s\n", reply.toString().c_str());
                     //printf("ITEM 1: %s\n", reply.get(0).toString().c_str());
                     if (reply.get(0).toString() == "help") {
-                        for (int i = 0; i < reply.size(); i++) {
+                        for (size_t i = 0; i < reply.size(); i++) {
                             yInfo("%s.", reply.get(i).toString().c_str());
                         }
                     } else {
@@ -100,7 +107,7 @@ public:
 
 
     bool detachTerminal() {
-        yWarning("Critial: stopping thread, this might hang.");
+        yWarning("Critical: stopping thread, this might hang.");
         Thread::stop();
         yWarning("done!");
         return true;
@@ -118,7 +125,7 @@ bool RFModuleRespondHandler::read(ConnectionReader& connection) {
         ConnectionWriter *writer = connection.getWriter();
         if (writer!=nullptr) {
             if (response.get(0).toString() == "many" && writer->isTextMode()) {
-                for (int i=1; i<response.size(); i++) {
+                for (size_t i=1; i<response.size(); i++) {
                     Value& v = response.get(i);
                     if (v.isList()) {
                         v.asList()->write(*writer);
@@ -143,7 +150,7 @@ private:
     RFModule& owner;
 
 public:
-    RFModuleThreadedHandler(RFModule& owner) : owner(owner) {};
+    RFModuleThreadedHandler(RFModule& owner) : owner(owner) {}
 
     void run() override { owner.runModule(); }
 };
@@ -225,7 +232,7 @@ static void handler (int sig) {
 //    }
 
 #if defined(_WIN32)
-    // on windows we need to reset the handler after beeing called, otherwise it
+    // on windows we need to reset the handler after being called, otherwise it
     // will not be called anymore.
     // see http://www.geeksforgeeks.org/write-a-c-program-that-doesnt-terminate-when-ctrlc-is-pressed/
 
@@ -482,12 +489,12 @@ bool RFModule::joinModule(double seconds) {
 }
 
 
-ConstString RFModule::getName(const ConstString& subName) {
+std::string RFModule::getName(const std::string& subName) {
     if (subName == "") {
         return name;
     }
 
-    ConstString base = name.c_str();
+    std::string base = name;
 
     // Support legacy behavior, check if a "/" needs to be
     // appended before subName.
@@ -499,7 +506,7 @@ ConstString RFModule::getName(const ConstString& subName) {
     }
 
     base += subName;
-    return base.c_str();
+    return base;
 }
 
 
@@ -520,9 +527,9 @@ bool RFModule::safeRespond(const Bottle& command, Bottle& reply) {
 
 bool RFModule::basicRespond(const Bottle& command, Bottle& reply) {
     switch (command.get(0).asVocab()) {
-    case VOCAB4('q', 'u', 'i', 't'):
-    case VOCAB4('e', 'x', 'i', 't'):
-    case VOCAB3('b', 'y', 'e'):
+    case yarp::os::createVocab('q', 'u', 'i', 't'):
+    case yarp::os::createVocab('e', 'x', 'i', 't'):
+    case yarp::os::createVocab('b', 'y', 'e'):
         reply.addVocab(Vocab::encode("bye"));
         stopModule(false); //calls interruptModule()
    //     interruptModule();

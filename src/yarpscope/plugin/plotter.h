@@ -1,11 +1,18 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef PLOTTER_H
@@ -16,7 +23,7 @@
 #include "yarp/os/Network.h"
 #include <QTimer>
 #include <QVariant>
-#include "qcustomplot.h"
+#include <qcustomplot.h>
 
 #define GRAPH_TYPE_LINE     0
 #define GRAPH_TYPE_BARS     1
@@ -48,7 +55,7 @@ public:
 
     void clearData();
 
-    Connection *getConnetion();
+    Connection *getConnection();
 
     double lastX;
     double lastY;
@@ -99,7 +106,8 @@ public:
     Connection(QString remotePortName, QString localPortName, QObject *parent = 0);
 
     ~Connection();
-    void connect(const yarp::os::ContactStyle &style) ;
+    void connect(const yarp::os::ContactStyle &style);
+    void freeResources();
 
 public:
     QString remotePortName;

@@ -1,13 +1,14 @@
 /*
- * Copyright (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Authors: Nicolò Genesio <nicolo.genesio@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/xmlclusterloader.h>
 #include <yarp/manager/utility.h>
-#include <yarp/manager/ymm-dir.h>
+#include <dirent.h>
 #include <tinyxml.h>
 #include <yarp/os/Value.h>
 
@@ -15,6 +16,7 @@
 #include <cctype>
 #include <string>
 #include <fstream>
+#include <utility>
 #include <yarp/os/Network.h>
 
 
@@ -25,14 +27,12 @@ using namespace yarp::manager;
 /**
  * load only one application indicated by its xml file name
  */
-XmlClusterLoader::XmlClusterLoader(const string &szFileName):confFile(szFileName)
+XmlClusterLoader::XmlClusterLoader(string szFileName) : confFile(std::move(szFileName))
 {
 }
 
 
-XmlClusterLoader::~XmlClusterLoader()
-{
-}
+XmlClusterLoader::~XmlClusterLoader() = default;
 
 bool XmlClusterLoader::parseXmlFile(Cluster &_cluster)
 {

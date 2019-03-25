@@ -1,7 +1,10 @@
 /*
- * Copyright: (C) 2008 RobotCub Consortium
- * Authors: Lorenzo Natale
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_CANBUSINTERFACE_H
@@ -140,7 +143,7 @@ public:
 
         if (m==0)
             {
-                yError("Warning trying to detroy non valid buffer\n");
+                yError("Warning trying to destroy non valid buffer\n");
                 return;
             }
 

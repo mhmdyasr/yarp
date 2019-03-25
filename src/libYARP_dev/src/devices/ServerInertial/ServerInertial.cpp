@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Alexis Maldonado, Radu Bogdan Rusu
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "ServerInertial.h"
@@ -36,7 +39,7 @@ yarp::dev::DriverCreator *createServerInertial()
 yarp::dev::ServerInertial::ServerInertial() :
         IMU_polydriver(nullptr),
         ownDevices(false),
-        subDeviceOwned(NULL)
+        subDeviceOwned(nullptr)
 {
     IMU = nullptr;
     spoke = false;
@@ -113,7 +116,7 @@ bool ServerInertial::checkROSParams(yarp::os::Searchable &config)
         useROS = ROS_config_error;
         return false;
     }
-    yarp::os::ConstString ros_use_type = rosGroup.find("useROS").asString();
+    std::string ros_use_type = rosGroup.find("useROS").asString();
     if(ros_use_type == "false")
     {
         yInfo() << partName << "useROS topic if set to 'false'";
@@ -222,8 +225,8 @@ bool yarp::dev::ServerInertial::openDeferredAttach(yarp::os::Property& prop)
     return true;
 }
 
-// Iif a subdevice parameter is given to the wrapper, it will open it as well
-// and and attach to it immediatly.
+// If a subdevice parameter is given to the wrapper, it will open it as well
+// and attach to it immediately.
 bool yarp::dev::ServerInertial::openAndAttachSubDevice(yarp::os::Property& prop)
 {
     yarp::os::Value &subdevice = prop.find("subdevice");
@@ -275,11 +278,11 @@ bool yarp::dev::ServerInertial::openAndAttachSubDevice(yarp::os::Property& prop)
 bool yarp::dev::ServerInertial::open(yarp::os::Searchable& config)
 {
     Property prop;
-    prop.fromString(config.toString().c_str());
+    prop.fromString(config.toString());
 
     p.setReader(*this);
 
-    period = config.check("period",yarp::os::Value(0.005),"maximum period").asDouble();
+    period = config.check("period",yarp::os::Value(0.005),"maximum period").asFloat64();
     strict = config.check("strict",yarp::os::Value(false),"strict write").asBool();
 
     //Look for the device name (serial Port). Usually /dev/ttyUSB0
@@ -307,7 +310,7 @@ bool yarp::dev::ServerInertial::open(yarp::os::Searchable& config)
 
 
     //Look for the portname to register (--name option), defaulting to /inertial if missing
-    yarp::os::ConstString portName;
+    std::string portName;
     if(useROS != ROS_only)
     {
         if (config.check("name"))
@@ -326,7 +329,7 @@ bool yarp::dev::ServerInertial::open(yarp::os::Searchable& config)
         writer.attach(p);
     }
 
-    // call ROS node/topic initilization, if needed
+    // call ROS node/topic initialization, if needed
     if(!initialize_ROS() )
     {
         return false;
@@ -381,7 +384,7 @@ bool yarp::dev::ServerInertial::getInertial(yarp::os::Bottle &bot)
 
             // Euler+accel+gyro+magn orientation values
             for (int i = 0; i < nchannels; i++)
-                bot.addDouble (indata[i]);
+                bot.addFloat64 (indata[i]);
         }
         else
         {
@@ -444,16 +447,16 @@ void yarp::dev::ServerInertial::run()
             {
                 double euler_xyz[3], quaternion[4];
 
-                euler_xyz[0] = imuData.get(0).asDouble();
-                euler_xyz[1] = imuData.get(1).asDouble();
-                euler_xyz[2] = imuData.get(2).asDouble();
+                euler_xyz[0] = imuData.get(0).asFloat64();
+                euler_xyz[1] = imuData.get(1).asFloat64();
+                euler_xyz[2] = imuData.get(2).asFloat64();
 
                 convertEulerAngleYXZdegrees_to_quaternion(euler_xyz, quaternion);
 
-                sensor_msgs_Imu &rosData = rosPublisherPort.prepare();
+                yarp::rosmsg::sensor_msgs::Imu &rosData = rosPublisherPort.prepare();
 
                 rosData.header.seq = rosMsgCounter++;
-                rosData.header.stamp = normalizeSecNSec(yarp::os::Time::now());
+                rosData.header.stamp = yarp::os::Time::now();
                 rosData.header.frame_id = frame_id;
 
                 rosData.orientation.x = quaternion[0];
@@ -462,14 +465,14 @@ void yarp::dev::ServerInertial::run()
                 rosData.orientation.w = quaternion[3];
                 rosData.orientation_covariance = covariance;
 
-                rosData.linear_acceleration.x = imuData.get(3).asDouble();   // [m/s^2]
-                rosData.linear_acceleration.y = imuData.get(4).asDouble();   // [m/s^2]
-                rosData.linear_acceleration.z = imuData.get(5).asDouble();   // [m/s^2]
+                rosData.linear_acceleration.x = imuData.get(3).asFloat64();   // [m/s^2]
+                rosData.linear_acceleration.y = imuData.get(4).asFloat64();   // [m/s^2]
+                rosData.linear_acceleration.z = imuData.get(5).asFloat64();   // [m/s^2]
                 rosData.linear_acceleration_covariance = covariance;
 
-                rosData.angular_velocity.x = imuData.get(6).asDouble();   // to be converted into rad/s (?) - verify with users
-                rosData.angular_velocity.y = imuData.get(7).asDouble();   // to be converted into rad/s (?) - verify with users
-                rosData.angular_velocity.z = imuData.get(8).asDouble();   // to be converted into rad/s (?) - verify with users
+                rosData.angular_velocity.x = imuData.get(6).asFloat64();   // to be converted into rad/s (?) - verify with users
+                rosData.angular_velocity.y = imuData.get(7).asFloat64();   // to be converted into rad/s (?) - verify with users
+                rosData.angular_velocity.z = imuData.get(8).asFloat64();   // to be converted into rad/s (?) - verify with users
                 rosData.angular_velocity_covariance = covariance;
 
                 rosPublisherPort.write();

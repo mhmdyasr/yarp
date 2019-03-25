@@ -1,23 +1,23 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_TWOWAYSTREAM_H
 #define YARP_OS_TWOWAYSTREAM_H
 
 #include <yarp/conf/numeric.h>
+
 #include <yarp/os/Contact.h>
 #include <yarp/os/InputStream.h>
 #include <yarp/os/OutputStream.h>
 
 namespace yarp {
-    namespace os {
-        class TwoWayStream;
-        class NullStream;
-    }
-}
+namespace os {
 
 /**
  * A stream which can be asked to perform bidirectional communication.
@@ -25,7 +25,8 @@ namespace yarp {
  * in which case it should fail if requested to communicate in an
  * unsupported direction.
  */
-class YARP_OS_API yarp::os::TwoWayStream {
+class YARP_OS_API TwoWayStream
+{
 public:
     /**
      * Destructor.
@@ -52,7 +53,7 @@ public:
      * @return the address of the local side of the stream.
      * The address will be tagged as invalid if the stream is not set up.
      */
-    virtual const Contact& getLocalAddress() = 0;
+    virtual const Contact& getLocalAddress() const = 0;
 
     /**
      * Get the address of the remote side of the stream.
@@ -60,7 +61,7 @@ public:
      * @return the address of the remote side of the stream.
      * The address will be tagged as invalid if the stream is not set up.
      */
-    virtual const Contact& getRemoteAddress() = 0;
+    virtual const Contact& getRemoteAddress() const = 0;
 
     /**
      *
@@ -69,7 +70,7 @@ public:
      * @return true iff the stream is ok
      *
      */
-    virtual bool isOk() = 0;
+    virtual bool isOk() const = 0;
 
     /**
      * Reset the stream.
@@ -104,31 +105,34 @@ public:
 /**
  * A "null" stream, always invalid.
  */
-class YARP_OS_API yarp::os::NullStream : public TwoWayStream,
-                                         public InputStream,
-                                         public OutputStream {
+class YARP_OS_API NullStream : public TwoWayStream, public InputStream, public OutputStream
+{
 private:
     Contact address;
+
 public:
     virtual ~NullStream();
 
-    virtual InputStream& getInputStream() override;
-    virtual OutputStream& getOutputStream() override;
+    InputStream& getInputStream() override;
+    OutputStream& getOutputStream() override;
 
-    virtual const Contact& getLocalAddress() override;
-    virtual const Contact& getRemoteAddress() override;
+    const Contact& getLocalAddress() const override;
+    const Contact& getRemoteAddress() const override;
 
-    virtual bool isOk() override;
-    virtual void reset() override;
-    virtual void close() override;
-    virtual void beginPacket() override;
-    virtual void endPacket() override;
+    bool isOk() const override;
+    void reset() override;
+    void close() override;
+    void beginPacket() override;
+    void endPacket() override;
 
     using yarp::os::InputStream::read;
-    virtual YARP_SSIZE_T read(const Bytes& b) override;
+    yarp::conf::ssize_t read(Bytes& b) override;
 
     using yarp::os::OutputStream::write;
-    virtual void write(const Bytes& b) override;
+    void write(const Bytes& b) override;
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_TWOWAYSTREAM_H

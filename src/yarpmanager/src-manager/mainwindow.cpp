@@ -1,19 +1,28 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <yarp/conf/version.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/ResourceFinder.h>
-#include <yarp/manager/ymm-dir.h>
+#include <dirent.h>
 #include <yarp/manager/xmlapploader.h>
 #include <yarp/manager/xmltemploader.h>
 #include <yarp/manager/localbroker.h>
@@ -56,10 +65,6 @@
 
 #ifndef APP_NAME
  #define APP_NAME "yarpmanager"
-#endif
-
-#ifndef APP_VERSION
- #define APP_VERSION "1.0"
 #endif
 
 using namespace std;
@@ -211,22 +216,22 @@ void MainWindow::onWizardError(QString err)
 void MainWindow::init(yarp::os::Property config)
 {
     this->config = config;
-    const yarp::os::ConstString directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
 
-    string basepath=config.check("ymanagerini_dir", yarp::os::Value("")).asString().c_str();
+    string basepath=config.check("ymanagerini_dir", yarp::os::Value("")).asString();
 
     if(config.check("modpath")){
         string strPath;
-        string modPaths(config.find("modpath").asString().c_str());
+        string modPaths(config.find("modpath").asString());
         while (modPaths!=""){
-            string::size_type pos=modPaths.find(";");
+            string::size_type pos=modPaths.find(';');
             strPath=modPaths.substr(0, pos);
             yarp::manager::trimString(strPath);
             if (!isAbsolute(strPath.c_str()))
-                strPath=basepath+strPath;
+                strPath.insert(0, basepath);
             if((strPath.rfind(directorySeparator)==string::npos) ||
             (strPath.rfind(directorySeparator)!=strPath.size()-1))
-                strPath = strPath + string(directorySeparator);
+                strPath.append(directorySeparator);
             lazyManager.addModules(strPath.c_str());
             if (pos==string::npos || pos==0)
                 break;
@@ -236,17 +241,17 @@ void MainWindow::init(yarp::os::Property config)
 
     if(config.check("respath")){
         string strPath;
-        string resPaths(config.find("respath").asString().c_str());
+        string resPaths(config.find("respath").asString());
         while (resPaths!=""){
-            string::size_type pos=resPaths.find(";");
+            string::size_type pos=resPaths.find(';');
             strPath=resPaths.substr(0, pos);
             yarp::manager::trimString(strPath);
             if (!isAbsolute(strPath.c_str()))
-                strPath=basepath+strPath;
+                strPath.insert(0, basepath);
 
             if((strPath.rfind(directorySeparator)==string::npos) ||
             (strPath.rfind(directorySeparator)!=strPath.size()-1))
-                strPath = strPath + string(directorySeparator);
+                strPath.append(directorySeparator);
 
             lazyManager.addResources(strPath.c_str());
             if (pos==string::npos)
@@ -260,18 +265,18 @@ void MainWindow::init(yarp::os::Property config)
 
     if(config.check("apppath")){
         string strPath;
-        string appPaths(config.find("apppath").asString().c_str());
+        string appPaths(config.find("apppath").asString());
         while (appPaths!=""){
-            string::size_type pos=appPaths.find(";");
+            string::size_type pos=appPaths.find(';');
             strPath=appPaths.substr(0, pos);
             yarp::manager::trimString(strPath);
             if (!isAbsolute(strPath.c_str())){
-                strPath=basepath+strPath;
+                strPath.insert(0, basepath);
             }
 
             if((strPath.rfind(directorySeparator)==string::npos) ||
                 (strPath.rfind(directorySeparator)!=strPath.size()-1)){
-                    strPath = strPath + string(directorySeparator);
+                    strPath.append(directorySeparator);
             }
 
             if(config.find("load_subfolders").asString() == "yes"){
@@ -293,13 +298,13 @@ void MainWindow::init(yarp::os::Property config)
 
     if (config.check("templpath")){
         string strPath;
-        string templPaths(config.find("templpath").asString().c_str());
+        string templPaths(config.find("templpath").asString());
         while (templPaths!=""){
-            string::size_type pos=templPaths.find(";");
+            string::size_type pos=templPaths.find(';');
             strPath=templPaths.substr(0, pos);
             yarp::manager::trimString(strPath);
             if (!isAbsolute(strPath.c_str())){
-                strPath=basepath+strPath;
+                strPath.insert(0, basepath);
             }
 
             if(!loadRecursiveTemplates(strPath.c_str())){
@@ -379,9 +384,9 @@ void MainWindow::syncApplicationList(QString selectNodeForEditing, bool open)
     yarp::manager::KnowledgeBase* kb = lazyManager.getKnowledgeBase();
     yarp::manager::ApplicaitonPContainer apps =  kb->getApplications();
     unsigned int cnt = 0;
-    for(yarp::manager::ApplicationPIterator itr=apps.begin(); itr!=apps.end(); itr++){
+    for(auto& itr : apps){
         cnt++;
-        yarp::manager::Application *app = dynamic_cast<yarp::manager::Application*>(*itr);
+        auto* app = dynamic_cast<yarp::manager::Application*>(itr);
         if(app){
             ui->entitiesTree->addApplication(app);
             if(strcmp(selectNodeForEditing.toLatin1().data(),app->getName())==0){
@@ -394,16 +399,16 @@ void MainWindow::syncApplicationList(QString selectNodeForEditing, bool open)
     watcher->addPaths(listOfAppFiles);
 
     yarp::manager::ResourcePContainer resources = kb->getResources();
-    for(yarp::manager::ResourcePIterator itr=resources.begin(); itr!=resources.end(); itr++){
-        yarp::manager::Computer* comp = dynamic_cast<yarp::manager::Computer*>(*itr);
+    for(auto& resource : resources) {
+        auto* comp = dynamic_cast<yarp::manager::Computer*>(resource);
         if(comp){
             ui->entitiesTree->addComputer(comp);
         }
     }
 
     yarp::manager::ModulePContainer modules = kb->getModules();
-    for(yarp::manager::ModulePIterator itr=modules.begin(); itr!=modules.end(); itr++){
-        yarp::manager::Module *mod = dynamic_cast<yarp::manager::Module*>(*itr);
+    for(auto& module : modules) {
+        auto* mod = dynamic_cast<yarp::manager::Module*>(module);
         if(mod){
             ui->entitiesTree->addModule(mod);
         }
@@ -425,11 +430,12 @@ void MainWindow::syncApplicationList(QString selectNodeForEditing, bool open)
  */
 bool MainWindow::loadRecursiveTemplates(const char* szPath)
 {
-    const yarp::os::ConstString directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
     string strPath = szPath;
     if((strPath.rfind(directorySeparator)==string::npos) ||
-            (strPath.rfind(directorySeparator)!=strPath.size()-1))
-            strPath = strPath + string(directorySeparator);
+            (strPath.rfind(directorySeparator)!=strPath.size()-1)) {
+        strPath.append(directorySeparator);
+    }
 
     DIR *dir;
     struct dirent *entry;
@@ -466,11 +472,11 @@ bool MainWindow::loadRecursiveTemplates(const char* szPath)
  */
 bool MainWindow::loadRecursiveApplications(const char* szPath)
 {
-    const yarp::os::ConstString directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
     string strPath = szPath;
     if((strPath.rfind(directorySeparator)==string::npos) ||
             (strPath.rfind(directorySeparator)!=strPath.size()-1))
-            strPath = strPath + string(directorySeparator);
+            strPath = strPath + directorySeparator;
 
     DIR *dir;
     struct dirent *entry;
@@ -539,9 +545,9 @@ QString MainWindow::getAppNameFromXml(QString fileName)
     QString appName("");
     yarp::manager::KnowledgeBase* kb = lazyManager.getKnowledgeBase();
     yarp::manager::ApplicaitonPContainer apps =  kb->getApplications();
-    for(yarp::manager::ApplicationPIterator itr=apps.begin(); itr!=apps.end(); itr++)
+    for(auto& itr : apps)
     {
-        yarp::manager::Application *app = dynamic_cast<yarp::manager::Application*>(*itr);
+        auto* app = dynamic_cast<yarp::manager::Application*>(itr);
         if(app)
         {
             if(app->getXmlFile() == fileName.toStdString())
@@ -565,7 +571,7 @@ void MainWindow::viewResource(yarp::manager::Computer *res)
         }
     }
 
-    ResourceViewWidget *w = new ResourceViewWidget(res,ui->mainTabs);
+    auto* w = new ResourceViewWidget(res,ui->mainTabs);
     int index = ui->mainTabs->addTab(w,res->getName());
     ui->mainTabs->setTabIcon(index,QIcon(":/computer22.svg"));
     ui->mainTabs->setCurrentIndex(index);
@@ -583,7 +589,7 @@ void MainWindow::viewModule(yarp::manager::Module *module)
         }
     }
 
-    ModuleViewWidget *w = new ModuleViewWidget(module,ui->mainTabs);
+    auto* w = new ModuleViewWidget(module,ui->mainTabs);
     int index = ui->mainTabs->addTab(w,module->getName());
     ui->mainTabs->setTabIcon(index,QIcon(":/module22.svg"));
     ui->mainTabs->setCurrentIndex(index);
@@ -612,7 +618,7 @@ void MainWindow::viewApplication(yarp::manager::Application *app,bool editingMod
     else
         config.unput("showManager");
 
-    ApplicationViewWidget *w = new ApplicationViewWidget(app,&lazyManager,&config,editingMode,ui->mainTabs);
+    auto* w = new ApplicationViewWidget(app,&lazyManager,&config,editingMode,ui->mainTabs);
     connect(w,SIGNAL(logError(QString)),this,SLOT(onLogError(QString)));
     connect(w,SIGNAL(logWarning(QString)),this,SLOT(onLogWarning(QString)));
     connect(w,SIGNAL(builderWindowFloating(bool)),this,SLOT(onBuilderWindowFloating(bool)));
@@ -662,7 +668,7 @@ void MainWindow::onExportGraph()
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         ww->exportGraph();
     }
 }
@@ -677,7 +683,7 @@ void MainWindow::onRun(bool onlySelected)
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         ww->runApplicationSet(onlySelected);
     }
 }
@@ -692,7 +698,7 @@ void MainWindow::onStop(bool onlySelected)
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         ww->stopApplicationSet(onlySelected);
     }
 }
@@ -707,7 +713,7 @@ void MainWindow::onKill(bool onlySelected)
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         ww->killApplicationSet(onlySelected);
     }
 }
@@ -722,7 +728,7 @@ void MainWindow::onConnect(bool onlySelected)
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         ww->connectConnectionSet(onlySelected);
     }
 }
@@ -736,7 +742,7 @@ void MainWindow::onDisconnect(bool onlySelected)
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         ww->disconnectConnectionSet(onlySelected);
     }
 }
@@ -771,12 +777,12 @@ void MainWindow::onRefresh()
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         ww->refresh();
     }
 
     if(type == yarp::manager::RESOURCE){
-        ResourceViewWidget *ww = (ResourceViewWidget*)w;
+        auto* ww = (ResourceViewWidget*)w;
         ww->refresh();
     }
 }
@@ -791,7 +797,7 @@ void MainWindow::onSelectAll()
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         ww->selectAll();
     }
 }
@@ -801,18 +807,12 @@ void MainWindow::onSelectAll()
  */
 bool MainWindow::onTabClose(int index)
 {
-    GenericViewWidget *w = (GenericViewWidget*)ui->mainTabs->widget(index);
+    auto* w = (GenericViewWidget*)ui->mainTabs->widget(index);
     if(!w){
         return false;
     }
     if(w->getType() == yarp::manager::APPLICATION){
         ApplicationViewWidget *aw = ((ApplicationViewWidget*)w);
-
-        if (!aw)
-        {
-            yError("ApplicationViewWidget is NULL!");
-            return false;
-        }
 
         if(aw && aw->isRunning()){
             QMessageBox msgBox;
@@ -935,9 +935,9 @@ void MainWindow::onBuilderWindowFloating(bool floating)
 void MainWindow::onTabChangeItem(int index)
 {
 
-    GenericViewWidget *w = (GenericViewWidget*)ui->mainTabs->widget(index);
+    auto* w = (GenericViewWidget*)ui->mainTabs->widget(index);
     if(w && w->getType() == yarp::manager::APPLICATION){
-        ApplicationViewWidget *aw = (ApplicationViewWidget*)w;
+        auto* aw = (ApplicationViewWidget*)w;
         if(aw->isEditingMode()){
             ui->actionSelect_All->setEnabled(false);
             ui->actionRefresh_Status->setEnabled(false);
@@ -990,7 +990,7 @@ void MainWindow::onTabChangeItem(int index)
     */
         if(prevWidget && prevWidget != w){
             if(prevWidget->getType() == yarp::manager::APPLICATION){
-                ApplicationViewWidget *aw = (ApplicationViewWidget*)prevWidget;
+                auto* aw = (ApplicationViewWidget*)prevWidget;
                 if(aw->isBuilderFloating()){
                     aw->showBuilder(false);
                 }
@@ -1040,7 +1040,7 @@ void MainWindow::onTabChangeItem(int index)
 /*! \brief Create a new Application */
 void MainWindow::onNewApplication()
 {
-    NewApplicationWizard *newApplicationWizard = new NewApplicationWizard(&config);
+    auto* newApplicationWizard = new NewApplicationWizard(&config);
     newApplicationWizard->setWindowTitle("Create New Application");
     if (newApplicationWizard->exec() == QDialog::Accepted){
 
@@ -1194,9 +1194,9 @@ void MainWindow::onModified(bool mod)
     ui->actionSave->setEnabled(mod);
     ui->actionSave_As->setEnabled(mod);
     int index = ui->mainTabs->currentIndex();
-    GenericViewWidget *gw = (GenericViewWidget*)ui->mainTabs->currentWidget();
+    auto* gw = (GenericViewWidget*)ui->mainTabs->currentWidget();
     if(gw->getType() == yarp::manager::APPLICATION){
-        ApplicationViewWidget *w = (ApplicationViewWidget*)gw;
+        auto* w = (ApplicationViewWidget*)gw;
         if(mod){
             ui->mainTabs->setTabText(index,w->getAppName() + "*");
             gw->setModified(mod);
@@ -1293,11 +1293,11 @@ void MainWindow::onYarpNameList()
     ui->entitiesTree->clearPorts();
     yarp::profiler::NetworkProfiler::ports_name_set ports;
     yarp::profiler::NetworkProfiler::yarpNameList(ports, true);
-    for(size_t i = 0; i<ports.size(); i++)
+    for(auto& port : ports)
     {
-        std::string portName = ports[i].find("name").asString();
-        std::string portIp   = ports[i].find("ip").asString() + " port " +
-                    std::to_string(ports[i].find("port_number").asInt());
+        std::string portName = port.find("name").asString();
+        std::string portIp   = port.find("ip").asString() + " port " +
+                    std::to_string(port.find("port_number").asInt32());
         ui->entitiesTree->addPort(QStringList() << QString(portName.c_str())
                                   << QString(portIp.c_str()));
     }
@@ -1306,13 +1306,13 @@ void MainWindow::onYarpNameList()
 
 void MainWindow::onSave()
 {
-    GenericViewWidget *w = (GenericViewWidget *)ui->mainTabs->currentWidget();
+    auto* w = (GenericViewWidget *)ui->mainTabs->currentWidget();
     if(!w){
         return;
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         bool ret = ww->save();
         if(ret){
             onReopenApplication(ww->getAppName(),ww->getFileName());
@@ -1324,7 +1324,7 @@ void MainWindow::onSave()
 
 void MainWindow::onSaveAs()
 {
-    NewApplicationWizard *newApplicationWizard = new NewApplicationWizard(&config,true);
+    auto* newApplicationWizard = new NewApplicationWizard(&config,true);
     newApplicationWizard->setWindowTitle("Save Application as");
     if(newApplicationWizard->exec() == QDialog::Accepted){
         fileName = newApplicationWizard->fileName;
@@ -1340,13 +1340,13 @@ void MainWindow::onSaveAs()
         return;
     }
 
-    GenericViewWidget *w = (GenericViewWidget *)ui->mainTabs->currentWidget();
+    auto* w = (GenericViewWidget *)ui->mainTabs->currentWidget();
     if(!w){
         return;
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         QString oldAppName = ww->getAppName();
         QString oldFileName = ww->getFileName();
         ww->setFileName(fileName);
@@ -1357,7 +1357,7 @@ void MainWindow::onSaveAs()
             return;
         }
         QString appName = fileName.toStdString().substr(0,it1).c_str();
-        size_t it2 =appName.toStdString().find_last_of("/");
+        size_t it2 =appName.toStdString().find_last_of('/');
         if(it2 != string::npos)
         {
             currentAppName = appName.toStdString().substr(it2+1).c_str();
@@ -1418,10 +1418,10 @@ void MainWindow::onOpen()
 /*! \brief Opens the About Dialog */
 void MainWindow::onAbout()
 {
-    QString copyright = "2014 (C) Istituto Italiano di Tecnologia (IIT)";
+    QString copyright = "Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)";
     QString name = APP_NAME;
-    QString version = APP_VERSION;
-    AboutDlg dlg(name,version,copyright,"http://www.icub.org/");
+    QString version = YARP_VERSION;
+    AboutDlg dlg(name,version,copyright,"https://www.iit.it/");
     dlg.exec();
 }
 
@@ -1481,7 +1481,7 @@ void MainWindow::onApplicationSelectionChanged()
     }
     yarp::manager::NodeType type = ((GenericViewWidget*)w)->getType();
     if(type == yarp::manager::APPLICATION){
-        ApplicationViewWidget *ww = (ApplicationViewWidget*)w;
+        auto* ww = (ApplicationViewWidget*)w;
         ui->actionRun->setEnabled(ww->anyModuleSelected());
         ui->actionStop->setEnabled(ww->anyModuleSelected());
         ui->actionKill->setEnabled(ww->anyModuleSelected());
@@ -1502,7 +1502,7 @@ void MainWindow::onViewBuilderWindows() {
         config.unput("showManager");
 
     for(int i=0;i<ui->mainTabs->count();i++){
-        GenericViewWidget *w = (GenericViewWidget*)ui->mainTabs->widget(i);
+        auto* w = (GenericViewWidget*)ui->mainTabs->widget(i);
         yAssert(w);
         if(w->getType() == yarp::manager::APPLICATION){
             ApplicationViewWidget *aw = ((ApplicationViewWidget*)w);

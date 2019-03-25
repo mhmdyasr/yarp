@@ -1,7 +1,9 @@
 /*
- * Copyright: (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Author: Valentina Gaggero <valentina.gaggero@iit.it>
- * Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "H264Decoder.h"
@@ -13,8 +15,8 @@
 #include <glib.h>
 
 #include <gst/app/gstappsink.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 //#define debug_time 1
 
@@ -27,15 +29,16 @@ using namespace yarp::sig;
 using namespace yarp::os;
 
 
-typedef struct
+struct data_for_gst_callback
 {
-    Mutex *m;
-    ImageOf<PixelRgb> *img;
-    bool isNew;
-    Semaphore *s;
-    bool isReq;
+    data_for_gst_callback() = default;
 
-} data_for_gst_callback;
+    Mutex *m{nullptr};
+    ImageOf<PixelRgb> *img{nullptr};
+    bool isNew{false};
+    Semaphore *s{nullptr};
+    bool isReq{false};
+};
 //-------------------------------------------------------------------
 //---------------  CALLBACK FUNCTIONS -------------------------------
 //-------------------------------------------------------------------
@@ -161,9 +164,9 @@ GstFlowReturn new_sample(GstAppSink *appsink, gpointer user_data)
 
 #endif
 
-    data_for_gst_callback *dec_data = (data_for_gst_callback*)user_data;
+    auto* dec_data = (data_for_gst_callback*)user_data;
 
-    GstSample *sample = NULL;
+    GstSample *sample = nullptr;
     g_signal_emit_by_name (appsink, "pull-sample", &sample, NULL);
     if(!sample)
     {
@@ -286,7 +289,18 @@ public:
 
     ImageOf<PixelRgb> myframe;
 
-    H264DecoderHelper( Mutex * m_ptr, Semaphore *s_ptr)
+    H264DecoderHelper(Mutex* m_ptr, Semaphore* s_ptr) :
+        pipeline(nullptr),
+        source(nullptr),
+        sink(nullptr),
+        rtpDepay(nullptr),
+        parser(nullptr),
+        convert(nullptr),
+        decoder(nullptr),
+        sizeChanger(nullptr),
+        verbose(false),
+        bus(nullptr),
+        bus_watch_id(0)
     {
         gst_cbk_data.m = m_ptr;
         gst_cbk_data.img = &myframe;
@@ -294,9 +308,9 @@ public:
     }
     ~H264DecoderHelper(){;}
 
-    bool istantiateElements(void)
+    bool istantiateElements()
     {
-        gst_init(NULL, NULL);
+        gst_init(nullptr, nullptr);
         pipeline = gst_pipeline_new ("video-player");
         source   = gst_element_factory_make ("udpsrc",       "video-source");
         rtpDepay = gst_element_factory_make ("rtph264depay", "rtp-depay");
@@ -329,10 +343,10 @@ public:
         GstAppSinkCallbacks cbs; // Does this need to be kept alive?
 
         // Set Video Sink callback methods
-        cbs.eos = NULL;
-        cbs.new_preroll = NULL;
+        cbs.eos = nullptr;
+        cbs.new_preroll = nullptr;
         cbs.new_sample = &new_sample;
-        gst_app_sink_set_callbacks( GST_APP_SINK( sink ), &cbs, &gst_cbk_data, NULL );
+        gst_app_sink_set_callbacks( GST_APP_SINK( sink ), &cbs, &gst_cbk_data, nullptr );
 
   /*      //3) add watch ( a message handler)
         bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -351,7 +365,7 @@ public:
 
     }
 
-    bool linkElements(void)
+    bool linkElements()
     {
 
         if(verbose) g_print("GSTREAMER: try to add elements to pipeline..... \n");
@@ -390,7 +404,9 @@ public:
 
 #define GET_HELPER(x) (*((H264DecoderHelper*)(x)))
 
-H264Decoder::H264Decoder(h264Decoder_cfgParamters &config) : sysResource(nullptr), cfg(config)
+H264Decoder::H264Decoder(h264Decoder_cfgParamters &config) :
+    sysResource(nullptr),
+    cfg(config)
 {
     sysResource = new H264DecoderHelper(&mutex, &semaphore);
     yAssert(sysResource != nullptr);
@@ -399,7 +415,7 @@ H264Decoder::H264Decoder(h264Decoder_cfgParamters &config) : sysResource(nullptr
     helper.verbose = cfg.verbose;
 }
 
-bool H264Decoder::init(void)
+bool H264Decoder::init()
 {
     H264DecoderHelper &helper = GET_HELPER(sysResource);
     if(!helper.istantiateElements())
@@ -454,7 +470,7 @@ H264Decoder::~H264Decoder()
 
 }
 
-ImageOf<PixelRgb> & H264Decoder::getLastFrame(void)
+ImageOf<PixelRgb> & H264Decoder::getLastFrame()
 {
     H264DecoderHelper &helper = GET_HELPER(sysResource);
     helper.gst_cbk_data.isNew = false;
@@ -462,19 +478,19 @@ ImageOf<PixelRgb> & H264Decoder::getLastFrame(void)
     return helper.myframe;
 }
 
-bool H264Decoder::newFrameIsAvailable(void)
+bool H264Decoder::newFrameIsAvailable()
 {
     H264DecoderHelper &helper = GET_HELPER(sysResource);
     return helper.gst_cbk_data.isNew;
 }
 
-int H264Decoder::getLastFrameSize(void)
+int H264Decoder::getLastFrameSize()
 {
     H264DecoderHelper &helper = GET_HELPER(sysResource);
     return (helper.myframe.width() * helper.myframe.height() * 3);
 }
 
-void H264Decoder::setReq(void)
+void H264Decoder::setReq()
 {
     H264DecoderHelper &helper = GET_HELPER(sysResource);
     helper.gst_cbk_data.isReq = true;

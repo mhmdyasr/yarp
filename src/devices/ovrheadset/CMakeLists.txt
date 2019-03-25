@@ -1,18 +1,17 @@
-# Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
-# Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 yarp_prepare_plugin(ovrheadset
                     CATEGORY device
                     TYPE yarp::dev::OVRHeadset
                     INCLUDE OVRHeadset.h
-                    DEPENDS "CREATE_DEVICE_LIBRARY_MODULES;YARP_HAS_LIBOVR;YARP_HAS_GLFW3;YARP_HAS_GLEW")
+                    DEPENDS "YARP_HAS_MATH_LIB;YARP_HAS_LIBOVR;YARP_HAS_GLFW3;YARP_HAS_GLEW;YARP_HAS_OPENGL")
 
-if(NOT SKIP_yarpmod_ovrheadset)
+if(NOT SKIP_ovrheadset)
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-  # LibOVR Requires C++11
-  add_definitions(${CXX11_FLAGS})
 
   set(yarp_ovrheadset_SRCS OVRHeadset.cpp
                            TextureBuffer.cpp
@@ -49,22 +48,37 @@ if(NOT SKIP_yarpmod_ovrheadset)
   yarp_add_plugin(yarp_ovrheadset ${yarp_ovrheadset_SRCS}
                                   ${yarp_ovrheadset_HDRS})
 
-  target_link_libraries(yarp_ovrheadset YARP::YARP_OS
-                                        YARP::YARP_sig
-                                        YARP::YARP_dev
-                                        YARP::YARP_math
-                                        LibOVR::OVR
-                                        GLEW::GLEW
-                                        GLFW3::GLFW3)
+  target_link_libraries(yarp_ovrheadset PRIVATE YARP::YARP_OS
+                                                YARP::YARP_sig
+                                                YARP::YARP_dev
+                                                YARP::YARP_math)
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+                                                      YARP_sig
+                                                      YARP_dev
+                                                      YARP_math)
+
+  target_link_libraries(yarp_ovrheadset PRIVATE LibOVR::OVR)
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS LibOVR)
+
+  target_link_libraries(yarp_ovrheadset PRIVATE GLEW::GLEW)
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS GLEW)
+
+  target_link_libraries(yarp_ovrheadset PRIVATE GLFW3::GLFW3)
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS GLFW3)
+
+  target_link_libraries(yarp_ovrheadset PRIVATE OpenGL::GL)
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS OpenGL)
 
   yarp_install(TARGETS yarp_ovrheadset
-               EXPORT YARP
-               COMPONENT runtime
+               EXPORT YARP_${YARP_PLUGIN_MASTER}
+               COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
                ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
   yarp_install(FILES ovrheadset.ini
-               COMPONENT runtime
+               COMPONENT ${YARP_PLUGIN_MASTER}
                DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+
+  set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
   set_property(TARGET yarp_ovrheadset PROPERTY FOLDER "Plugins/Device")
 endif()

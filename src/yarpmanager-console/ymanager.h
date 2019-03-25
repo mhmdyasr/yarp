@@ -1,12 +1,20 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #ifndef YCONSOLEMANAGER
 #define YCONSOLEMANAGER
@@ -16,7 +24,7 @@
 #include <yarp/manager/utility.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/Property.h>
-#include <yarp/os/ConstString.h>
+#include <string>
 
 //namespace ymm {
 
@@ -38,12 +46,12 @@ public:
 
 
 protected:
-    virtual void onExecutableStart(void* which) override;
-    virtual void onExecutableStop(void* which) override;
-    virtual void onExecutableDied(void* which) override;
-    virtual void onExecutableFailed(void* which) override;
-    virtual void onCnnStablished(void* which) override;
-    virtual void onCnnFailed(void* which) override;
+    void onExecutableStart(void* which) override;
+    void onExecutableStop(void* which) override;
+    void onExecutableDied(void* which) override;
+    void onExecutableFailed(void* which) override;
+    void onCnnStablished(void* which) override;
+    void onCnnFailed(void* which) override;
 
 private:
     bool bShouldRun;

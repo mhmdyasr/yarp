@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/Log.h>
@@ -24,10 +27,10 @@ public:
         count = 1;
     }
 
-    virtual void report(const SearchReport& report, const char *context) override {
-        ConstString ctx = context;
-        ConstString key = report.key.c_str();
-        ConstString prefix = "";
+    void report(const SearchReport& report, const char *context) override {
+        std::string ctx = context;
+        std::string key = report.key;
+        std::string prefix;
 
         prefix = ctx;
         prefix += ".";
@@ -37,23 +40,23 @@ public:
             key = key.substr(1,key.length());
         }
 
-        if (!present.check(key.c_str())) {
-            present.put(key.c_str(),"present");
+        if (!present.check(key)) {
+            present.put(key,"present");
             order.addString(key.c_str());
         }
 
         if (report.isFound) {
-            actual.put(key.c_str(),report.value);
+            actual.put(key,report.value);
             return;
         }
 
         if (report.isComment==true) {
-            comment.put(key.c_str(),report.value);
+            comment.put(key,report.value);
             return;
         }
 
         if (report.isDefault==true) {
-            fallback.put(key.c_str(),report.value);
+            fallback.put(key,report.value);
             return;
         }
     }
@@ -62,8 +65,8 @@ public:
         return order;
     }
 
-    ConstString getComment(const char *option) {
-        ConstString desc = comment.find(option).toString();
+    std::string getComment(const char *option) {
+        std::string desc = comment.find(option).toString();
         return desc;
     }
 
@@ -93,7 +96,7 @@ public:
 #define HELPER(x) (*((YarpDevMonitor*)(x)))
 
 
-bool PolyDriver::open(const ConstString& txt) {
+bool PolyDriver::open(const std::string& txt) {
     Property p;
     p.put("device",txt);
     return open(p);
@@ -183,9 +186,9 @@ Bottle PolyDriver::getOptions() {
     return HELPER(system_resource).getOptions();
 }
 
-ConstString PolyDriver::getComment(const char *option) {
+std::string PolyDriver::getComment(const char *option) {
     if (system_resource==nullptr) {
-        return "";
+        return {};
     }
     return HELPER(system_resource).getComment(option);
 }
@@ -209,22 +212,11 @@ Value PolyDriver::getValue(const char *option) {
 bool PolyDriver::coreOpen(yarp::os::Searchable& prop) {
     yarp::os::Searchable *config = &prop;
     Property p;
-    ConstString str = prop.toString();
+    std::string str = prop.toString();
     Value *part;
     if (prop.check("device",part)) {
-        str = part->toString().c_str();
+        str = part->toString();
     }
-
-#ifndef YARP_NO_DEPRECATED // since YARP 2.3.70
-    Bottle bot(str.c_str());
-    if (bot.size()>1) {
-        // this wasn't a device name, but some codes -- rearrange
-        yWarning("Passing 'device' parameter with a list of parameters as value is deprecated. This might be an internal bug. If you didn't do it please report an issue at https://github.com/robotology/yarp");
-        p.fromString(str.c_str());
-        str = p.find("device").asString().c_str();
-        config = &p;
-    }
-#endif
 
     DeviceDriver *driver = nullptr;
 
@@ -232,7 +224,7 @@ bool PolyDriver::coreOpen(yarp::os::Searchable& prop) {
     if (creator!=nullptr) {
         Value *val;
         if (config->check("wrapped",val)&&(creator->getWrapper()!="")) {
-            ConstString wrapper = creator->getWrapper();
+            std::string wrapper = creator->getWrapper();
             DriverCreator *wrapCreator =
                 Drivers::factory().find(wrapper.c_str());
             if (wrapCreator!=nullptr) {
@@ -240,8 +232,8 @@ bool PolyDriver::coreOpen(yarp::os::Searchable& prop) {
                 p.unput("wrapped");
                 config = &p;
                 if (wrapCreator!=creator) {
-                    p.put("subdevice",str.c_str());
-                    p.put("device",wrapper.c_str());
+                    p.put("subdevice",str);
+                    p.put("device",wrapper);
                     p.setMonitor(prop.getMonitor(),
                                  wrapper.c_str()); // pass on any monitoring
                     driver = wrapCreator->create();
@@ -280,17 +272,17 @@ bool PolyDriver::coreOpen(yarp::os::Searchable& prop) {
             driver->view(ddd);
             if(ddd) {
                 if(config->check("allow-deprecated-devices")) {
-                    yWarning("Device \"%s\" is deprecated. Opening since the \"allow-deprecated-devices\" option was passed in the configuration.", str.c_str());
+                    yWarning(R"(Device "%s" is deprecated. Opening since the "allow-deprecated-devices" option was passed in the configuration.)", str.c_str());
                 } else {
-                    yError("Device \"%s\" is deprecated. Pass the \"allow-deprecated-devices\" option in the configuration if you want to open it anyway.", str.c_str());
+                    yError(R"(Device "%s" is deprecated. Pass the "allow-deprecated-devices" option in the configuration if you want to open it anyway.)", str.c_str());
                     driver->close();
                     delete driver;
                     return false;
                 }
             }
-            ConstString name = creator->getName();
-            ConstString wrapper = creator->getWrapper();
-            ConstString code = creator->getCode();
+            std::string name = creator->getName();
+            std::string wrapper = creator->getWrapper();
+            std::string code = creator->getCode();
             yInfo("created %s <%s>. See C++ class %s for documentation.",
                   ((name==wrapper)?"wrapper":"device"),
                   name.c_str(),

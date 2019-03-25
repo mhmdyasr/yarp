@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IMOTOR_H
@@ -54,7 +56,7 @@ public:
 
     /**
      * Retreives the current temperature limit for a specific motor.
-     * The specific behavior of the motor when the temperature limit is exceeded depends on the implementation (power off recommeneded)
+     * The specific behavior of the motor when the temperature limit is exceeded depends on the implementation (power off recommended)
      * @param m motor number
      * @param temp the current temperature limit.
      * @return true/false
@@ -63,7 +65,7 @@ public:
 
     /**
      * Set the temperature limit for a specific motor.
-     * The specific behavior of the motor when the temperature limit is exceeded depends on the implementation (power off recommeneded)
+     * The specific behavior of the motor when the temperature limit is exceeded depends on the implementation (power off recommended)
      * @param m motor number
      * @param temp the temperature limit to be set
      * @return true/false
@@ -124,7 +126,7 @@ public:
 
     /**
      * Retreives the current temperature limit for a specific motor.
-     * The specific behavior of the motor when the temperature limit is exceeded depends on the implementation (power off recommeneded)
+     * The specific behavior of the motor when the temperature limit is exceeded depends on the implementation (power off recommended)
      * @param m motor number
      * @param temp the current temperature limit.
      * @return true/false
@@ -133,7 +135,7 @@ public:
 
     /**
      * Set the temperature limit for a specific motor.
-     * The specific behavior of the motor when the temperature limit is exceeded depends on the implementation (power off recommeneded)
+     * The specific behavior of the motor when the temperature limit is exceeded depends on the implementation (power off recommended)
      * @param m motor number
      * @param temp the temperature limit to be set
      * @return true/false
@@ -158,11 +160,11 @@ public:
 };
 
 // interface IMotorEncoders gets
-#define VOCAB_MOTORS_NUMBER        VOCAB4('m','t','n','m')
-#define VOCAB_TEMPERATURE          VOCAB3('t','m','p')
-#define VOCAB_GEARBOX_RATIO        VOCAB4('g','b','x','r')
-#define VOCAB_TEMPERATURES         VOCAB4('t','m','p','s')
-#define VOCAB_TEMPERATURE_LIMIT    VOCAB4('t','m','p','l')
+constexpr yarp::conf::vocab32_t VOCAB_MOTORS_NUMBER        = yarp::os::createVocab('m','t','n','m');
+constexpr yarp::conf::vocab32_t VOCAB_TEMPERATURE          = yarp::os::createVocab('t','m','p');
+constexpr yarp::conf::vocab32_t VOCAB_GEARBOX_RATIO        = yarp::os::createVocab('g','b','x','r');
+constexpr yarp::conf::vocab32_t VOCAB_TEMPERATURES         = yarp::os::createVocab('t','m','p','s');
+constexpr yarp::conf::vocab32_t VOCAB_TEMPERATURE_LIMIT    = yarp::os::createVocab('t','m','p','l');
 
 
 #endif // YARP_DEV_IMOTOR_H

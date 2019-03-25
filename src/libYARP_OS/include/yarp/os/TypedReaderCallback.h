@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006, 2008 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_TYPEDREADERCALLBACK_H
@@ -9,16 +12,17 @@
 
 #include <yarp/os/api.h>
 
-// Defined in this file:
-namespace yarp { namespace os { template <typename T> class TypedReaderCallback; }}
-
-// Other forward declarations:
-namespace yarp { namespace os { template <typename T> class TypedReader; }}
+// Forward declarations:
+namespace yarp {
+namespace os {
+template <typename T>
+class TypedReader;
+} // namespace os
+} // namespace yarp
 
 
 namespace yarp {
 namespace os {
-
 
 /**
  * A callback for typed data from a port.
@@ -56,7 +60,6 @@ public:
      */
     virtual void onRead(T& datum, const yarp::os::TypedReader<T>& reader);
 };
-
 
 } // namespace os
 } // namespace yarp

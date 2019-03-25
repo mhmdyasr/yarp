@@ -1,8 +1,10 @@
 /*
-* Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
-* Authors: Marco Randazzo <marco.randazzo@iit.it>
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #ifndef YARP_DEV_ICURRENTCONTROL_H
 #define YARP_DEV_ICURRENTCONTROL_H
@@ -85,7 +87,7 @@ public:
     /**  Set the reference value of the current for a group of motors.
     * @param n_motor size of motors ans currs arrays
     * @param motors  pointer to the array containing the list of motor numbers
-    * @param currs   pointer to the array specifing the new current references
+    * @param currs   pointer to the array specifying the new current references
     * @return true/false on success/failure
     */
     virtual bool setRefCurrents(const int n_motor, const int *motors, const double *currs) = 0;
@@ -171,7 +173,7 @@ public:
     /**  Set the reference value of the current for a group of motors.
      * @param n_motor size of motors ans currs arrays
      * @param motors pointer to the array of motor numbers
-     * @param refs   pointer to the array specifing the new current reference
+     * @param refs   pointer to the array specifying the new current reference
      * @return true/false on success/failure
      */
     virtual bool setRefCurrentsRaw(const int n_motor, const int *motors, const double *currs) = 0;
@@ -191,13 +193,13 @@ public:
 };
 
 // Interface name
-#define VOCAB_CURRENTCONTROL_INTERFACE VOCAB4('i','c','u','r')
+constexpr yarp::conf::vocab32_t VOCAB_CURRENTCONTROL_INTERFACE = yarp::os::createVocab('i','c','u','r');
 // methods names
 
-#define VOCAB_CURRENT_REF          VOCAB3('r','e','f')
-#define VOCAB_CURRENT_REFS         VOCAB4('r','e','f','s')
-#define VOCAB_CURRENT_REF_GROUP    VOCAB4('r','e','f','g')
-#define VOCAB_CURRENT_RANGE        VOCAB3('r','n','g')
-#define VOCAB_CURRENT_RANGES       VOCAB4('r','n','g','s')
+constexpr yarp::conf::vocab32_t VOCAB_CURRENT_REF          = yarp::os::createVocab('r','e','f');
+constexpr yarp::conf::vocab32_t VOCAB_CURRENT_REFS         = yarp::os::createVocab('r','e','f','s');
+constexpr yarp::conf::vocab32_t VOCAB_CURRENT_REF_GROUP    = yarp::os::createVocab('r','e','f','g');
+constexpr yarp::conf::vocab32_t VOCAB_CURRENT_RANGE        = yarp::os::createVocab('r','n','g');
+constexpr yarp::conf::vocab32_t VOCAB_CURRENT_RANGES       = yarp::os::createVocab('r','n','g','s');
 
 #endif // YARP_DEV_ICURRENTCONTROL_H

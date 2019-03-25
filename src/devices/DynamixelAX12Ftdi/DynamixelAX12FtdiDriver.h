@@ -1,7 +1,10 @@
 /*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2010 Ze Ji
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
  /*
@@ -32,8 +35,6 @@
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 
-#include <ace/Vector_T.h>
-
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -42,11 +43,9 @@
 //#include <libftdi/ftdi.h>
 #include <usb.h>
 #include <iostream>
-#include <ace/DEV_Connector.h>
-#include <ace/TTY_IO.h>
 #include <yarp/os/Time.h>
 
-#include <yarp/os/Semaphore.h>
+#include <yarp/os/Mutex.h>
 
 #define MOTION_COMPLETION_TOLERANCE 3
 
@@ -150,7 +149,7 @@ private:
 
     ErrorCode checkAnswerPacket(unsigned char* packet, const char*& message);
 
-    yarp::os::Semaphore mutex;
+    yarp::os::Mutex mutex;
 
     unsigned char *jointNumbers;
 
@@ -174,14 +173,14 @@ public:
         @param config Config file containing string pairs for parameters
         @return true on success
      */
-    virtual bool open(yarp::os::Searchable& config);
+    bool open(yarp::os::Searchable& config) override;
 
     /** Close device
         Closes the device and shuts down connection.
 
         @return true on success
      */
-    virtual bool close(void);
+    bool close(void) override;
 
     /** Configure device online
         Configures parts of the device that can be configures online.
@@ -189,7 +188,7 @@ public:
         @param config Config file containing string pairs for parameters
         @return true on success
      */
-    virtual bool configure(yarp::os::Searchable& config);
+    bool configure(yarp::os::Searchable& config) override;
 
     /** Send instruction to device
         Send an instruction to a device of given ID. The instruction has to be a byte arry containing
@@ -211,35 +210,35 @@ public:
      */
     virtual int readParameter(unsigned char id, unsigned char param);
 
-    bool getAxes(int *ax);
+    bool getAxes(int *ax) override;
 
     /**
      * @param refs should be in range [1 300]
      */
-    bool positionMove(int j, double ref);
-    bool positionMove(const double *refs);
-    bool relativeMove(int j, double delta);
-    bool relativeMove(const double *deltas);
-    bool checkMotionDone(int j, bool *flag);
-    bool checkMotionDone(bool *flag);
-    bool setRefSpeed(int j, double sp);
-    bool setRefSpeeds(const double *spds);
-    bool setRefAcceleration(int j, double acc);
-    bool setRefAccelerations(const double *accs);
-    bool getRefSpeed(int j, double *ref);
-    bool getRefSpeeds(double *spds);
-    bool getRefAcceleration(int j, double *acc);
-    bool getRefAccelerations(double *accs);
-    bool stop(int j);
-    bool stop();
+    bool positionMove(int j, double ref) override;
+    bool positionMove(const double *refs) override;
+    bool relativeMove(int j, double delta) override;
+    bool relativeMove(const double *deltas) override;
+    bool checkMotionDone(int j, bool *flag) override;
+    bool checkMotionDone(bool *flag) override;
+    bool setRefSpeed(int j, double sp) override;
+    bool setRefSpeeds(const double *spds) override;
+    bool setRefAcceleration(int j, double acc) override;
+    bool setRefAccelerations(const double *accs) override;
+    bool getRefSpeed(int j, double *ref) override;
+    bool getRefSpeeds(double *spds) override;
+    bool getRefAcceleration(int j, double *acc) override;
+    bool getRefAccelerations(double *accs) override;
+    bool stop(int j) override;
+    bool stop() override;
 
-    bool getRefTorques(double *t);
-    bool getRefTorque(int j, double *t);
+    bool getRefTorques(double *t) override;
+    bool getRefTorque(int j, double *t) override;
     bool setTorques(const double *t);
     bool setTorque(int j, double t);
     bool setTorquePid(int j, const Pid &pid);
-    bool getTorque(int j, double *t);
-    bool getTorques(double *t);
+    bool getTorque(int j, double *t) override;
+    bool getTorques(double *t) override;
     bool setTorquePids(const Pid *pids);
     bool setTorqueErrorLimit(int j, double limit);
     bool setTorqueErrorLimits(const double *limits);
@@ -259,27 +258,27 @@ public:
     bool getBemfParam(int j, double *bemf);
     bool setBemfParam(int j, double bemf);
 
-    bool resetEncoder(int j);
-    bool resetEncoders();
+    bool resetEncoder(int j) override;
+    bool resetEncoders() override;
 
-    bool setEncoder(int j, double val);
-    bool setEncoders(const double *vals);
+    bool setEncoder(int j, double val) override;
+    bool setEncoders(const double *vals) override;
     /**
      * Get the angle of servo.
      */
-    bool getEncoder(int j, double *v);
-    bool getEncoders(double *encs);
-    bool getEncoderSpeed(int j, double *sp);
-    bool getEncoderSpeeds(double *spds);
-    bool getEncoderAcceleration(int j, double *spds);
-    bool getEncoderAccelerations(double *accs);
+    bool getEncoder(int j, double *v) override;
+    bool getEncoders(double *encs) override;
+    bool getEncoderSpeed(int j, double *sp) override;
+    bool getEncoderSpeeds(double *spds) override;
+    bool getEncoderAcceleration(int j, double *spds) override;
+    bool getEncoderAccelerations(double *accs) override;
 
     using yarp::dev::ITorqueControl::setRefTorques;
-    bool setRefTorques(const double* t);
+    bool setRefTorques(const double* t) override;
 
-    bool setRefTorque(int j, double t);
-    bool getTorqueRange(int j, double* min, double* max);
-    bool getTorqueRanges(double* min, double* max);
+    bool setRefTorque(int j, double t) override;
+    bool getTorqueRange(int j, double* min, double* max) override;
+    bool getTorqueRanges(double* min, double* max) override;
 private:
 
     double *positions;

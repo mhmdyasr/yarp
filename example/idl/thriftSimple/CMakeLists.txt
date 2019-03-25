@@ -1,8 +1,10 @@
-# Copyright: (C) 2012 Istituto Italiano di Tecnologia (IIT)
-# Authors: Elena Ceseracciu
-# CopyPolicy:  Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 
 #find YARP
 find_package(YARP REQUIRED)
@@ -12,7 +14,7 @@ set(generated_libs_dir "${CMAKE_CURRENT_SOURCE_DIR}")
 yarp_idl_to_dir(demo.thrift ${generated_libs_dir})
 
 # CMake has compiled the file during the configuration process, so now we can include the generated .cmake file that lists all sources into "headers" and "sources" variables
-include(demo_thrift.cmake)
+include(${generated_libs_dir}/demo_thrift.cmake)
 include_directories(${generated_libs_dir}/include)
 
 # Create the server executable that implements the interface

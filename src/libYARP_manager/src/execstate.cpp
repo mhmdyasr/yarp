@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/execstate.h>
 #include <yarp/manager/executable.h>
@@ -49,9 +48,7 @@ Suspended::Suspended(Executable* pExecutable, FSM::IEventSink* pEventSink)
 }
 
 
-Suspended::~Suspended()
-{
-}
+Suspended::~Suspended() = default;
 
 void Suspended::start()
 {
@@ -98,9 +95,7 @@ Ready::Ready(Executable* pExecutable, FSM::IEventSink* pEventSink)
 }
 
 
-Ready::~Ready()
-{
-}
+Ready::~Ready() = default;
 
 bool Ready::checkPriorityPorts()
 {
@@ -262,9 +257,7 @@ Connecting::Connecting(Executable* pExecutable, FSM::IEventSink* pEventSink)
                       bAborted(false)
 {}
 
-Connecting::~Connecting()
-{
-}
+Connecting::~Connecting() = default;
 
 bool Connecting::checkNormalPorts()
 {
@@ -350,9 +343,7 @@ Running::Running(Executable* pExecutable, FSM::IEventSink* pEventSink)
 }
 
 
-Running::~Running()
-{
-}
+Running::~Running() = default;
 
 void Running::refresh()
 {
@@ -403,9 +394,7 @@ Dying::Dying(Executable* pExecutable, FSM::IEventSink* pEventSink)
 }
 
 
-Dying::~Dying()
-{
-}
+Dying::~Dying() = default;
 
 void Dying::stopModule()
 {
@@ -511,9 +500,7 @@ Dead::Dead(Executable* pExecutable, FSM::IEventSink* pEventSink)
 }
 
 
-Dead::~Dead()
-{
-}
+Dead::~Dead() = default;
 
 void Dead::start()
 {
@@ -565,7 +552,7 @@ ExecMachine::ExecMachine(Executable* pExecutable)
     dying = new Dying(executable, this);
     dead = new Dead(executable, this);
 
-    // seting initial state
+    // setting initial state
     setInitState(suspended);
 
     // transitions from suspended
@@ -628,7 +615,7 @@ ExecMachine::~ExecMachine()
 
 void ExecMachine::refresh()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->refresh();
     }
@@ -636,7 +623,7 @@ void ExecMachine::refresh()
 
 void ExecMachine::start()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->start();
     }
@@ -644,7 +631,7 @@ void ExecMachine::start()
 
 void ExecMachine::stop()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->stop();
     }
@@ -652,7 +639,7 @@ void ExecMachine::stop()
 
 void ExecMachine::kill()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->kill();
     }
@@ -660,7 +647,7 @@ void ExecMachine::kill()
 
 void ExecMachine::startModule()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->startModule();
     }
@@ -668,7 +655,7 @@ void ExecMachine::startModule()
 
 void ExecMachine::stopModule()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->stopModule();
     }
@@ -676,7 +663,7 @@ void ExecMachine::stopModule()
 
 void ExecMachine::killModule()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->killModule();
     }
@@ -684,7 +671,7 @@ void ExecMachine::killModule()
 
 void ExecMachine::connectAllPorts()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->connectAllPorts();
     }
@@ -692,7 +679,7 @@ void ExecMachine::connectAllPorts()
 
 void ExecMachine::disconnectAllPorts()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->disconnectAllPorts();
     }
@@ -700,7 +687,7 @@ void ExecMachine::disconnectAllPorts()
 
 void ExecMachine::moduleFailed()
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->moduleFailed();
     }
@@ -708,13 +695,13 @@ void ExecMachine::moduleFailed()
 
 void ExecMachine::connectionFailed(void* which)
 {
-    ITransition* tr = dynamic_cast<ITransition*>(currentState());
+    auto* tr = dynamic_cast<ITransition*>(currentState());
     if (tr) {
         tr->connectionFailed(which);
     }
 }
 
-// For debuging
+// For debugging
 void ExecMachine::onTransition(StateBase* previous,
                                 Event* event, StateBase* current)
 {

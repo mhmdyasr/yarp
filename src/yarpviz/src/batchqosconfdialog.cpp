@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include <fstream>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -60,7 +77,7 @@ void BatchQosConfDialog::openCons()
     unsigned int count = 0;
     while(getline(file, line)) {
         count++;
-        Bottle sample(line.c_str());
+        Bottle sample(line);
         if(sample.size() == 3) {
             //data.addList() = sample;
             //yInfo()<<sample.toString();
@@ -72,6 +89,7 @@ void BatchQosConfDialog::openCons()
             prop.append(sample.get(1).asString().c_str());
             prop.append(sample.get(2).asString().c_str());
             item = new QTreeWidgetItem( ui->treeWidgetCons, prop);
+            YARP_UNUSED(item);
         }
         else
             yWarning()<<"Wrong connection data at line"<<count;
@@ -135,7 +153,7 @@ void BatchQosConfDialog::updateQos()
             item->setText(5, qosStr);
         }
         else
-            yWarning()<<"Cannot retrive Qos property of"<<item->text(0).toUtf8().constData()<<"->"<<item->text(0).toUtf8().constData();
+            yWarning()<<"Cannot retrieve Qos property of"<<item->text(0).toUtf8().constData()<<"->"<<item->text(0).toUtf8().constData();
     }
     ui->treeWidgetCons->update();
 }

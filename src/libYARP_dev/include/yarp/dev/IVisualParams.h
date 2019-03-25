@@ -1,13 +1,15 @@
 /*
- * Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
- * Author: Alberto Cardellino <alberto.cardellino@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_DEV_IVISUALPARAMS_H
 #define YARP_DEV_IVISUALPARAMS_H
 
+#include <yarp/dev/api.h>
 #include <yarp/os/Vocab.h>
 #include <yarp/os/Property.h>
 #include <yarp/sig/Image.h>
@@ -39,39 +41,32 @@ struct yarp::dev::CameraConfig {
 YARP_END_PACK
 
 // Interface name
-#define VOCAB_RGB_VISUAL_PARAMS       VOCAB4('v','i','s','r')
-#define VOCAB_DEPTH_VISUAL_PARAMS     VOCAB4('v','i','s','d')
+constexpr yarp::conf::vocab32_t VOCAB_RGB_VISUAL_PARAMS       = yarp::os::createVocab('v','i','s','r');
+constexpr yarp::conf::vocab32_t VOCAB_DEPTH_VISUAL_PARAMS     = yarp::os::createVocab('v','i','s','d');
 
 // Common
-#define VOCAB_SET               VOCAB3('s','e','t')
-#define VOCAB_GET               VOCAB3('g','e','t')
-#define VOCAB_IS                VOCAB2('i','s')
-#define VOCAB_OK                VOCAB2('o','k')
-#define VOCAB_FAILED            VOCAB4('f','a','i','l')
 
 // Rgb and depth
-#define VOCAB_RGB               VOCAB3('r','g','b')
-#define VOCAB_DEPTH             VOCAB4('d','e','p','t')
-#define VOCAB_MIRROR            VOCAB4('m','i','r','r')
+constexpr yarp::conf::vocab32_t VOCAB_RGB               = yarp::os::createVocab('r','g','b');
+constexpr yarp::conf::vocab32_t VOCAB_DEPTH             = yarp::os::createVocab('d','e','p','t');
+constexpr yarp::conf::vocab32_t VOCAB_MIRROR            = yarp::os::createVocab('m','i','r','r');
 
 // Methods
-#define VOCAB_WIDTH             VOCAB1('w')
-#define VOCAB_HEIGHT            VOCAB1('h')
-#define VOCAB_RESOLUTION        VOCAB3('r','e','s')
-#define VOCAB_FOV               VOCAB3('f','o','v')
-#define VOCAB_INTRINSIC_PARAM   VOCAB4('i','n','t','p')
-#define VOCAB_SUPPORTED_CONF    VOCAB4('c','o','n','f')
+constexpr yarp::conf::vocab32_t VOCAB_RESOLUTION        = yarp::os::createVocab('r','e','s');
+constexpr yarp::conf::vocab32_t VOCAB_FOV               = yarp::os::createVocab('f','o','v');
+constexpr yarp::conf::vocab32_t VOCAB_INTRINSIC_PARAM   = yarp::os::createVocab('i','n','t','p');
+constexpr yarp::conf::vocab32_t VOCAB_SUPPORTED_CONF    = yarp::os::createVocab('c','o','n','f');
 
 // Depth only
-#define VOCAB_ACCURACY          VOCAB4('a','c','r','c')
-#define VOCAB_CLIP_PLANES       VOCAB4('c','l','i','p')
+constexpr yarp::conf::vocab32_t VOCAB_ACCURACY          = yarp::os::createVocab('a','c','r','c');
+constexpr yarp::conf::vocab32_t VOCAB_CLIP_PLANES       = yarp::os::createVocab('c','l','i','p');
 
 
 
 /**
  * @ingroup dev_iface_other
  *
- * An interface for retriving intrinsic parameter from a rgb camera
+ * An interface for retrieving intrinsic parameter from a rgb camera
  *
  */
 class YARP_dev_API yarp::dev::IRgbVisualParams
@@ -143,8 +138,8 @@ public:
      *
      * |  Parameter name              | SubParameter        | Type                | Units          | Default Value | Required                         | Description                                                                            | Notes                                                                 |
      * |:----------------------------:|:-------------------:|:-------------------:|:--------------:|:-------------:|:--------------------------------:|:--------------------------------------------------------------------------------------:|:---------------------------------------------------------------------:|
-     * |  focalLengthX                |      -              | double              | mm             |   -           |   Yes                            |  Horizontal component of the focal lenght                                              |                                                                       |
-     * |  focalLengthY                |      -              | double              | mm             |   -           |   Yes                            |  Vertical component of the focal lenght                                                |                                                                       |
+     * |  focalLengthX                |      -              | double              | mm             |   -           |   Yes                            |  Horizontal component of the focal length                                              |                                                                       |
+     * |  focalLengthY                |      -              | double              | mm             |   -           |   Yes                            |  Vertical component of the focal length                                                |                                                                       |
      * |  principalPointX             |      -              | double              | pixel          |   -           |   Yes                            |  X coordinate of the principal point                                                   |                                                                       |
      * |  principalPointY             |      -              | double              | pixel          |   -           |   Yes                            |  Y coordinate of the principal point                                                   |                                                                       |
      * |  retificationMatrix          |      -              | 4x4 double matrix   | -              |   -           |   Yes                            |  Matrix that describes the lens' distortion                                            |                                                                       |
@@ -180,7 +175,7 @@ public:
 /**
  * @ingroup dev_iface_other
  *
- * An interface for retriving intrinsic parameter from a depth camera
+ * An interface for retrieving intrinsic parameter from a depth camera
  *
  */
 class YARP_dev_API yarp::dev::IDepthVisualParams
@@ -254,14 +249,14 @@ public:
     virtual bool getDepthIntrinsicParam(yarp::os::Property &intrinsic) = 0;
 
     /**
-     * Get the accuracy of the depth measure in [meter]
-     * @return the accuracy of the sensor in meters.
+     * Get the minimum detectable variation in distance [meter]
+     * @return the sensor resolution in meters.
      */
     virtual double getDepthAccuracy() = 0;
 
     /**
-     * Set the accuracy of the depth measure in [meter] when possible
-     * @param the accuracy of the sensor in meters.
+     * Set the minimum detectable variation in distance [meter] when possible
+     * @param the desired resolution in meters.
      * @return true on success
      */
     virtual bool setDepthAccuracy(double accuracy) = 0;

@@ -1,3 +1,10 @@
+% Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+% Copyright (C) 2012 Juan G. Victores
+% All rights reserved.
+%
+% This software may be modified and distributed under the terms of the
+% BSD-3-Clause license. See the accompanying LICENSE file for details.
+
 function [sys,x0,str,ts,simStateCompliance] = yarpWriteDoubles_sfun(t,x,u,flag,setNumDoubles)
 %SFUNTMPL General M-file S-function template
 %   With M-file S-functions, you can define you own ordinary differential
@@ -237,7 +244,7 @@ global numDoubles;
 global dPort;
 dBottle=yarp.Bottle;
 for i=1:1:numDoubles;
-    dBottle.addDouble(u(i));
+    dBottle.addFloat64(u(i));
 end;
 dPort.write(dBottle);
 sys = [];

@@ -1,11 +1,10 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_MANAGER_MANAGER
 #define YARP_MANAGER_MANAGER
@@ -109,14 +108,14 @@ public:
     ErrorLogger* getLogger(void) { return logger;}
 
 protected:
-    virtual void onExecutableStart(void* which) override;
-    virtual void onExecutableStop(void* which) override;
-    virtual void onExecutableDied(void* which) override;
-    virtual void onExecutableFailed(void* which) override;
-    virtual void onCnnStablished(void* which) override;
-    virtual void onCnnFailed(void* which) override;
-    virtual void onError(void* which) override;
-    virtual void onExecutableStdout(void* which, const char* msg) override;
+    void onExecutableStart(void* which) override;
+    void onExecutableStop(void* which) override;
+    void onExecutableDied(void* which) override;
+    void onExecutableFailed(void* which) override;
+    void onCnnStablished(void* which) override;
+    void onCnnFailed(void* which) override;
+    void onError(void* which) override;
+    void onExecutableStdout(void* which, const char* msg) override;
 
 
 private:

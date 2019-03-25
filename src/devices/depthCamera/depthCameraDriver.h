@@ -1,22 +1,36 @@
 /*
-* Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
-* Author: Andrea Ruzzenenti <andrea.ruzzenenti@iit.it>
-* CopyPolicy: Released under the terms of the GPLv2 or later, see GPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #ifndef DEPTHCAMERA_DRIVER_H
 #define DEPTHCAMERA_DRIVER_H
 
 #include <iostream>
 #include <string>
+#include <map>
+
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/FrameGrabberControl2.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/sig/all.h>
 #include <yarp/sig/Matrix.h>
-#include <yarp/os/all.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/dev/IRGBDSensor.h>
+#include <yarp/dev/RGBDSensorParamParser.h>
 #include <OpenNI.h>
 
 
@@ -36,10 +50,6 @@ namespace yarp
         namespace impl
         {
             class  streamFrameListener;
-            struct CameraParameters;
-            struct RGBDParam;
-            struct IntrinsicParams;
-            struct plum_bob;
         }
     }
 }
@@ -48,8 +58,9 @@ namespace yarp
 /**
  *  @ingroup dev_impl_media
  *
+ * @brief `depthCamera` : YARP driver for OpenNI2 compatible devices.
  *
- * This device is a YARP plugin for OpenNI2 compatible devices, and exposes the IRGBDSensor and IFrameGrabberControls2
+ * This device driver exposes the IRGBDSensor and IFrameGrabberControls
  * interfaces to read the images and operate on the available settings.
  *
  * See the documentation for more details about each interface.
@@ -85,6 +96,10 @@ namespace yarp
  *
  * \warning: whenever more then one value is required by the setting, the values must be in parenthesys!
  *
+ * | YARP device name |
+ * |:-----------------:|
+ * | `depthCamera` |
+ *
  *   Parameters used by this device are:
  * | Parameter name               | SubParameter        | Type                |  Read / write   | Units          | Default Value | Required                         | Description                                                                            | Notes                                                                 |
  * |:----------------------------:|:-------------------:|:-------------------:|:---------------:|:--------------:|:-------------:|:--------------------------------:|:--------------------------------------------------------------------------------------:|:---------------------------------------------------------------------:|
@@ -96,7 +111,7 @@ namespace yarp
  * |                              |  depthFOV           | double, double      |  Read / write   | degrees        |   -           |  Alternative to HW_DESCRIPTION   | Horizontal and Vertical fields of view of the depth camera                             | 2 values expected as horizontal and vertical FOVs                     |
  * |                              |  rgbMirroring       | bool                |  Read / write   | true/false     |  false        |  Alternative to HW_DESCRIPTION   | Set the mirroring to the acquired rgb image                                            |                                                                       |
  * |                              |  depthMirroring     | bool                |  Read / write   | true/false     |  false        |  Alternative to HW_DESCRIPTION   | Set the mirroring to the acquired depth image                                          |                                                                       |
- * |                              |  clipPlanes         | double, double      |  Read / write   | meters         |   -           |  Alternative to HW_DESCRIPTION   | Minumum and maximum distance at which an object is seen by the depth sensor            |  parameter introduced mainly for simulated sensors, it can be used to set the clip planes if Openni gives wrong values |
+ * |                              |  clipPlanes         | double, double      |  Read / write   | meters         |   -           |  Alternative to HW_DESCRIPTION   | Minimum and maximum distance at which an object is seen by the depth sensor            |  parameter introduced mainly for simulated sensors, it can be used to set the clip planes if Openni gives wrong values |
  * |  HW_DESCRIPTION              |      -              |  group              |                 | -              |   -           |   Yes                            | Hardware description of device property.                                               |  Read only property. Setting will be disabled                         |
  * |                              | same as 'SETTINGS' group | -              |    Read only    | -              |   -           |   Alternative to SETTING group   | Parameters here are alternative to the SETTING group                                   |                                                                       |
  * |  RGB_INTRINSIC_PARAMETERS    |      -              | group               |                 | -              |   -           |   Yes                            | Description of rgb camera visual parameters                                            |                                                                       |
@@ -125,7 +140,7 @@ namespace yarp
  * |                              |   k3                | double              |                 | -              |   -           |   Yes                            |  Radial distortion coefficient of the lens                                             |                                                                       |
  * |                              |   t1                | double              |                 | -              |   -           |   Yes                            |  Tangential distortion of the lens                                                     |                                                                       |
  * |                              |   t2                | double              |                 | -              |   -           |   Yes                            |  Tangential distortion of the lens                                                     |                                                                       |
- * |  EXTRINSIC_PARAMETERS        |      -              |                     |                 | -              |   -           |   Yes                            |                                                                                        |                                                                        |
+ * |  EXTRINSIC_PARAMETERS        |      -              |                     |                 | -              |   -           |   Yes                            |                                                                                        |                                                                       |
  * |                              | transformation      | 4x4 double matrix   |                 | -              |   -           |   Yes                            | trasformation matrix between depth optical frame to the rgb one                        |                                                                       |
  *
  *
@@ -185,7 +200,7 @@ transformation          (1.0 0.0 0.0 0.0   0.0 1.0 0.0 0.0   0.0 0.0 1.0 0.0  0.
 
 class yarp::dev::depthCameraDriver : public yarp::dev::DeviceDriver,
                                      public yarp::dev::IRGBDSensor,
-                                     public yarp::dev::IFrameGrabberControls2
+                                     public yarp::dev::IFrameGrabberControls
 {
 private:
     typedef yarp::sig::ImageOf<yarp::sig::PixelFloat> depthImage;
@@ -201,73 +216,70 @@ public:
     static int pixFormatToCode(openni::PixelFormat p);
 
     // DeviceDriver
-    virtual bool open(yarp::os::Searchable& config) override;
-    virtual bool close() override;
+    bool open(yarp::os::Searchable& config) override;
+    bool close() override;
 
     // IRGBDSensor
-    virtual int    getRgbHeight() override;
-    virtual int    getRgbWidth() override;
-    virtual bool   getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations) override;
-    virtual bool   getRgbResolution(int &width, int &height) override;
-    virtual bool   setRgbResolution(int width, int height) override;
-    virtual bool   getRgbFOV(double& horizontalFov, double& verticalFov) override;
-    virtual bool   setRgbFOV(double horizontalFov, double verticalFov) override;
-    virtual bool   getRgbMirroring(bool& mirror) override;
-    virtual bool   setRgbMirroring(bool mirror) override;
+    int    getRgbHeight() override;
+    int    getRgbWidth() override;
+    bool   getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations) override;
+    bool   getRgbResolution(int &width, int &height) override;
+    bool   setRgbResolution(int width, int height) override;
+    bool   getRgbFOV(double& horizontalFov, double& verticalFov) override;
+    bool   setRgbFOV(double horizontalFov, double verticalFov) override;
+    bool   getRgbMirroring(bool& mirror) override;
+    bool   setRgbMirroring(bool mirror) override;
 
-    virtual bool   getRgbIntrinsicParam(Property& intrinsic) override;
-    virtual int    getDepthHeight() override;
-    virtual int    getDepthWidth() override;
-    virtual bool   setDepthResolution(int width, int height) override;
-    virtual bool   getDepthFOV(double& horizontalFov, double& verticalFov) override;
-    virtual bool   setDepthFOV(double horizontalFov, double verticalFov) override;
-    virtual bool   getDepthIntrinsicParam(Property& intrinsic) override;
-    virtual double getDepthAccuracy() override;
-    virtual bool   setDepthAccuracy(double accuracy) override;
-    virtual bool   getDepthClipPlanes(double& nearPlane, double& farPlane) override;
-    virtual bool   setDepthClipPlanes(double nearPlane, double farPlane) override;
-    virtual bool   getDepthMirroring(bool& mirror) override;
-    virtual bool   setDepthMirroring(bool mirror) override;
+    bool   getRgbIntrinsicParam(Property& intrinsic) override;
+    int    getDepthHeight() override;
+    int    getDepthWidth() override;
+    bool   setDepthResolution(int width, int height) override;
+    bool   getDepthFOV(double& horizontalFov, double& verticalFov) override;
+    bool   setDepthFOV(double horizontalFov, double verticalFov) override;
+    bool   getDepthIntrinsicParam(Property& intrinsic) override;
+    double getDepthAccuracy() override;
+    bool   setDepthAccuracy(double accuracy) override;
+    bool   getDepthClipPlanes(double& nearPlane, double& farPlane) override;
+    bool   setDepthClipPlanes(double nearPlane, double farPlane) override;
+    bool   getDepthMirroring(bool& mirror) override;
+    bool   setDepthMirroring(bool mirror) override;
 
 
-    virtual bool   getExtrinsicParam(sig::Matrix &extrinsic) override;
-    virtual bool   getRgbImage(FlexImage& rgbImage, Stamp* timeStamp = NULL) override;
-    virtual bool   getDepthImage(depthImage& depthImage, Stamp* timeStamp = NULL) override;
-    virtual bool   getImages(FlexImage& colorFrame, depthImage& depthFrame, Stamp* colorStamp=NULL, Stamp* depthStamp=NULL) override;
+    bool   getExtrinsicParam(sig::Matrix &extrinsic) override;
+    bool   getRgbImage(FlexImage& rgbImage, Stamp* timeStamp = NULL) override;
+    bool   getDepthImage(depthImage& depthImage, Stamp* timeStamp = NULL) override;
+    bool   getImages(FlexImage& colorFrame, depthImage& depthFrame, Stamp* colorStamp=NULL, Stamp* depthStamp=NULL) override;
 
-    virtual RGBDSensor_status     getSensorStatus() override;
-    virtual yarp::os::ConstString getLastErrorMsg(Stamp* timeStamp = NULL) override;
+    RGBDSensor_status     getSensorStatus() override;
+    std::string getLastErrorMsg(Stamp* timeStamp = NULL) override;
 
-    //IFrameGrabberControls2
-    virtual bool   getCameraDescription(CameraDescriptor *camera) override;
-    virtual bool   hasFeature(int feature, bool*   hasFeature) override;
-    virtual bool   setFeature(int feature, double  value) override;
-    virtual bool   getFeature(int feature, double* value) override;
-    virtual bool   setFeature(int feature, double  value1,  double  value2) override;
-    virtual bool   getFeature(int feature, double* value1,  double* value2) override;
-    virtual bool   hasOnOff(  int feature, bool*   HasOnOff) override;
-    virtual bool   setActive( int feature, bool    onoff) override;
-    virtual bool   getActive( int feature, bool*   isActive) override;
-    virtual bool   hasAuto(   int feature, bool*   hasAuto) override;
-    virtual bool   hasManual( int feature, bool*   hasManual) override;
-    virtual bool   hasOnePush(int feature, bool*   hasOnePush) override;
-    virtual bool   setMode(   int feature, FeatureMode mode) override;
-    virtual bool   getMode(   int feature, FeatureMode *mode) override;
-    virtual bool   setOnePush(int feature) override;
+    //IFrameGrabberControls
+    bool   getCameraDescription(CameraDescriptor *camera) override;
+    bool   hasFeature(int feature, bool*   hasFeature) override;
+    bool   setFeature(int feature, double  value) override;
+    bool   getFeature(int feature, double* value) override;
+    bool   setFeature(int feature, double  value1,  double  value2) override;
+    bool   getFeature(int feature, double* value1,  double* value2) override;
+    bool   hasOnOff(  int feature, bool*   HasOnOff) override;
+    bool   setActive( int feature, bool    onoff) override;
+    bool   getActive( int feature, bool*   isActive) override;
+    bool   hasAuto(   int feature, bool*   hasAuto) override;
+    bool   hasManual( int feature, bool*   hasManual) override;
+    bool   hasOnePush(int feature, bool*   hasOnePush) override;
+    bool   setMode(   int feature, FeatureMode mode) override;
+    bool   getMode(   int feature, FeatureMode *mode) override;
+    bool   setOnePush(int feature) override;
 
 private:
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
     //method
     inline bool initializeOpeNIDevice();
     inline bool setParams();
-    inline bool parseIntrinsic(const yarp::os::Searchable& config, const std::string& groupName, impl::IntrinsicParams &params);
     bool        getImage(FlexImage& Frame, Stamp* Stamp, impl::streamFrameListener *sourceFrame);
     bool        getImage(depthImage& Frame, Stamp* Stamp, impl::streamFrameListener *sourceFrame);
     bool        setResolution(int w, int h, openni::VideoStream &stream);
     bool        setFOV(double horizontalFov, double verticalFov, openni::VideoStream &stream);
-    bool        setIntrinsic(yarp::os::Property& intrinsic, const impl::IntrinsicParams& values);
-    bool        checkParam(const os::Bottle& settings, const os::Bottle& description, impl::RGBDParam& param);
-    bool        checkParam(const yarp::os::Bottle& input, impl::RGBDParam &param, bool& found);
+    bool        setIntrinsic(yarp::os::Property& intrinsic, const RGBDSensorParamParser::IntrinsicParams& values);
     void        settingErrorMsg(const std::string& error, bool& ret);
 
     //properties
@@ -276,10 +288,11 @@ private:
     openni::Device                  m_device;
     impl::streamFrameListener*      m_depthFrame;
     impl::streamFrameListener*      m_imageFrame;
-    yarp::os::ConstString           m_lastError;
-    impl::CameraParameters*         m_cameraDescription;
+    std::string           m_lastError;
+    yarp::dev::RGBDSensorParamParser* m_paramParser;
     bool                            m_depthRegistration;
     std::vector<cameraFeature_id_t> m_supportedFeatures;
+
 #endif
 };
 #endif

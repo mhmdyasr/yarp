@@ -1,43 +1,43 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_OS_IMPL_LOGFORWARDER_H
 #define YARP_OS_IMPL_LOGFORWARDER_H
 
 #include <yarp/os/api.h>
-#include <yarp/os/BufferedPort.h>
-#include <yarp/os/Network.h>
-#include <yarp/os/Semaphore.h>
+#include <yarp/os/Port.h>
+#include <yarp/os/Mutex.h>
 #include <string>
 
 namespace yarp {
 namespace os {
+namespace impl {
 
-#define MAX_STRING_SIZE 255
-
-class YARP_OS_API LogForwarder
+class YARP_OS_impl_API LogForwarder
 {
     public:
-        static LogForwarder* getInstance();
-        static void clearInstance();
-        void forward (const std::string& message);
-    protected:
-        LogForwarder();
         ~LogForwarder();
+        static LogForwarder& getInstance();
+
+        void forward (const std::string& message);
+        static void shutdown();
+
     private:
-        static yarp::os::Semaphore *sem;
-        char logPortName[MAX_STRING_SIZE];
-        yarp::os::BufferedPort<yarp::os::Bottle>* outputPort;
-    private:
-        LogForwarder(LogForwarder const&){};
-        LogForwarder& operator=(LogForwarder const&){return *this;}; //@@@checkme
-        static LogForwarder* instance;
+        LogForwarder();
+        LogForwarder(LogForwarder const&) = delete;
+        LogForwarder& operator=(LogForwarder const&) = delete;
+
+        yarp::os::Mutex mutex;
+        yarp::os::Port outputPort;
+        static bool started;
 };
 
+} // namespace impl
 } // namespace os
 } // namespace yarp
 

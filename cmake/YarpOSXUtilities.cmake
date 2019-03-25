@@ -1,8 +1,8 @@
-# Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
-# Authors: Francesco Romano <francesco.romano@iit.it>
-#          Daniele E. Domenichelli <daniele.domenichelli@iit.it>
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 include(GetAllCMakeProperties)
 
@@ -81,6 +81,9 @@ function(YARP_OSX_DUPLICATE_AND_ADD_BUNDLE)
         list(REMOVE_ITEM _all_properties "${_prop_name}")
       elseif("${_prop_name}" MATCHES "<.+>")
         # Remove other properties containing "<...>" that are not target properties.
+        list(REMOVE_ITEM _all_properties "${_prop_name}")
+      elseif("${_prop_name}" MATCHES "IMPORTED_GLOBAL")
+        # Remove other properties containing "IMPORTED_GLOBAL".
         list(REMOVE_ITEM _all_properties "${_prop_name}")
       endif()
     endforeach()

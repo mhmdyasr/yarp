@@ -1,8 +1,10 @@
 /*
- * Copyright (C) 2009 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_SERVERSQL_IMPL_SQLITETRIPLESOURCE_H
@@ -237,7 +239,7 @@ public:
     }
 
 
-    virtual void begin(TripleContext *context) override {
+    void begin(TripleContext *context) override {
         int result = sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
         if (verbose) {
             printf("Query: BEGIN TRANSACTION;\n");
@@ -247,7 +249,7 @@ public:
         }
     }
 
-    virtual void end(TripleContext *context) override {
+    void end(TripleContext *context) override {
         int result = sqlite3_exec(db, "END TRANSACTION;", nullptr, nullptr, nullptr);
         if (verbose) {
             printf("Query: END TRANSACTION;\n");

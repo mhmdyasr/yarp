@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2016 RobotCub Consortium
- * Author: Alberto Cardellino
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include "RGBDSensorClient_StreamingMsgParser.h"
@@ -10,8 +13,8 @@ using namespace yarp::dev;
 using namespace yarp::dev::impl;
 
 // Callback reader for rgb
-RgbImageReader_Impl::RgbImageReader_Impl() { }
-RgbImageReader_Impl::~RgbImageReader_Impl() { }
+RgbImageReader_Impl::RgbImageReader_Impl() = default;
+RgbImageReader_Impl::~RgbImageReader_Impl() = default;
 
 void RgbImageReader_Impl::onRead(yarp::sig::FlexImage& datum)
 {
@@ -25,8 +28,8 @@ yarp::sig::FlexImage RgbImageReader_Impl::getImage()
 
 
 // callback reader for depthImage
-FloatImageReader_Impl::FloatImageReader_Impl() { }
-FloatImageReader_Impl::~FloatImageReader_Impl() { }
+FloatImageReader_Impl::FloatImageReader_Impl() = default;
+FloatImageReader_Impl::~FloatImageReader_Impl() = default;
 
 void FloatImageReader_Impl::onRead(yarp::sig::ImageOf< yarp::sig::PixelFloat> & datum)
 {

@@ -1,7 +1,8 @@
-# Copyright (C) 2012 Istituto Italiano di Tecnologia (IIT)
-# Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 # XmlRpc++
 project(YARP_priv_xmlrpcpp)
@@ -26,14 +27,15 @@ set(xmlrpcpp_HDRS xmlrpcpp/src/base64.h
                   xmlrpcpp/src/XmlRpcUtil.h
                   xmlrpcpp/src/XmlRpcValue.h)
 
-if(NOT MSVC)
-  check_cxx_compiler_flag("-Wno-unused-parameter" CXX_HAS_WNO_UNUSED_PARAMETER)
-  if(CXX_HAS_WNO_UNUSED_PARAMETER)
-    set_property(SOURCE ${xmlrpcpp_SRCS} APPEND_STRING PROPERTY COMPILE_FLAGS " -Wno-unused-parameter")
-  endif()
+set(YARP_priv_xmlrpcpp_TYPE "STATIC" CACHE STRING "YARP_priv_xmlrpcpp (LGPL2.1+) library type (STATIC or SHARED)" )
+set_property(CACHE YARP_priv_xmlrpcpp_TYPE PROPERTY STRINGS "STATIC" "SHARED")
+mark_as_advanced(YARP_priv_xmlrpcpp_TYPE)
+if(NOT YARP_priv_xmlrpcpp_TYPE MATCHES "(STATIC|SHARED)")
+  message(WARNING "Invalid value for YARP_priv_xmlrpcpp_TYPE: ${YARP_priv_xmlrpcpp_TYPE}. Valid values are \"STATIC\" and \"SHARED\". Resetting to default value (STATIC).")
+  set_property(CACHE YARP_priv_xmlrpcpp_TYPE PROPERTY VALUE "STATIC")
+  unset(YARP_priv_xmlrpcpp_TYPE)
 endif()
-
-add_library(YARP_priv_xmlrpcpp STATIC ${xmlrpcpp_SRCS})
+add_library(YARP_priv_xmlrpcpp ${YARP_priv_xmlrpcpp_TYPE} ${xmlrpcpp_SRCS})
 
 set_property(TARGET YARP_priv_xmlrpcpp PROPERTY FOLDER "Libraries/External")
 
@@ -41,10 +43,13 @@ set(xmlrpcpp_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/xmlrpcpp/src PARENT_SCOPE)
 set(xmlrpcpp_LIBRARIES "YARP_priv_xmlrpcpp" PARENT_SCOPE)
 
 install(TARGETS YARP_priv_xmlrpcpp
-        EXPORT YARP
-        COMPONENT runtime
+        EXPORT YARP_priv_xmlrpcpp
+        COMPONENT YARP_priv_xmlrpcpp
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
-set_property(GLOBAL APPEND PROPERTY YARP_LIBS YARP_priv_xmlrpcpp)
+if(NOT CREATE_SHARED_LIBS)
+  include(YarpInstallBasicPackageFiles)
+  yarp_install_basic_package_files(YARP_priv_xmlrpcpp)
+endif()

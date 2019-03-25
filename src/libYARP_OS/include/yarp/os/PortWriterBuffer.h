@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_PORTWRITERBUFFER_H
@@ -10,60 +13,70 @@
 #include <yarp/os/Portable.h>
 
 namespace yarp {
-    namespace os {
-        class Port;
-        template <class T> class PortWriterBuffer;
-        class PortWriterBufferManager;
-        template <class T> class PortWriterBufferAdaptor;
-        class PortWriterBufferBase;
-        class PortWriterWrapper;
-    }
-}
+namespace os {
+class Port;
+} // namespace os
+} // namespace yarp
+
+
+namespace yarp {
+namespace os {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-class yarp::os::PortWriterBufferManager {
+class PortWriterBufferManager
+{
 public:
     virtual ~PortWriterBufferManager();
 
-    virtual void onCompletion(void *tracker) = 0;
+    virtual void onCompletion(void* tracker) = 0;
 };
 
-class yarp::os::PortWriterWrapper : public yarp::os::PortWriter {
+class PortWriterWrapper : public PortWriter
+{
 public:
-    virtual PortWriter *getInternal() = 0;
+    virtual PortWriter* getInternal() = 0;
 };
 
 template <class T>
-class yarp::os::PortWriterBufferAdaptor : public PortWriterWrapper {
+class PortWriterBufferAdaptor : public PortWriterWrapper
+{
 public:
     PortWriterBufferManager& creator;
     T writer;
-    void *tracker;
+    void* tracker;
 
     PortWriterBufferAdaptor(PortWriterBufferManager& creator,
-                            void *tracker) :
-        creator(creator), tracker(tracker) {}
+                            void* tracker) :
+            creator(creator),
+            tracker(tracker)
+    {
+    }
 
-    virtual bool write(ConnectionWriter& connection) override {
+    bool write(ConnectionWriter& connection) const override
+    {
         return writer.write(connection);
     }
 
-    virtual void onCompletion() override {
+    void onCompletion() const override
+    {
         writer.onCompletion();
         creator.onCompletion(tracker);
     }
 
-    virtual void onCommencement() override {
+    void onCommencement() const override
+    {
         writer.onCommencement();
     }
 
-    virtual PortWriter *getInternal() override {
+    PortWriter* getInternal() override
+    {
         return &writer;
     }
 };
 
-class YARP_OS_API yarp::os::PortWriterBufferBase {
+class YARP_OS_API PortWriterBufferBase
+{
 public:
     PortWriterBufferBase();
 
@@ -72,7 +85,7 @@ public:
     virtual PortWriterWrapper *create(PortWriterBufferManager& man,
                                       void *tracker) = 0;
 
-    void *getContent();
+    const void* getContent() const;
 
     bool releaseContent();
 
@@ -87,11 +100,10 @@ public:
     void waitForWrite();
 
 protected:
-
     void init();
 
 private:
-    void *implementation;
+    void* implementation;
 };
 
 #endif /*DOXYGEN_SHOULD_SKIP_THIS*/
@@ -103,14 +115,15 @@ private:
  * attach().  "T" should be a PortWriter class, such as Bottle.
  */
 template <class T>
-class yarp::os::PortWriterBuffer : public PortWriterBufferBase {
+class PortWriterBuffer : public PortWriterBufferBase
+{
 public:
-
     //typedef T Type;
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-    virtual PortWriterWrapper *create(PortWriterBufferManager& man,
-                                      void *tracker) override {
+    virtual PortWriterWrapper* create(PortWriterBufferManager& man,
+                                      void* tracker) override
+    {
         return new PortWriterBufferAdaptor<T>(man, tracker);
     }
 #endif /*DOXYGEN_SHOULD_SKIP_THIS*/
@@ -124,7 +137,8 @@ public:
      * output(s) of the port.
      * @return the next object that will be written
      */
-    T& prepare() {
+    T& prepare()
+    {
         return get();
     }
 
@@ -135,7 +149,8 @@ public:
      * @return true if there was a prepared object to return.
      *
      */
-    bool unprepare() {
+    bool unprepare()
+    {
         return releaseContent();
     }
 
@@ -143,8 +158,9 @@ public:
      * A synonym of PortWriterBuffer::prepare.
      * @return the next object that will be written
      */
-    T& get() {
-        PortWriterBufferAdaptor<T> *content = (PortWriterBufferAdaptor<T>*)getContent();  // guaranteed to be non-NULL
+    T& get()
+    {
+        PortWriterBufferAdaptor<T>* content = (PortWriterBufferAdaptor<T>*)getContent(); // guaranteed to be non-NULL
         return content->writer;
     }
 
@@ -156,7 +172,8 @@ public:
      * for reuse.
      * @return the number of buffers in use for communication.
      */
-    int getCount() {
+    int getCount()
+    {
         return PortWriterBufferBase::getCount();
     }
 
@@ -164,24 +181,29 @@ public:
      * Set the Port to which objects will be written.
      * @param port the Port to which objects will be written
      */
-    void attach(Port& port) {
+    void attach(Port& port)
+    {
         PortWriterBufferBase::attach(port);
     }
 
     /**
      * Try to write the last buffer returned by PortWriterBuffer::get.
      */
-    void write(bool forceStrict=false) {
+    void write(bool forceStrict = false)
+    {
         PortWriterBufferBase::write(forceStrict);
     }
 
     /**
      * Wait until any pending writes are done.
      */
-    void waitForWrite() {
+    void waitForWrite()
+    {
         PortWriterBufferBase::waitForWrite();
     }
 };
 
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_PORTWRITERBUFFER_H

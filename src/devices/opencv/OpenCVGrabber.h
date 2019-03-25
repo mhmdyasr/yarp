@@ -1,10 +1,22 @@
 /*
- * Copyright (C) 2006  Eric Mislivec and RobotCub Consortium
- * Authors: Eric Mislivec and Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * Copyright (C) 2006 Eric Mislivec
  *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 
 #ifndef YARP_OPENCV_GRABBER_DEVICE_OPENCVGRABBER_H
 #define YARP_OPENCV_GRABBER_DEVICE_OPENCVGRABBER_H
@@ -72,34 +84,34 @@ public:
 
 
 
-    virtual bool open(yarp::os::Searchable & config) override;
+    bool open(yarp::os::Searchable & config) override;
 
-    virtual bool close() override;
+    bool close() override;
 
-    virtual bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb> & image) override;
+    bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb> & image) override;
     virtual bool sendImage(const cv::Mat & frame, yarp::sig::ImageOf<yarp::sig::PixelRgb> & image);
 
 
     /** Get the height of images a grabber produces.
      * @return The image height. */
-    inline virtual int height() const override { return m_h; }
+    inline int height() const override { return m_h; }
 
     /** Get the width of images a grabber produces.
      * @return The image width. */
-    inline virtual int width() const override { return m_w; }
+    inline int width() const override { return m_w; }
 
     /**
     * Implements the IPreciselyTimed interface.
     * @return the yarp::os::Stamp of the last image acquired
     */
-    inline virtual yarp::os::Stamp getLastInputStamp() override { return m_laststamp; }
+    inline yarp::os::Stamp getLastInputStamp() override { return m_laststamp; }
 
 protected:
 
     /** Width of the images a grabber produces. */
-    int m_w;
+    size_t m_w;
     /** Height of the images a grabber produces. */
-    int m_h;
+    size_t m_h;
 
     /** Whether to loop or not. */
     bool m_loop;

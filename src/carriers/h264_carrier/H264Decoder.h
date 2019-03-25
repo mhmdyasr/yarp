@@ -1,7 +1,9 @@
 /*
- * Copyright: (C) 2017 Istituto Italiano di Tecnologia (IIT)
- * Author: Valentina Gaggero <valentina.gaggero@iit.it>
- * Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef H264DECODER_INC
@@ -16,24 +18,32 @@ namespace yarp {
         class H264Decoder;
     }
 }
-typedef struct
+
+struct h264Decoder_cfgParamters
 {
+    h264Decoder_cfgParamters() :
+        crop{0,0,0,0},
+        fps_max(0),
+        remotePort(-1),
+        verbose(false)
+    {}
+
     struct
     {
         int left;   //number of pixel to crop from left
         int right;  //number of pixel to crop from right
         int top;    //number of pixel to crop from top
         int bottom; //number of pixel to crop from bottom
-    }crop;
+    } crop;
+
     int fps_max;    //max value of fps. it is imposed by gstreamer
     int remotePort; // the port on which the server send data
     bool verbose;   //enables debug print of gstream plugin
-} h264Decoder_cfgParamters;
+};
 
 class yarp::os::H264Decoder
 {
 private:
-    int remotePort;
     void *sysResource;
     h264Decoder_cfgParamters cfg;
 

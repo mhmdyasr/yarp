@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/impl/UnitTest.h>
 #include <yarp/os/impl/Logger.h>
@@ -58,13 +60,16 @@ void operator delete(void *ptr) {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-class RootUnitTest : public UnitTest {
+class RootUnitTest : public UnitTest
+{
 public:
-    RootUnitTest(UnitTest *parent) : UnitTest(parent) {
+    RootUnitTest(UnitTest *parent) : UnitTest(parent)
+    {
         // no parent
     }
 
-    virtual ConstString getName() override {
+    std::string getName() const override
+    {
         return "root";
     }
 };
@@ -73,33 +78,38 @@ public:
 
 
 
-UnitTest::UnitTest() {
-    parent = &UnitTest::getRoot();
-    hasProblem = false;
+UnitTest::UnitTest() :
+        parent(&UnitTest::getRoot()),
+        hasProblem(0)
+{
 }
 
-UnitTest::UnitTest(UnitTest *parent) {
-    this->parent = parent;
+UnitTest::UnitTest(UnitTest *parent) :
+        parent(parent),
+        hasProblem(0)
+{
     if (parent!=nullptr) {
         parent->add(*this);
     }
-    hasProblem = false;
 }
 
-void UnitTest::add(UnitTest& unit) {
-    for (unsigned int i=0; i<subTests.size(); i++) {
-        if (subTests[i]==&unit) {
+void UnitTest::add(UnitTest& unit)
+{
+    for (auto& subTest : subTests) {
+        if (subTest == &unit) {
             return; // already present, no need to add
         }
     }
     subTests.push_back(&unit);
 }
 
-void UnitTest::clear() {
+void UnitTest::clear()
+{
     subTests.clear();
 }
 
-void UnitTest::report(int severity, const ConstString& problem) {
+void UnitTest::report(int severity, const std::string& problem)
+{
     if (parent!=nullptr) {
         parent->report(severity, getName() + ": " + problem);
     } else {
@@ -109,37 +119,32 @@ void UnitTest::report(int severity, const ConstString& problem) {
     count(severity);
 }
 
-void UnitTest::count(int severity) {
+void UnitTest::count(int severity)
+{
     if (severity>0) {
         // could do something more sophisticated with the reports than this...
-        hasProblem = true;
+        hasProblem++;
     }
 }
 
-
-void UnitTest::runSubTests(int argc, char *argv[]) {
-    for (unsigned int i=0; i<subTests.size(); i++) {
-        subTests[i]->run(argc, argv);
-    }
-}
-
-
-int UnitTest::run() {
+int UnitTest::run()
+{
     run(0, nullptr);
     return hasProblem;
 }
 
+int UnitTest::run(int argc, char *argv[])
+{
+    static bool ran = false;
 
-int UnitTest::run(int argc, char *argv[]) {
-    bool ran = false;
     if (argc==0) {
         runTests();
         ran = true;
     } else {
-        ConstString name = getName();
+        std::string name = getName();
         bool onList = false;
         for (int i=0; i<argc; i++) {
-            if (name == ConstString(argv[i])) {
+            if (name == std::string(argv[i])) {
                 onList = true;
                 break;
             }
@@ -149,21 +154,34 @@ int UnitTest::run(int argc, char *argv[]) {
             ran = true;
         }
     }
-    runSubTests(argc, argv);
+
+    // Run sub tests
+    for (auto& subTest : subTests) {
+        hasProblem += subTest->run(argc, argv);
+    }
+
+    if (parent != nullptr) {
+        return hasProblem;
+    }
+
     if (hasProblem) {
         report(0, "A PROBLEM WAS ENCOUNTERED");
+        return 1;
     }
-    else {
-        if (ran) {
-            report(0, "no problems reported");
-        }
+
+    if (!ran) {
+        report(0, "no test found");
+        return 2;
     }
-    return hasProblem;
+
+    report(0, "no problems reported");
+    return 0;
 }
 
 
 
-void UnitTest::startTestSystem() {
+void UnitTest::startTestSystem()
+{
     if (theRoot==nullptr) {
         theRoot = new RootUnitTest(nullptr);
     }
@@ -171,80 +189,66 @@ void UnitTest::startTestSystem() {
 
 // system starts on first call, probably from a static object - this
 // is to avoid link order dependency problems
-UnitTest& UnitTest::getRoot() {
+UnitTest& UnitTest::getRoot()
+{
     startTestSystem();
     yAssert(theRoot!=nullptr);
     return *theRoot;
 }
 
 // this is the important one to call
-void UnitTest::stopTestSystem() {
+void UnitTest::stopTestSystem()
+{
     if (theRoot!=nullptr) {
         delete theRoot;
         theRoot = nullptr;
     }
 }
 
-
-bool UnitTest::checkEqualImpl(int x, int y,
-                              const char *desc,
-                              const char *txt1,
-                              const char *txt2,
-                              const char *fname,
-                              int fline) {
-    char buf[1000];
-    sprintf(buf, "in file %s:%d [%s] %s (%d) == %s (%d)",
-                    fname, fline, desc, txt1, x, txt2, y);
-    if (x==y) {
-        report(0, ConstString("  [") + desc + "] passed ok");
-    } else {
-        report(1, ConstString("  FAILURE ") + buf);
-    }
-    return x==y;
-}
-
 bool UnitTest::checkEqualishImpl(double x, double y,
-                                 const char *desc,
+                                 const std::string& desc,
                                  const char *txt1,
                                  const char *txt2,
                                  const char *fname,
-                                 int fline) {
-    char buf[1000];
-    sprintf(buf, "in file %s:%d [%s] %s (%g) == %s (%g)",
-                    fname, fline, desc, txt1, x, txt2, y);
-    bool ok = (fabs(x-y)<0.0001);
-    if (ok) {
-        report(0, ConstString("  [") + desc + "] passed ok");
+                                 int fline)
+{
+    std::ostringstream ost;
+    if (fabs(x-y)<0.0001) {
+        ost << "  [" << desc << "] passed ok";
+        report(0, ost.str());
+        return true;
     } else {
-        report(1, ConstString("  FAILURE ") + buf);
+        ost << "  FAILURE in file " << fname << ":" << fline << " [" << desc << "] " << txt1 << " (" << x << ") == " << txt2 << " (" << y << ")";
+        report(1, ost.str());
+        return false;
     }
-    return ok;
 }
 
 
-bool UnitTest::checkEqualImpl(const ConstString& x, const ConstString& y,
-                              const char *desc,
+bool UnitTest::checkEqualImpl(const std::string& x, const std::string& y,
+                              const std::string& desc,
                               const char *txt1,
                               const char *txt2,
                               const char *fname,
-                              int fline) {
-    char buf[1000];
-    sprintf(buf, "in file %s:%d [%s] %s (%s) == %s (%s)",
-                    fname, fline, desc, txt1, humanize(x).c_str(), txt2, humanize(y).c_str());
-    bool ok = (x==y);
-    if (ok) {
-        report(0, ConstString("  [") + desc + "] passed ok");
+                              int fline)
+{
+    std::ostringstream ost;
+    if (x == y) {
+        ost << "  [" << desc << "] passed ok";
+        report(0, ost.str());
+        return true;
     } else {
-        report(1, ConstString("  FAILURE ") + buf);
+        ost << "  FAILURE in file " << fname << ":" << fline << " [" << desc << "] " << txt1 << " (" << humanize(x) << ") == " << txt2 << " (" << humanize(y) << ")";
+        report(1, ost.str());
+        return false;
     }
-    return ok;
 }
 
 
-ConstString UnitTest::humanize(const ConstString& txt) {
-    ConstString result("");
-    for (unsigned int i=0; i<txt.length(); i++) {
-        char ch = txt[i];
+std::string UnitTest::humanize(const std::string& txt)
+{
+    std::string result;
+    for (char ch : txt) {
         if (ch == '\n') {
             result += "\\n";
         } else if (ch == '\r') {
@@ -259,22 +263,24 @@ ConstString UnitTest::humanize(const ConstString& txt) {
 }
 
 
-void UnitTest::saveEnvironment(const char *key) {
+void UnitTest::saveEnvironment(const char *key)
+{
     bool found = false;
-    ConstString val = NetworkBase::getEnvironment(key, &found);
+    std::string val = NetworkBase::getEnvironment(key, &found);
     Bottle& lst = env.addList();
     lst.addString(key);
     lst.addString(val);
-    lst.addInt(found?1:0);
+    lst.addInt32(found?1:0);
 }
 
-void UnitTest::restoreEnvironment() {
-    for (int i=0; i<env.size(); i++) {
+void UnitTest::restoreEnvironment()
+{
+    for (size_t i=0; i<env.size(); i++) {
         Bottle *lst = env.get(i).asList();
         if (lst==nullptr) continue;
-        ConstString key = lst->get(0).asString();
-        ConstString val = lst->get(1).asString();
-        bool found = lst->get(2).asInt()?true:false;
+        std::string key = lst->get(0).asString();
+        std::string val = lst->get(1).asString();
+        bool found = lst->get(2).asInt32()?true:false;
         if (!found) {
             NetworkBase::unsetEnvironment(key);
         } else {
@@ -285,7 +291,8 @@ void UnitTest::restoreEnvironment() {
 }
 
 
-bool UnitTest::heapMonitorSupported() {
+bool UnitTest::heapMonitorSupported()
+{
 #ifdef YARP_TEST_HEAP
     return true;
 #else
@@ -293,7 +300,8 @@ bool UnitTest::heapMonitorSupported() {
 #endif
 }
 
-void UnitTest::heapMonitorBegin(bool expectAllocations) {
+void UnitTest::heapMonitorBegin(bool expectAllocations)
+{
 #ifdef YARP_TEST_HEAP
     heapMonitorEnd();
     heap_count_ops = 0;
@@ -305,7 +313,8 @@ void UnitTest::heapMonitorBegin(bool expectAllocations) {
 #endif
 }
 
-int UnitTest::heapMonitorOps() {
+int UnitTest::heapMonitorOps()
+{
 #ifdef YARP_TEST_HEAP
     heap_count_mutex->lock();
     int diff = heap_count_ops;
@@ -320,7 +329,8 @@ int UnitTest::heapMonitorOps() {
 #endif
 }
 
-int UnitTest::heapMonitorEnd() {
+int UnitTest::heapMonitorEnd()
+{
 #ifdef YARP_TEST_HEAP
     if (!heap_count_mutex) return 0;
     heap_count_mutex->lock();

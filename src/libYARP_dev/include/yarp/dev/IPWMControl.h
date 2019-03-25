@@ -1,13 +1,16 @@
 /*
-* Copyright (C) 2016 Istituto Italiano di Tecnologia (IIT)
-* Authors: Marco Randazzo <marco.randazzo@iit.it>
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 #ifndef YARP_DEV_IPWMCONTROL_H
 #define YARP_DEV_IPWMCONTROL_H
 
 #include <yarp/dev/api.h>
+#include <yarp/os/Vocab.h>
 
 namespace yarp {
     namespace dev {
@@ -138,11 +141,11 @@ public:
 };
 
 // Interface name
-#define VOCAB_PWMCONTROL_INTERFACE   VOCAB4('i','p','w','m')
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_INTERFACE   = yarp::os::createVocab('i','p','w','m');
 // methods names
-#define VOCAB_PWMCONTROL_REF_PWM     VOCAB3('r','e','f')
-#define VOCAB_PWMCONTROL_REF_PWMS    VOCAB4('r','e','f','s')
-#define VOCAB_PWMCONTROL_PWM_OUTPUT  VOCAB3('p','w','m')
-#define VOCAB_PWMCONTROL_PWM_OUTPUTS VOCAB4('p','w','m','s')
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_REF_PWM     = yarp::os::createVocab('r','e','f');
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_REF_PWMS    = yarp::os::createVocab('r','e','f','s');
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_PWM_OUTPUT  = yarp::os::createVocab('p','w','m');
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_PWM_OUTPUTS = yarp::os::createVocab('p','w','m','s');
 
 #endif // YARP_DEV_IPWMCONTROL_H

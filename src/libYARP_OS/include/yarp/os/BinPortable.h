@@ -1,19 +1,16 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_BINPORTABLE_H
 #define YARP_OS_BINPORTABLE_H
 
 #include <yarp/os/Portable.h>
-
-namespace yarp {
-    namespace os {
-        template <class T> class BinPortable;
-    }
-}
 
 namespace yarp {
 namespace os {
@@ -43,10 +40,10 @@ public:
     T& content();
 
     // Documented in Portable
-    virtual bool read(ConnectionReader& connection) override;
+    bool read(ConnectionReader& connection) override;
 
     // Documented in Portable
-    virtual bool write(ConnectionWriter& connection) override;
+    bool write(ConnectionWriter& connection) const override;
 };
 
 } // namespace os

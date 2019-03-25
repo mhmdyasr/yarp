@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_ALL_H
@@ -13,6 +16,10 @@
 #include <yarp/dev/CartesianControl.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
+#include <yarp/dev/IAxisInfo.h>
+#include <yarp/dev/IAmplifierControl.h>
+#include <yarp/dev/IControlDebug.h>
+#include <yarp/dev/IControlLimits.h>
 #include <yarp/dev/ControlBoardPid.h>
 #include <yarp/dev/DataSource.h>
 #include <yarp/dev/DeviceDriver.h>
@@ -26,14 +33,11 @@
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/IRGBDSensor.h>
 #include <yarp/dev/IHapticDevice.h>
-#include <yarp/dev/IKinectDeviceDriver.h>
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/IRGBDSensor.h>
 #include <yarp/dev/IVisualServoing.h>
+#include <yarp/dev/MultipleAnalogSensorsInterfaces.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/RemoteFrameGrabber.h>
-#include <yarp/dev/ServerFrameGrabber.h>
-#include <yarp/dev/ServerSoundGrabber.h>
 #include <yarp/dev/ServiceInterfaces.h>
 #include <yarp/dev/Wrapper.h>
 

@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms of the
+# BSD-3-Clause license. See the accompanying LICENSE file for details.
+
 function header() {
     echo "###############################################################"
     echo "## $1"
@@ -27,18 +33,18 @@ cd $base
 mkdir -p $base/fakebot
 mkdir -p $base/fakebot_static
 
-PLUGIN_FLAGS="-DCREATE_DEVICE_LIBRARY_MODULES=TRUE -DENABLE_yarpmod_fakebot=TRUE -DCREATE_OPTIONAL_CARRIERS=TRUE -DENABLE_yarpcar_human_carrier=TRUE -DCREATE_GUIS=OFF"
+PLUGIN_FLAGS="-DENABLE_yarpmod_fakebot=TRUE -DENABLE_yarpcar_human_carrier=TRUE -DCREATE_GUIS=OFF"
 
 # Create fakebot device
 cd $base/fakebot
 echo "Working in $PWD"
-cmake -DCMAKE_INSTALL_PREFIX=$base/root $PLUGIN_FLAGS -DCREATE_SHARED_LIBRARY=TRUE $src
+cmake -DCMAKE_INSTALL_PREFIX=$base/root $PLUGIN_FLAGS -DBUILD_SHARED_LIBS=TRUE $src
 make
 make install
 
 cd $base/fakebot_static
 echo "Working in $PWD"
-cmake -DCMAKE_INSTALL_PREFIX=$base/root_static $PLUGIN_FLAGS -DCREATE_SHARED_LIBRARY=FALSE $src
+cmake -DCMAKE_INSTALL_PREFIX=$base/root_static $PLUGIN_FLAGS -DBUILD_SHARED_LIBS=FALSE $src
 make
 make install
 

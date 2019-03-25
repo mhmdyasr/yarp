@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <cstdio>
@@ -23,7 +26,7 @@ void DeviceResponder::addUsage(const char *txt, const char *explain) {
     examples.addString(txt); //Value::makeList(txt));
     explains.addString((explain!=nullptr)?explain:"");
     details.add(Value::makeList(txt));
-    ConstString more = ConstString("   ") + ((explain != nullptr) ? explain : "");
+    std::string more = std::string("   ") + ((explain != nullptr) ? explain : "");
     details.addString(more.c_str());
 }
 
@@ -35,7 +38,7 @@ void DeviceResponder::addUsage(const Bottle& bot, const char *explain) {
 
 bool DeviceResponder::respond(const Bottle& command, Bottle& reply) {
     switch (command.get(0).asVocab()) {
-    case VOCAB4('h','e','l','p'):
+    case yarp::os::createVocab('h','e','l','p'):
         if (examples.size()>=1) {
             reply.add(Value::makeVocab("many"));
             if (command.get(1).toString()=="more") {
@@ -65,7 +68,7 @@ bool DeviceResponder::read(ConnectionReader& connection) {
         ConnectionWriter *writer = connection.getWriter();
         if (writer!=nullptr) {
             if (response.get(0).toString()=="many"&&writer->isTextMode()) {
-                for (int i=1; i<response.size(); i++) {
+                for (size_t i=1; i<response.size(); i++) {
                     Value& v = response.get(i);
                     if (v.isList()) {
                         v.asList()->write(*writer);

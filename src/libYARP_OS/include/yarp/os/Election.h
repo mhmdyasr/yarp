@@ -1,50 +1,51 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_ELECTION_H
 #define YARP_OS_ELECTION_H
 
-#include <yarp/os/ConstString.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/os/Log.h>
+#include <yarp/os/Mutex.h>
 
 #include <map>
+#include <string>
 
 namespace yarp {
-    namespace os {
-        template <class T> class PeerRecord;
-        template <class PR> class ElectionOf;
-    }
-}
+namespace os {
 
 template <class T>
-class yarp::os::PeerRecord {
+class PeerRecord
+{
 public:
     typedef T peer_type;
-    typedef std::map<T *, bool> map_type;
+    typedef std::map<T*, bool> map_type;
     map_type peerSet;
     typedef typename map_type::iterator iterator;
     typedef typename map_type::const_iterator const_iterator;
 
-    PeerRecord() {
-    }
+    PeerRecord() {}
 
-    PeerRecord(const PeerRecord& alt) {
-    }
+    PeerRecord(const PeerRecord& alt) {}
 
-    void add(T *entity) {
+    void add(T* entity)
+    {
         peerSet[entity] = true;
     }
 
-    void remove(T *entity) {
+    void remove(T* entity)
+    {
         peerSet.erase(entity);
     }
 
-    T *getFirst() {
-        if (peerSet.begin()!=peerSet.end()) {
+    T* getFirst()
+    {
+        if (peerSet.begin() != peerSet.end()) {
             return peerSet.begin()->first;
         }
         return nullptr;
@@ -60,17 +61,19 @@ public:
  * PR should be a subclass of PeerRecord.
  */
 template <class PR>
-class yarp::os::ElectionOf {
+class ElectionOf
+{
 private:
-    typedef void *voidPtr;
+    typedef void* voidPtr;
 
-    yarp::os::Semaphore mutex;
+    yarp::os::Mutex mutex;
 
-    typedef typename std::map<yarp::os::ConstString, PR> map_type;
+    typedef typename std::map<std::string, PR> map_type;
     map_type nameMap;
     long ct;
 
-    PR *getRecordRaw(const yarp::os::ConstString& key, bool create = false) {
+    PR* getRecordRaw(const std::string& key, bool create = false)
+    {
         typename map_type::iterator entry = nameMap.find(key);
         if (entry == nameMap.end() && create) {
             nameMap[key] = PR();
@@ -81,83 +84,70 @@ private:
         }
         return &(entry->second);
     }
- public:
-    ElectionOf() : mutex(1) {
+
+public:
+    ElectionOf() :
+            mutex()
+    {
         ct = 0;
     }
     virtual ~ElectionOf() {}
 
-    PR *add(const yarp::os::ConstString& key, typename PR::peer_type *entity) {
-        mutex.wait();
+    PR* add(const std::string& key, typename PR::peer_type* entity)
+    {
+        mutex.lock();
         ct++;
-        PR *rec = getRecordRaw(key, true);
+        PR* rec = getRecordRaw(key, true);
         yAssert(rec);
         rec->add(entity);
-        mutex.post();
+        mutex.unlock();
         return rec;
     }
-    void remove(const yarp::os::ConstString& key, typename PR::peer_type *entity) {
-        mutex.wait();
+    void remove(const std::string& key, typename PR::peer_type* entity)
+    {
+        mutex.lock();
         ct++;
-        PR *rec = getRecordRaw(key, false);
+        PR* rec = getRecordRaw(key, false);
         yAssert(rec);
         rec->remove(entity);
-        mutex.post();
+        mutex.unlock();
     }
 
-    typename PR::peer_type *getElect(const yarp::os::ConstString& key) {
-        mutex.wait();
-        PR *rec = getRecordRaw(key, false);
-        mutex.post();
+    typename PR::peer_type* getElect(const std::string& key)
+    {
+        mutex.lock();
+        PR* rec = getRecordRaw(key, false);
+        mutex.unlock();
         if (rec) {
             return rec->getFirst();
         }
         return nullptr;
     }
 
-    PR *getRecord(const yarp::os::ConstString& key) {
-        mutex.wait();
-        PR *rec = getRecordRaw(key, false);
-        mutex.post();
+    PR* getRecord(const std::string& key)
+    {
+        mutex.lock();
+        PR* rec = getRecordRaw(key, false);
+        mutex.unlock();
         return rec;
     }
 
-    long getEventCount() {
+    long getEventCount()
+    {
         return ct;
     }
 
-    void lock() { mutex.wait(); }
-    void unlock() { mutex.post(); }
+    void lock()
+    {
+        mutex.lock();
+    }
+    void unlock()
+    {
+        mutex.unlock();
+    }
 };
 
-
-/**
- * Type-safe wrapper for the Election class.
- */
-/*
-template <class T, class PR>
-class yarp::os::ElectionOf : protected Election<PR> {
-public:
-    PR *add(const yarp::os::ConstString& key, T *entity) {
-        return Election<PR>::add(key, entity);
-    }
-
-    void remove(const yarp::os::ConstString& key, T *entity) {
-        Election<PR>::remove(key, entity);
-    }
-
-    T *getElect(const yarp::os::ConstString& key) {
-        return (T *)Election<PR>::getElect(key);
-    }
-
-    PR *getRecord(const yarp::os::ConstString& key) {
-        return Election<PR>::getRecord(key);
-    }
-
-    void lock() { Election<PR>::lock(); }
-
-    void unlock() { Election<PR>::unlock(); }
-};
-*/
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_ELECTION_H

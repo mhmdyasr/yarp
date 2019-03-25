@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IMPLEMENTMOTOR_H
@@ -20,8 +22,7 @@ class YARP_dev_API yarp::dev::ImplementMotor: public IMotor
 protected:
     IMotorRaw *imotor;
     void *helper;
-    double *temp1;
-    double *temp2;
+    int nj;
 
 
     /**
@@ -48,14 +49,14 @@ public:
 
     virtual ~ImplementMotor();
 
-    virtual bool getNumberOfMotors(int *num) override;
+    bool getNumberOfMotors(int *num) override;
 
-    virtual bool getTemperature      (int m, double* val) override;
-    virtual bool getTemperatures     (double *vals) override;
-    virtual bool getTemperatureLimit (int m, double* val) override;
-    virtual bool setTemperatureLimit (int m, const double val) override;
-    virtual bool getGearboxRatio     (int m, double* val) override;
-    virtual bool setGearboxRatio     (int m, const double val) override;
+    bool getTemperature      (int m, double* val) override;
+    bool getTemperatures     (double *vals) override;
+    bool getTemperatureLimit (int m, double* val) override;
+    bool setTemperatureLimit (int m, const double val) override;
+    bool getGearboxRatio     (int m, double* val) override;
+    bool setGearboxRatio     (int m, const double val) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTMOTOR_H

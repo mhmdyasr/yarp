@@ -1,12 +1,15 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/Log.h>
 #include <yarp/sig/Image.h>
-#include <yarp/sig/IplImage.h>
+#include <yarp/sig/impl/IplImage.h>
 
 #include <cstring>
 #include <cstdio>
@@ -1201,29 +1204,29 @@ static void CopyPixels(const T1 *osrc, int q1, T2 *odest, int q2,
 }
 
 
-typedef PixelMono Def_VOCAB_PIXEL_MONO;
-typedef PixelMono16 Def_VOCAB_PIXEL_MONO16;
-typedef PixelRgb Def_VOCAB_PIXEL_RGB;
-typedef PixelRgba Def_VOCAB_PIXEL_RGBA;
-typedef PixelBgra Def_VOCAB_PIXEL_BGRA;
-typedef PixelHsv Def_VOCAB_PIXEL_HSV;
-typedef PixelBgr Def_VOCAB_PIXEL_BGR;
-typedef PixelMonoSigned Def_VOCAB_PIXEL_MONO_SIGNED;
-typedef PixelRgbSigned Def_VOCAB_PIXEL_RGB_SIGNED;
-typedef PixelFloat Def_VOCAB_PIXEL_MONO_FLOAT;
-typedef PixelRgbFloat Def_VOCAB_PIXEL_RGB_FLOAT;
-typedef PixelHsvFloat Def_VOCAB_PIXEL_HSV_FLOAT;
-typedef PixelInt Def_VOCAB_PIXEL_INT;
-typedef PixelRgbInt Def_VOCAB_PIXEL_RGB_INT;
+using Def_VOCAB_PIXEL_MONO = PixelMono;
+using Def_VOCAB_PIXEL_MONO16 = PixelMono16;
+using Def_VOCAB_PIXEL_RGB = PixelRgb;
+using Def_VOCAB_PIXEL_RGBA = PixelRgba;
+using Def_VOCAB_PIXEL_BGRA = PixelBgra;
+using Def_VOCAB_PIXEL_HSV = PixelHsv;
+using Def_VOCAB_PIXEL_BGR = PixelBgr;
+using Def_VOCAB_PIXEL_MONO_SIGNED = PixelMonoSigned;
+using Def_VOCAB_PIXEL_RGB_SIGNED = PixelRgbSigned;
+using Def_VOCAB_PIXEL_MONO_FLOAT = PixelFloat;
+using Def_VOCAB_PIXEL_RGB_FLOAT = PixelRgbFloat;
+using Def_VOCAB_PIXEL_HSV_FLOAT = PixelHsvFloat;
+using Def_VOCAB_PIXEL_INT = PixelInt;
+using Def_VOCAB_PIXEL_RGB_INT = PixelRgbInt;
 
 #define HASH(id1, id2) ((int)(((int)(id1%65537))*11 + ((long int)(id2))))
 #define HANDLE_CASE(len, x1, T1, q1, o1, x2, T2, q2, o2) CopyPixels(reinterpret_cast<const T1*>(x1), q1, reinterpret_cast<T2*>(x2), q2, w, h, o1!=o2);
 #define MAKE_CASE(id1, id2) case HASH(id1, id2): HANDLE_CASE(len, src, Def_##id1, quantum1, topIsLow1, dest, Def_##id2, quantum2, topIsLow2); break;
 
 // More elegant ways to do this, but needs to be efficient at pixel level
-void Image::copyPixels(const unsigned char *src, int id1,
-                       char unsigned *dest, int id2, int w, int h,
-                       int imageSize, int quantum1, int quantum2,
+void Image::copyPixels(const unsigned char *src, size_t id1,
+                       char unsigned *dest, size_t id2, size_t w, size_t h,
+                       size_t imageSize, size_t quantum1, size_t quantum2,
                        bool topIsLow1, bool topIsLow2)
 {
     DBG printf("copyPixels...\n");
@@ -1456,7 +1459,7 @@ void Image::copyPixels(const unsigned char *src, int id1,
         MAKE_CASE(VOCAB_PIXEL_MONO16, VOCAB_PIXEL_MONO16)
 
         default:
-            printf("*** Tried to copy type %d to %d\n", id1, id2);
+            printf("*** Tried to copy type %zu to %zu\n", id1, id2);
             std::exit(1);
             break;
     }

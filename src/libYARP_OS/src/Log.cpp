@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2012-2014 Istituto Italiano di Tecnologia (IIT)
- * Authors: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
- *          Marco Randazzo          <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/Log.h>
@@ -19,6 +20,10 @@
 
 #ifdef YARP_HAS_ACE
 # include <ace/Stack_Trace.h>
+// In one the ACE headers there is a definition of "main" for WIN32
+# ifdef main
+#  undef main
+# endif
 #elif defined(YARP_HAS_EXECINFO_H)
 # include <execinfo.h>
 #endif
@@ -146,7 +151,7 @@ void yarp::os::impl::LogImpl::forward_callback(yarp::os::Log::LogType t,
     }
 
     std::stringstream stringstream_buffer;
-    LogForwarder* theForwarder = LogForwarder::getInstance();
+    LogForwarder& theForwarder = LogForwarder::getInstance();
 
     switch (t) {
     case yarp::os::Log::TraceType:
@@ -156,7 +161,7 @@ void yarp::os::impl::LogImpl::forward_callback(yarp::os::Log::LogType t,
             } else {
                 stringstream_buffer << "[TRACE]" << func << msg << std::endl;
             }
-            theForwarder->forward(stringstream_buffer.str());
+            theForwarder.forward(stringstream_buffer.str());
         }
         break;
     case yarp::os::Log::DebugType:
@@ -166,7 +171,7 @@ void yarp::os::impl::LogImpl::forward_callback(yarp::os::Log::LogType t,
             } else {
                 stringstream_buffer << "[DEBUG]" << msg << std::endl;
             }
-            theForwarder->forward(stringstream_buffer.str());
+            theForwarder.forward(stringstream_buffer.str());
         }
         break;
     case yarp::os::Log::InfoType:
@@ -175,7 +180,7 @@ void yarp::os::impl::LogImpl::forward_callback(yarp::os::Log::LogType t,
             } else {
                 stringstream_buffer << "[INFO]" << msg << std::endl;
             }
-            theForwarder->forward(stringstream_buffer.str());
+            theForwarder.forward(stringstream_buffer.str());
         break;
     case yarp::os::Log::WarningType:
             if (verbose_output) {
@@ -183,7 +188,7 @@ void yarp::os::impl::LogImpl::forward_callback(yarp::os::Log::LogType t,
             } else {
                 stringstream_buffer << "[WARNING]" << msg << std::endl;
             }
-            theForwarder->forward(stringstream_buffer.str());
+            theForwarder.forward(stringstream_buffer.str());
         break;
     case yarp::os::Log::ErrorType:
             if (verbose_output) {
@@ -191,7 +196,7 @@ void yarp::os::impl::LogImpl::forward_callback(yarp::os::Log::LogType t,
             } else {
                 stringstream_buffer << "[ERROR]" << msg << std::endl;
             }
-            theForwarder->forward(stringstream_buffer.str());
+            theForwarder.forward(stringstream_buffer.str());
         break;
     case yarp::os::Log::FatalType:
             if (verbose_output) {
@@ -199,7 +204,7 @@ void yarp::os::impl::LogImpl::forward_callback(yarp::os::Log::LogType t,
             } else {
                 stringstream_buffer << "[FATAL]" << msg << std::endl;
             }
-            theForwarder->forward(stringstream_buffer.str());
+            theForwarder.forward(stringstream_buffer.str());
             yarp_print_trace(stderr, file, line);
         break;
     default:

@@ -1,8 +1,9 @@
 /*
- * Copyright (C) 2011 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo <marco.randazzo@iit.it>
- *          Lorenzo Natale <lorenzo.natale@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_DEV_IMPLEMENTIMPEDANCECONTROL_H
@@ -49,12 +50,12 @@ public:
      */
     virtual ~ImplementImpedanceControl();
 
-    virtual bool getAxes(int *ax) override;
-    virtual bool getImpedance(int j, double *stiffness, double *damping) override;
-    virtual bool setImpedance(int j, double  stiffness, double  damping) override;
-    virtual bool setImpedanceOffset(int j, double offset) override;
-    virtual bool getImpedanceOffset(int j, double* offset) override;
-    virtual bool getCurrentImpedanceLimit(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp) override;
+    bool getAxes(int *ax) override;
+    bool getImpedance(int j, double *stiffness, double *damping) override;
+    bool setImpedance(int j, double  stiffness, double  damping) override;
+    bool setImpedanceOffset(int j, double offset) override;
+    bool getImpedanceOffset(int j, double* offset) override;
+    bool getCurrentImpedanceLimit(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp) override;
 
 };
 

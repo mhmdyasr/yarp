@@ -1,11 +1,18 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "xmlloader.h"
@@ -17,7 +24,7 @@ XmlLoader::XmlLoader(QString fileName, PlotManager *plotManager,QObject *parent)
     plotter = nullptr;
     this->plotManager = plotManager;
 
-    QFile* file = new QFile(fileName);
+    auto* file = new QFile(fileName);
        /* If we can't open it, let's show an error message. */
        if (!file->open(QIODevice::ReadOnly | QIODevice::Text)) {
            return;
@@ -127,17 +134,17 @@ XmlLoader::XmlLoader(QString fileName, PlotManager *plotManager,QObject *parent)
                 if(graphAttributes.hasAttribute("remote")) {
                     graph_remote = graphAttributes.value("remote").toString();
                 } else {
-                    qCritical("Syntax error while loading %s. \"remote\" attribute not found in element \"graph\"",fileName.toLatin1().data());
+                    qCritical(R"(Syntax error while loading %s. "remote" attribute not found in element "graph")",fileName.toLatin1().data());
                     break;
                 }
                 if(graphAttributes.hasAttribute("index")) {
                     graph_index = graphAttributes.value("index").toInt();
                     if(graph_index < 0) {
-                        qCritical("Syntax error while loading %s. \"index\" attribute not found in element \"graph\"",fileName.toLatin1().data());
+                        qCritical(R"(Syntax error while loading %s. "index" attribute not found in element "graph")",fileName.toLatin1().data());
                         break;
                     }
                 } else {
-                    qCritical("Syntax error while loading %s. \"index\" attribute in element \"graph\" should be >= 0",fileName.toLatin1().data());
+                    qCritical(R"(Syntax error while loading %s. "index" attribute in element "graph" should be >= 0)",fileName.toLatin1().data());
                     break;
                 }
                 if(graphAttributes.hasAttribute("title")) {
@@ -162,9 +169,12 @@ XmlLoader::XmlLoader(QString fileName, PlotManager *plotManager,QObject *parent)
                         graph_size = default_graph_size;
                     }
                 }
-                Graph *graph = plotter->addGraph(graph_remote,"",graph_index,graph_title, graph_color, graph_type, graph_size, graph_y_scale);
-                if(graph){
-                    graph->init(graph_remote,"", portscope_carrier, portscope_persistent);
+                if (plotter)
+                {
+                    Graph *graph = plotter->addGraph(graph_remote,"",graph_index,graph_title, graph_color, graph_type, graph_size, graph_y_scale);
+                    if(graph){
+                        graph->init(graph_remote,"", portscope_carrier, portscope_persistent);
+                    }
                 }
                 continue;
             }

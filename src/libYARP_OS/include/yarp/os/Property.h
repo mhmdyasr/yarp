@@ -1,21 +1,23 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_PROPERTY_H
 #define YARP_OS_PROPERTY_H
 
-#include <yarp/os/ConstString.h>
 #include <yarp/os/Bottle.h>
+#include <yarp/os/Portable.h>
+#include <yarp/os/Searchable.h>
+
+#include <string>
 
 namespace yarp {
-    namespace os {
-        class Property;
-    }
-}
-
+namespace os {
 
 /**
  * \ingroup key_class
@@ -29,8 +31,8 @@ namespace yarp {
  * Searchable object (include Bottle objects) using the fromString() method.
  * Property objects can be searched efficiently.
  */
-class YARP_OS_API yarp::os::Property : public Searchable, public Portable {
-
+class YARP_OS_API Property : public Searchable, public Portable
+{
 public:
     using Searchable::check;
     using Searchable::findGroup;
@@ -48,7 +50,7 @@ public:
     /**
      * Initialize from a string, using fromString().
      */
-    Property(const char *str);
+    Property(const char* str);
 
 
     /**
@@ -67,7 +69,7 @@ public:
     const Property& operator=(const Property& prop);
 
     // documented in Searchable
-    bool check(const ConstString& key) const override;
+    bool check(const std::string& key) const override;
 
     /**
      * \brief Associate the given \c key with the given string.
@@ -80,7 +82,7 @@ public:
      * @param key the key
      * @param value the string value
      */
-    void put(const ConstString& key, const ConstString& value);
+    void put(const std::string& key, const std::string& value);
 
     /**
      * \brief Associate the given \c key with the given value
@@ -93,7 +95,7 @@ public:
      * @param key the key
      * @param value the value
      */
-    void put(const ConstString& key, const Value& value);
+    void put(const std::string& key, const Value& value);
 
     /**
      * \brief Associate the given \c key with the given value.
@@ -106,12 +108,12 @@ public:
      * @param key the key
      * @param value the value
      */
-    void put(const ConstString& key, Value *value);
+    void put(const std::string& key, Value* value);
 
     /**
      * \brief Associate the given \c key with the given integer.
      *
-     * After the association <code>find(key).asInt()</code> will return that
+     * After the association <code>find(key).asInt32()</code> will return that
      * integer.
      * If \c key is already associated, the value will be replaced with the new
      * one.
@@ -119,7 +121,7 @@ public:
      * @param key the key
      * @param value the integer value
      */
-    void put(const ConstString& key, int value);
+    void put(const std::string& key, int value);
 
     /**
      * \brief Associate the given \c key with the given floating point number
@@ -132,7 +134,7 @@ public:
      * @param key the key
      * @param value the floating point value
      */
-    void put(const ConstString& key, double value);
+    void put(const std::string& key, double value);
 
     /**
      * \brief Add a nested group.
@@ -144,7 +146,7 @@ public:
      * @param key the key
      * @return the nested group, represented as a Property
      */
-    Property& addGroup(const ConstString& key);
+    Property& addGroup(const std::string& key);
 
     /**
      * \brief Remove the association from the given \c key to a value, if
@@ -154,13 +156,13 @@ public:
      *
      * @param key the key
      */
-    void unput(const ConstString& key);
+    void unput(const std::string& key);
 
     // documented in Searchable
-    virtual Value& find(const ConstString& key) const override;
+    Value& find(const std::string& key) const override;
 
     // documented in Searchable
-    virtual Bottle& findGroup(const ConstString& key) const override;
+    Bottle& findGroup(const std::string& key) const override;
 
     /**
      * \brief Remove all associations.
@@ -180,8 +182,8 @@ public:
      * <code>{width => 10, height => 15}</code>.
      * Therefore:
      * \code
-     *   prop.find("width").asInt() // gives 10
-     *   prop.find("height").asInt() // gives 15
+     *   prop.find("width").asInt32() // gives 10
+     *   prop.find("height").asInt32() // gives 15
      * \endcode
      *
      * If a key is duplicated, only the latest will be used.
@@ -191,7 +193,7 @@ public:
      * @param txt the textual form of the Property object
      * @param wipe should Property be emptied first
      */
-    void fromString(const ConstString& txt, bool wipe=true);
+    void fromString(const std::string& txt, bool wipe = true);
 
     /**
      * \brief Interprets a list of command arguments as a list of properties.
@@ -202,8 +204,8 @@ public:
      * will be the mapping <code>{width => 10, height => 15}</code>.
      * Therefore:
      * \code
-     *   prop.find("width").asInt() // gives 10
-     *   prop.find("height").asInt() // gives 15
+     *   prop.find("width").asInt32() // gives 10
+     *   prop.find("height").asInt32() // gives 15
      * \endcode
      *
      * If a key is duplicated, only the latest will be used.
@@ -217,8 +219,7 @@ public:
      * (which is the right thing to do for arguments passed to main())
      * @param wipe should Property be emptied first
      */
-    void fromCommand(int argc, char *argv[], bool skipFirst=true,
-                     bool wipe=true);
+    void fromCommand(int argc, char* argv[], bool skipFirst = true, bool wipe = true);
 
     /**
      * \brief Interprets a list of command arguments as a list of properties.
@@ -229,8 +230,8 @@ public:
      * will be the mapping <code>{width => 10, height => 15}</code>.
      * Therefore:
      * \code
-     *   prop.find("width").asInt() // gives 10
-     *   prop.find("height").asInt() // gives 15
+     *   prop.find("width").asInt32() // gives 10
+     *   prop.find("height").asInt32() // gives 15
      * \endcode
      *
      * If a key is duplicated, only the latest will be used.
@@ -244,8 +245,7 @@ public:
      * (which is the right thing to do for arguments passed to main())
      * @param wipe should Property be emptied first
      */
-    void fromCommand(int argc, const char *argv[], bool skipFirst=true,
-                     bool wipe=true);
+    void fromCommand(int argc, const char* argv[], bool skipFirst = true, bool wipe = true);
 
     /**
      * \brief Interprets a list of command arguments as a list of properties.
@@ -256,8 +256,8 @@ public:
      * will be the mapping <code>{width => 10, height => 15}</code>.
      * Therefore:
      * \code
-     *   prop.find("width").asInt() // gives 10
-     *   prop.find("height").asInt() // gives 15
+     *   prop.find("width").asInt32() // gives 10
+     *   prop.find("height").asInt32() // gives 15
      * \endcode
      *
      * If a key is duplicated, only the latest will be used.
@@ -268,7 +268,7 @@ public:
      * @param arguments the command arguments
      * @param wipe should Property be emptied first
      */
-    void fromArguments(const char *arguments, bool wipe=true);
+    void fromArguments(const char* arguments, bool wipe = true);
 
     /**
      * \brief Interprets a file as a list of properties.
@@ -281,8 +281,8 @@ public:
      * the Property object will be the mapping  {width => 10, height => 15}.
      * In other words:
      * \code
-     *   prop.find("width").asInt() // gives 10
-     *   prop.find("height").asInt() // gives 15
+     *   prop.find("width").asInt32() // gives 10
+     *   prop.find("height").asInt32() // gives 15
      * \endcode
      *
      * If a key is duplicated, only the latest will be used.
@@ -307,7 +307,7 @@ public:
      * "(SIZE (width 10) (height 15)) (APPEARANCE (color red))".
      * In other words:
      * \code
-     *   prop.findGroup("SIZE").find("width").asInt() // gives 10
+     *   prop.findGroup("SIZE").find("width").asInt32() // gives 10
      *   prop.findGroup("APPEARANCE").find("color").asString() // gives red
      * \endcode
      *
@@ -346,7 +346,7 @@ public:
      * @param wipe should Property be emptied first
      * @return true if file exists and can be read
      */
-    bool fromConfigFile(const ConstString& fname, bool wipe=true);
+    bool fromConfigFile(const std::string& fname, bool wipe = true);
 
     /**
      * \brief Variant of fromConfigFile(fname, wipe) that includes extra
@@ -361,9 +361,9 @@ public:
      * @param wipe should Property be emptied first
      * @return true if file exists and can be read
      */
-    bool fromConfigFile(const ConstString& fname,
+    bool fromConfigFile(const std::string& fname,
                         Searchable& env,
-                        bool wipe=true);
+                        bool wipe = true);
 
     /**
      * \brief Interprets all files in a directory as lists of properties as
@@ -375,8 +375,8 @@ public:
      * @param wipe should Property be emptied first
      * @return true if file exists and can be read
      */
-    bool fromConfigDir(const ConstString& dirname,
-                       const ConstString& section = ConstString(),
+    bool fromConfigDir(const std::string& dirname,
+                       const std::string& section = std::string(),
                        bool wipe = true);
 
     /**
@@ -386,7 +386,7 @@ public:
      * @param txt the configuration text
      * @param wipe should Property be emptied first
      */
-    void fromConfig(const char *txt, bool wipe=true);
+    void fromConfig(const char* txt, bool wipe = true);
 
     /**
      * Variant of fromConfig(const char*, bool) that includes extra
@@ -400,9 +400,9 @@ public:
      * @param env extra set of environment variables
      * @param wipe should Property be emptied first
      */
-    void fromConfig(const char *txt,
+    void fromConfig(const char* txt,
                     Searchable& env,
-                    bool wipe=true);
+                    bool wipe = true);
 
     /**
      * \brief Parses text in a url.
@@ -413,25 +413,28 @@ public:
      *            <code>...prop1=val1&prop2=val2...</code>
      * @param wipe should Property be emptied first
      */
-    void fromQuery(const char *url,
-                   bool wipe=true);
+    void fromQuery(const char* url,
+                   bool wipe = true);
 
 
     // documented in Searchable
-    ConstString toString() const override;
+    std::string toString() const override;
 
     // documented in Portable
     bool read(ConnectionReader& reader) override;
 
     // documented in Portable
-    bool write(ConnectionWriter& writer) override;
+    bool write(ConnectionWriter& writer) const override;
 
 private:
-    void *implementation;
+    void* implementation;
     int hash_size;
 
     void summon();
     bool check() const;
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_PROPERTY_H

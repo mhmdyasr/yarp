@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2015 Istituto Italiano di Tecnologia (IIT)
- * Authors: Ali Paikan
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_RTF_PLUGINS_YARPMANAGER_YARPFIXMANAGER_H
@@ -38,8 +40,8 @@ public:
     }
 
 protected:
-    virtual void onExecutableFailed(void* which) override;
-    virtual void onCnnFailed(void* which) override;
+    void onExecutableFailed(void* which) override;
+    void onCnnFailed(void* which) override;
 private:
     RTF::FixtureEvents* dispatcher;
 
@@ -51,9 +53,9 @@ public:
     YarpFixManager();
     virtual ~YarpFixManager();
 
-    virtual bool setup(int argc, char** argv) override;
+    bool setup(int argc, char** argv) override;
 
-    virtual void tearDown() override;
+    void tearDown() override;
 
 private:
     bool initialized;

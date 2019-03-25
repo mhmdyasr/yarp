@@ -1,15 +1,18 @@
 /*
- * Copyright (C) 2010 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <cstdio>
-#include <yarp/os/all.h>
+
 #include "RosSlave.h"
 #include "RosLookup.h"
 #include "TcpRosStream.h"
+
+#include <yarp/os/Vocab.h>
 
 #include <string>
 
@@ -66,28 +69,28 @@ string showFormat(Bottle& b, string root) {
     r += addPart("int32",root + "_tag",BOTTLE_TAG_LIST+code,nullptr,"BOTTLE_TAG_LIST+code");
     r += "\n";
     bool specialized = (code>0);
-    if (code==BOTTLE_TAG_INT) {
+    if (code==BOTTLE_TAG_INT32) {
         r += addPart("int32[]",root,b.size(),nullptr,"length","length");
         r += "\n";
         if (b.size()<50) {
             r += " # integers seen: ";
-            for (int i=0; i<b.size(); i++) {
+            for (size_t i=0; i<b.size(); i++) {
                 char buf[1000];
-                sprintf(buf," %d",b.get(i).asInt());
+                sprintf(buf," %d",b.get(i).asInt32());
                 r += buf;
             }
             r += "\n";
         }
         return r;
     }
-    if (code==BOTTLE_TAG_DOUBLE) {
+    if (code==BOTTLE_TAG_FLOAT64) {
         r += addPart("float64[]",root,b.size(),nullptr,"length","length");
         r += "\n";
         if (b.size()<50) {
             r += " # floats seen: ";
-            for (int i=0; i<b.size(); i++) {
+            for (size_t i=0; i<b.size(); i++) {
                 char buf[1000];
-                sprintf(buf," %g",b.get(i).asDouble());
+                sprintf(buf," %g",b.get(i).asFloat64());
                 r += buf;
             }
             r += "\n";
@@ -96,35 +99,35 @@ string showFormat(Bottle& b, string root) {
     }
     r += addPart("int32",root + "_len",b.size(),nullptr,"elements in list");
     r += "\n";
-    for (int i=0; i<b.size(); i++) {
+    for (size_t i=0; i<b.size(); i++) {
         Value& v = b.get(i);
         char tag_name[1000];
         char val_name[1000];
-        sprintf(tag_name,"%s%d_tag", root.c_str(), i);
-        sprintf(val_name,"%s%d", root.c_str(), i);
+        sprintf(tag_name,"%s%zu_tag", root.c_str(), i);
+        sprintf(val_name,"%s%zu", root.c_str(), i);
         if (v.isVocab()) {
             if (!specialized) {
                 r += addPart("int32",tag_name,BOTTLE_TAG_VOCAB,nullptr,
                              "BOTTLE_TAG_VOCAB");
                 r += "\n";
             }
-            r += addPart("int32",val_name,v.asInt(),nullptr,v.toString().c_str(),"vocab");
+            r += addPart("int32",val_name,v.asInt32(),nullptr,v.toString(),"vocab");
             r += "\n";
-        } else if (v.isInt()) {
+        } else if (v.isInt32()) {
             if (!specialized) {
-                r += addPart("int32",tag_name,BOTTLE_TAG_INT,nullptr,
-                             "BOTTLE_TAG_INT");
+                r += addPart("int32",tag_name,BOTTLE_TAG_INT32,nullptr,
+                             "BOTTLE_TAG_INT32");
                 r += "\n";
             }
-            r += addPart("int32",val_name,v.asInt(),&v,v.toString().c_str());
+            r += addPart("int32",val_name,v.asInt32(),&v,v.toString());
             r += "\n";
-        } else if (v.isDouble()) {
+        } else if (v.isFloat64()) {
             if (!specialized) {
-                r += addPart("int32",tag_name,BOTTLE_TAG_DOUBLE,nullptr,
-                             "BOTTLE_TAG_DOUBLE");
+                r += addPart("int32",tag_name,BOTTLE_TAG_FLOAT64,nullptr,
+                             "BOTTLE_TAG_FLOAT64");
                 r += "\n";
             }
-            r += addPart("float64",val_name,v.asInt(),&v,v.toString().c_str());
+            r += addPart("float64",val_name,v.asInt32(),&v,v.toString());
             r += "\n";
         } else if (v.isList()) {
             r += showFormat(*v.asList(), val_name);
@@ -141,11 +144,11 @@ string showFormat(Bottle& b, string root) {
                              "BOTTLE_TAG_STRING");
                 r += "\n";
             }
-            r += addPart("string",val_name,0,nullptr,v.asString().c_str(),"string");
+            r += addPart("string",val_name,0,nullptr,v.asString(),"string");
             r += "\n";
         } else {
             r += "IGNORED ";
-            r += v.toString().c_str();
+            r += v.toString();
             r += "\n";
         }
     }
@@ -203,13 +206,13 @@ bool register_port(const char *name,
                    const char *hostname,
                    int portnum,
                    PortReader& reply) {
-    ConstString ip = Contact::convertHostToIp(hostname);
+    std::string ip = Contact::convertHostToIp(hostname);
     Bottle req;
     req.addString("register");
     req.addString(name);
     req.addString(carrier);
     req.addString(ip);
-    req.addInt(portnum);
+    req.addInt32(portnum);
     bool ok = Network::write(Network::getNameServerContact(),
                              req,
                              reply);
@@ -226,8 +229,8 @@ int main(int argc, char *argv[]) {
         show_usage();
         return 0;
     }
-    if (ConstString(argv[1])=="help" ||
-        ConstString(argv[1])=="--help") {
+    if (std::string(argv[1])=="help" ||
+        std::string(argv[1])=="--help") {
         show_usage();
         return 0;
     }
@@ -253,18 +256,18 @@ int main(int argc, char *argv[]) {
     }
 
     // Get the command tag
-    ConstString tag = cmd.get(0).asString();
+    std::string tag = cmd.get(0).asString();
 
     // Process the command
     if (tag=="roscore") {
         if (cmd.size()>1) {
-            if (!(cmd.get(1).isString()&&cmd.get(2).isInt())) {
+            if (!(cmd.get(1).isString()&&cmd.get(2).isInt32())) {
                 fprintf(stderr,"wrong syntax, run with no arguments for help\n");
                 return 1;
             }
             Bottle reply;
             register_port("/roscore", "xmlrpc",
-                          cmd.get(1).asString().c_str(), cmd.get(2).asInt(),
+                          cmd.get(1).asString().c_str(), cmd.get(2).asInt32(),
                           reply);
             printf("%s\n", reply.toString().c_str());
         } else {
@@ -312,19 +315,19 @@ int main(int argc, char *argv[]) {
         if (cmd.size()==3) {
             offset = -1;
         }
-        ConstString yarp_port = cmd.get(1+offset).asString();
-        ConstString ros_port = cmd.get(2+offset).asString();
-        ConstString topic = cmd.get(3+offset).asString();
+        std::string yarp_port = cmd.get(1+offset).asString();
+        std::string ros_port = cmd.get(2+offset).asString();
+        std::string topic = cmd.get(3+offset).asString();
         if (cmd.size()==3) {
             yarp_port = ros_port + topic;
         }
         RosLookup lookup(verbose);
         if (verbose) printf("  * looking up ros node %s\n", ros_port.c_str());
-        bool ok = lookup.lookupCore(ros_port.c_str());
+        bool ok = lookup.lookupCore(ros_port);
         if (!ok) return 1;
         if (verbose) printf("  * found ros node %s\n", ros_port.c_str());
         if (verbose) printf("  * looking up topic %s\n", topic.c_str());
-        ok = lookup.lookupTopic(topic.c_str());
+        ok = lookup.lookupTopic(topic);
         if (!ok) return 1;
         if (verbose) printf("  * found topic %s\n", topic.c_str());
         string carrier = "tcpros+role.pub+topic.";
@@ -332,12 +335,12 @@ int main(int argc, char *argv[]) {
             carrier = "rossrv+service.";
         }
         register_port(yarp_port.c_str(),
-                      (carrier+topic.c_str()).c_str(),
+                      (carrier+topic).c_str(),
                       lookup.hostname.c_str(),
                       lookup.portnum,
                       reply);
         printf("%s\n", reply.toString().c_str());
-        return ok?0:1;
+        return 0;
     } else if (tag=="subscriber"||tag=="sub") {
         Bottle req, reply;
         if (cmd.size()!=3 && cmd.size()!=4) {
@@ -348,19 +351,19 @@ int main(int argc, char *argv[]) {
         if (cmd.size()==3) {
             offset = -1;
         }
-        ConstString yarp_port = cmd.get(1+offset).asString();
-        ConstString ros_port = cmd.get(2+offset).asString();
-        ConstString topic = cmd.get(3+offset).asString();
+        std::string yarp_port = cmd.get(1+offset).asString();
+        std::string ros_port = cmd.get(2+offset).asString();
+        std::string topic = cmd.get(3+offset).asString();
         if (cmd.size()==3) {
             yarp_port = ros_port + topic;
         }
         RosLookup lookup(verbose);
         if (verbose) printf("  * looking up ros node %s\n", ros_port.c_str());
-        bool ok = lookup.lookupCore(ros_port.c_str());
+        bool ok = lookup.lookupCore(ros_port);
         if (!ok) return 1;
         if (verbose) printf("  * found ros node %s\n", ros_port.c_str());
         ok = register_port(yarp_port.c_str(),
-                      (string("tcpros+role.sub+topic.")+topic.c_str()).c_str(),
+                      (string("tcpros+role.sub+topic.")+topic).c_str(),
                       lookup.hostname.c_str(),
                       lookup.portnum,
                       reply);
@@ -374,7 +377,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr,"Show the format of a YARP bottle-compatible message in ROS syntax.\n");
             return 1;
         }
-        ConstString dir = cmd.get(1).asString();
+        std::string dir = cmd.get(1).asString();
         bool in = false;
         if (dir=="in") in = true;
         else if (dir=="out") in = false;
@@ -382,7 +385,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr,"Please specify one of 'in' or 'out'.\n");
             return 1;
         }
-        ConstString pname = cmd.get(2).asString();
+        std::string pname = cmd.get(2).asString();
         Port p;
         if (!p.open("...")) return 1;
         if (in) {
@@ -393,7 +396,7 @@ int main(int argc, char *argv[]) {
         Bottle b;
         p.read(b);
         string r;
-        if (in&&b.get(0).asVocab()==VOCAB3('r','p','c')&&b.get(1).isList()) {
+        if (in&&b.get(0).asVocab()==yarp::os::createVocab('r','p','c')&&b.get(1).isList()) {
 
             r = showFormat(*b.get(1).asList(),"v");
         } else {

@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Davide Perrone
- * Date: Feb 2014
- * email:   dperrone@aitek.it
- * website: www.aitek.it
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
 
 #ifndef QTYARPVIEW_H
 #define QTYARPVIEW_H
@@ -50,7 +59,7 @@ typedef struct mOptions pgmOptions;
 /*! \class QtYARPView
     \brief The plugin Core class
 
-    this is the plugin core class wich acts as bridge between the QML and c++.
+    this is the plugin core class which acts as bridge between the QML and c++.
     in the C++ code is implemented the backend logic, instead in the QML is
     implemented the Visual part.
 */
@@ -104,7 +113,7 @@ private:
 private:
     VideoProducer videoProducer;
 
-    // This Network yarp must be placed before any other yarp dependant member
+    // This Network yarp must be placed before any other yarp dependent member
     yarp::os::Network yarp;
     SignalHandler sigHandler;
 #ifdef YARP_LITTLE_ENDIAN

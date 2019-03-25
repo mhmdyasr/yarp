@@ -1,9 +1,10 @@
 /*
- * Copyright (C) 2011 Istituto Italiano di Tecnologia (IIT)
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/os/MultiNameSpace.h>
 #include <yarp/os/YarpNameSpace.h>
@@ -17,7 +18,7 @@
 using namespace yarp::os;
 using namespace yarp::os::impl;
 
-typedef std::vector<NameSpace *> SpaceList;
+using SpaceList = std::vector<NameSpace*>;
 
 // private implementation of a namespace container
 class MultiNameSpaceHelper {
@@ -40,8 +41,7 @@ public:
 
     void clear() {
         // remove all namespaces and reset flags
-        for (int i=0; i<(int)spaces.size(); i++) {
-            NameSpace *ns = spaces[i];
+        for (auto ns : spaces) {
             if (ns) {
                 delete ns;
                 ns = nullptr;
@@ -60,8 +60,7 @@ public:
         _usesCentralServer = false;
         _serverAllocatesPortNumbers = true;
         // now scan each namespace
-        for (int i=0; i<(int)spaces.size(); i++) {
-            NameSpace *ns = spaces[i];
+        for (auto ns : spaces) {
             if (!ns) continue;
             // if any namespace is nonlocal, combination is nonlocal
             if (!ns->localOnly()) _localOnly = false;
@@ -114,8 +113,8 @@ public:
         }
         Bottle ns = conf.getNamespaces();
         // loop through namespaces
-        for (int i=0; i<ns.size(); i++) {
-            ConstString n = ns.get(i).asString();
+        for (size_t i=0; i<ns.size(); i++) {
+            std::string n = ns.get(i).asString();
             NameConfig conf2;
             // read configuration of individual namespace
             if (!conf2.fromFile(n.c_str())) {
@@ -123,7 +122,7 @@ public:
                         n.c_str());
                 continue;
             }
-            ConstString mode = conf2.getMode();
+            std::string mode = conf2.getMode();
             Contact address = conf2.getAddress();
             address.setName(n);
             if (mode=="yarp"||mode=="//") {
@@ -159,11 +158,10 @@ public:
         return Contact();
     }
 
-    Contact queryName(const ConstString& name) {
+    Contact queryName(const std::string& name) {
         activate();
         // try query against each namespace in order
-        for (int i=0; i<(int)spaces.size(); i++) {
-            NameSpace *ns = spaces[i];
+        for (auto ns : spaces) {
             if (!ns) continue;
             if (ns->getNameServerName()==name) {
                 // optimization: return cached server address for
@@ -249,7 +247,7 @@ Contact MultiNameSpace::getNameServerContact() const {
     return ((MultiNameSpaceHelper*)system_resource)->getNameServerContact();
 }
 
-Contact MultiNameSpace::queryName(const ConstString& name) {
+Contact MultiNameSpace::queryName(const std::string& name) {
     return HELPER(this).queryName(name);
 }
 
@@ -301,7 +299,7 @@ bool MultiNameSpace::disconnectPortToPortPersistently(const Contact& src,
     return ns->disconnectPortToPortPersistently(src, dest, style);
 }
 
-Contact MultiNameSpace::registerName(const ConstString& name) {
+Contact MultiNameSpace::registerName(const std::string& name) {
     SpaceList lst = HELPER(this).getAll();
     Contact result;
     // loop through namespaces
@@ -333,7 +331,7 @@ Contact MultiNameSpace::registerContact(const Contact& contact) {
     return result;
 }
 
-Contact MultiNameSpace::unregisterName(const ConstString& name) {
+Contact MultiNameSpace::unregisterName(const std::string& name) {
     SpaceList lst = HELPER(this).getAll();
     Contact result;
     for (int i=0; i<(int)lst.size(); i++) {
@@ -355,14 +353,14 @@ Contact MultiNameSpace::unregisterContact(const Contact& contact) {
     return result;
 }
 
-bool MultiNameSpace::setProperty(const ConstString& name, const ConstString& key,
+bool MultiNameSpace::setProperty(const std::string& name, const std::string& key,
                                 const Value& value) {
     NameSpace *ns = HELPER(this).getOne();
     if (!ns) return false;
     return ns->setProperty(name, key, value);
 }
 
-Value *MultiNameSpace::getProperty(const ConstString& name, const ConstString& key) {
+Value *MultiNameSpace::getProperty(const std::string& name, const std::string& key) {
     NameSpace *ns = HELPER(this).getOne();
     if (!ns) return nullptr;
     return ns->getProperty(name, key);
@@ -376,9 +374,9 @@ Contact MultiNameSpace::detectNameServer(bool useDetectedServer,
     // name are ros namespaces.  There's no need for guesswork like
     // that anymore.  Also, code duplication.  Should spin this
     // off into a proper plugin mechanism for namespaces.
-    ConstString name = NetworkBase::getNameServerName();
+    std::string name = NetworkBase::getNameServerName();
     Contact fake, r;
-    if (name.find("/ros")!=ConstString::npos) {
+    if (name.find("/ros")!=std::string::npos) {
         RosNameSpace ns(fake);
         r = ns.detectNameServer(useDetectedServer, scanNeeded, serverUsed);
         if (r.isValid()&&useDetectedServer&&scanNeeded) {

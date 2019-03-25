@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2014 Istituto Italiano di Tecnologia (IIT)
- * Author: Marco Randazzo <marco.randazzo@iit.it>
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #include <yarp/os/impl/LogForwarder.h>
@@ -9,89 +11,58 @@
 #include <yarp/os/Os.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Log.h>
+#include <yarp/os/SystemInfo.h>
+#include <yarp/os/impl/PlatformLimits.h>
 
-yarp::os::LogForwarder* yarp::os::LogForwarder::instance = nullptr;
-yarp::os::Semaphore *yarp::os::LogForwarder::sem = nullptr;
+bool yarp::os::impl::LogForwarder::started{false};
 
-yarp::os::LogForwarder* yarp::os::LogForwarder::getInstance()
+yarp::os::impl::LogForwarder& yarp::os::impl::LogForwarder::getInstance()
 {
-    if (!instance)
-    {
-        instance = new LogForwarder;
-    }
+    static LogForwarder instance;
     return instance;
-};
-
-void yarp::os::LogForwarder::clearInstance()
-{
-    if (instance)
-    {
-        delete instance;
-    };
-};
-
-void yarp::os::LogForwarder::forward (const std::string& message)
-{
-    sem->wait();
-    if (outputPort)
-    {
-        Bottle& b = outputPort->prepare();
-        b.clear();
-        std::string port = "["; port+=logPortName; port+="]";
-        b.addString(port);
-        b.addString(message);
-        outputPort->write(true);
-        outputPort->waitForWrite();
-    }
-    sem->post();
 }
 
-yarp::os::LogForwarder::LogForwarder()
-{
-    // I believe this guy, which is called by a yDebug() or similar, should be always called after
-    // yarp::os::Network has already been initialized, therefore calling initMinimum here is not required.
-    // It should not harm, but I prefer to avoid it if possible
-//     yarp::os::NetworkBase::initMinimum();
-    sem = new yarp::os::Semaphore(1);
-    yAssert(sem);
-    outputPort =nullptr;
-    outputPort = new yarp::os::BufferedPort<yarp::os::Bottle>;
-    char host_name [MAX_STRING_SIZE]; //unsafe
-    yarp::os::gethostname(host_name, MAX_STRING_SIZE);
-    char prog_name [MAX_STRING_SIZE]; //unsafe
-    yarp::os::getprogname(prog_name, MAX_STRING_SIZE);
-    int pid = yarp::os::getpid();
-    sprintf(logPortName, "/log/%s/%s/%d", host_name, prog_name, pid);  //unsafe, better to use snprintf when available
-    if (outputPort->open(logPortName) == false)
-    {
-        printf("LogForwarder error while opening port %s\n", logPortName);
-    }
-    if (yarp::os::Network::connect(logPortName, "/yarplogger") == false)
-    {
-        printf("LogForwarder error while connecting port %s\n", logPortName);
-    }
-    //yarp::os::Network::connect(logPortName, "/test");
-};
+yarp::os::impl::LogForwarder::~LogForwarder() = default;
 
-yarp::os::LogForwarder::~LogForwarder()
+yarp::os::impl::LogForwarder::LogForwarder()
 {
-    sem->wait();
-    if (outputPort)
-    {
-        Bottle& b = outputPort->prepare();
-        b.clear();
-        std::string port = "["; port+=logPortName; port+="]";
-        b.addString(port);
-        b.addString("[INFO] Execution terminated\n");
-        outputPort->write(true);
-        outputPort->waitForWrite();
-        //outputPort->interrupt();
-        outputPort->close();
-        delete outputPort;
-        outputPort=nullptr;
+    char hostname[HOST_NAME_MAX];
+    yarp::os::gethostname(hostname, HOST_NAME_MAX);
+
+    yarp::os::SystemInfo::ProcessInfo processInfo = yarp::os::SystemInfo::getProcessInfo();
+
+    outputPort.setWriteOnly();
+    std::string logPortName = "/log/" + std::string(hostname) + "/" + processInfo.name + "/" + std::to_string(processInfo.pid);
+    if (outputPort.open(logPortName) == false) {
+        printf("LogForwarder error while opening port %s\n", logPortName.c_str());
     }
-    sem->post();
-    delete sem;
-    sem = nullptr;
-//     yarp::os::NetworkBase::finiMinimum();
-};
+    outputPort.enableBackgroundWrite(true);
+    outputPort.addOutput("/yarplogger", "fast_tcp");
+
+    started = true;
+}
+
+void yarp::os::impl::LogForwarder::forward(const std::string& message)
+{
+    mutex.lock();
+    static Bottle b;
+    b.clear();
+    std::string port = "[" + outputPort.getName() + "]";
+    b.addString(port);
+    b.addString(message);
+    outputPort.write(b);
+    mutex.unlock();
+}
+
+void yarp::os::impl::LogForwarder::shutdown()
+{
+    if (started) {
+        yarp::os::impl::LogForwarder& fw = getInstance();
+        fw.forward("[INFO] Execution terminated\n");
+        while (fw.outputPort.isWriting()) {
+            yarp::os::SystemClock::delaySystem(0.2);
+        }
+        fw.outputPort.interrupt();
+        fw.outputPort.close();
+    }
+}

@@ -1,15 +1,14 @@
 /*
- *  Yarp Modules Manager
- *  Copyright: (C) 2011 Istituto Italiano di Tecnologia (IIT)
- *  Authors: Ali Paikan <ali.paikan@iit.it>
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- *  Copy Policy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #include <yarp/manager/xmltemploader.h>
 #include <yarp/manager/utility.h>
-#include <yarp/manager/ymm-dir.h>
+#include <dirent.h>
 
 #include <algorithm>
 #include <cctype>
@@ -35,7 +34,7 @@ XmlTempLoader::XmlTempLoader(const char* szPath, const char* szAppName)
 
     if(strlen(szPath))
     {
-        const yarp::os::ConstString directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+        const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
         strPath = szPath;
         if((strPath.rfind(directorySeparator)==string::npos) ||
             (strPath.rfind(directorySeparator)!=strPath.size()-1))
@@ -53,9 +52,7 @@ XmlTempLoader::XmlTempLoader(const char* szFileName)
 }
 
 
-XmlTempLoader::~XmlTempLoader()
-{
-}
+XmlTempLoader::~XmlTempLoader() = default;
 
 
 bool XmlTempLoader::init()
@@ -183,7 +180,7 @@ AppTemplate* XmlTempLoader::parsXml(const char* szFile)
     app.tmpFileName = szFile;
 
     /* retrieving name */
-    TiXmlElement* name = (TiXmlElement*) root->FirstChild("name");
+    auto* name = (TiXmlElement*) root->FirstChild("name");
     if(!name || !name->GetText())
     {
         OSTRINGSTREAM err;
@@ -194,9 +191,9 @@ AppTemplate* XmlTempLoader::parsXml(const char* szFile)
     else
     {
         string strname = name->GetText();
-        for(unsigned int i=0; i<strname.size(); i++)
-            if(strname[i] == ' ')
-                strname[i] = '_';
+        for(char& i : strname)
+            if(i == ' ')
+                i = '_';
         app.name = strname;
     }
 

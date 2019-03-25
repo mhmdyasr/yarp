@@ -1,8 +1,11 @@
 /*
-* Copyright (C) 2007 RobotCub Consortium
-* Author: Lorenzo Natale
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ */
 
 /**
 * \infile routines for Singular Value Decomposition
@@ -156,14 +159,19 @@ Matrix yarp::math::projectionMatrix(const Matrix &A, double tol)
 
 void yarp::math::projectionMatrix(const Matrix &A, Matrix &out, double tol)
 {
-    int m = A.rows(), n = A.cols(), k = m<n?m:n;
-    Matrix U(m,k), V(n,k);
+    int m = A.rows();
+    int n = A.cols();
+    int k = std::min(m, n);
+    Matrix U(m, k);
+    Matrix V(n, k);
     Vector Sdiag(k);
     yarp::math::SVD(A, U, Sdiag, V);
     Matrix UT = U.transposed();
-    for(int c=0;c<m; c++)
-        if(Sdiag(c) <= tol)
+    for(int c = 0; c < k; c++) {
+        if(Sdiag(c) <= tol) {
             UT.setRow(c, zeros(m));
+        }
+    }
     out = U*UT;
 }
 
@@ -176,13 +184,18 @@ Matrix yarp::math::nullspaceProjection(const Matrix &A, double tol)
 
 void yarp::math::nullspaceProjection(const Matrix &A, Matrix &out, double tol)
 {
-    int m = A.rows(), n = A.cols(), k = m<n?m:n;
-    Matrix U(m,k), V(n,k);
+    int m = A.rows();
+    int n = A.cols();
+    int k = std::min(m, n);
+    Matrix U(m,k);
+    Matrix V(n,k);
     Vector Sdiag(k);
     yarp::math::SVD(A, U, Sdiag, V);
     Matrix VT = V.transposed();
-    for (int c=0;c<n; c++)
-        if ( Sdiag(c)<= tol)
+    for (int c = 0; c < k; c++) {
+        if (Sdiag(c) <= tol) {
             VT.setRow(c, zeros(n));
+        }
+    }
     out = eye(n) - V*VT;
 }

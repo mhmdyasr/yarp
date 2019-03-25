@@ -1,9 +1,11 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
-
 
 #ifndef YARP_DEV_TESTFRAMEGRABBER_H
 #define YARP_DEV_TESTFRAMEGRABBER_H
@@ -21,7 +23,7 @@
 #include <yarp/os/Value.h>
 #include <yarp/dev/IVisualParams.h>
 
-#define VOCAB_LINE VOCAB4('l','i','n','e')
+constexpr yarp::conf::vocab32_t VOCAB_LINE = yarp::os::createVocab('l','i','n','e');
 
 namespace yarp {
     namespace dev {
@@ -45,9 +47,9 @@ class yarp::dev::TestFrameGrabber : public DeviceDriver,
                                     public IRgbVisualParams
 {
 private:
-    int ct;
-    int bx, by;
-    int w, h;
+    size_t ct;
+    size_t bx, by;
+    size_t w, h;
     unsigned long rnd;
     double freq;
     double period;
@@ -67,7 +69,7 @@ public:
      */
     TestFrameGrabber();
 
-    virtual bool close() override;
+    bool close() override;
 
     /**
      * Configure with a set of options. These are:
@@ -85,85 +87,75 @@ public:
      * @param config The options to use
      * @return true iff the object could be configured.
      */
-    virtual bool open(yarp::os::Searchable& config) override;
+    bool open(yarp::os::Searchable& config) override;
 
     void timing();
 
-    virtual int height() const override;
+    int height() const override;
 
-    virtual int width() const override;
+    int width() const override;
     //IRgbVisualParams
-    virtual int getRgbHeight() override;
+    int getRgbHeight() override;
 
-    virtual int getRgbWidth() override;
+    int getRgbWidth() override;
 
-    virtual bool getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations) override;
+    bool getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations) override;
 
-    virtual bool getRgbResolution(int &width, int &height) override;
+    bool getRgbResolution(int &width, int &height) override;
 
-    virtual bool setRgbResolution(int width, int height) override;
+    bool setRgbResolution(int width, int height) override;
 
-    virtual bool getRgbFOV(double &horizontalFov, double &verticalFov) override;
+    bool getRgbFOV(double &horizontalFov, double &verticalFov) override;
 
-    virtual bool setRgbFOV(double horizontalFov, double verticalFov) override;
+    bool setRgbFOV(double horizontalFov, double verticalFov) override;
 
-    virtual bool getRgbIntrinsicParam(yarp::os::Property &intrinsic) override;
+    bool getRgbIntrinsicParam(yarp::os::Property &intrinsic) override;
 
-    virtual bool getRgbMirroring(bool &mirror) override;
+    bool getRgbMirroring(bool &mirror) override;
 
-    virtual bool setRgbMirroring(bool mirror) override;
+    bool setRgbMirroring(bool mirror) override;
     //
-    virtual bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image) override;
+    bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image) override;
 
-    virtual bool getImage(yarp::sig::ImageOf<yarp::sig::PixelMono>& image) override;
+    bool getImage(yarp::sig::ImageOf<yarp::sig::PixelMono>& image) override;
 
-    virtual bool setBrightness(double v) override;
+    yarp::os::Stamp getLastInputStamp() override;
 
-    virtual bool setExposure(double v) override;
+    bool hasAudio() override;
 
-    virtual bool setSharpness(double v) override;
+    bool hasVideo() override;
 
-    virtual bool setWhiteBalance(double blue, double red) override;
+    bool hasRawVideo() override;
 
-    virtual bool setHue(double v) override;
+    bool getCameraDescription(CameraDescriptor *camera) override;
 
-    virtual bool setSaturation(double v) override;
+    bool hasFeature(int feature, bool *hasFeature) override;
 
-    virtual bool setGamma(double v) override;
+    bool setFeature(int feature, double value) override;
 
-    virtual bool setShutter(double v) override;
+    bool getFeature(int feature, double *value) override;
 
-    virtual bool setGain(double v) override;
+    bool setFeature(int feature, double  value1, double  value2) override;
 
-    virtual bool setIris(double v) override;
+    bool getFeature(int feature, double *value1, double *value2) override;
 
-    virtual double getBrightness() override;
+    bool hasOnOff(int feature, bool *HasOnOff) override;
 
-    virtual double getExposure() override;
+    bool setActive(int feature, bool onoff) override;
 
-    virtual double getSharpness() override;
+    bool getActive(int feature, bool *isActive) override;
 
-    virtual bool getWhiteBalance(double &blue, double &red) override;
+    bool hasAuto(int feature, bool *hasAuto) override;
 
-    virtual double getHue() override;
+    bool hasManual(int feature, bool *hasManual) override;
 
-    virtual double getSaturation() override;
+    bool hasOnePush(int feature, bool *hasOnePush) override;
 
-    virtual double getGamma() override;
+    bool setMode(int feature, FeatureMode mode) override;
 
-    virtual double getShutter() override;
+    bool getMode(int feature, FeatureMode *mode) override;
 
-    virtual double getGain() override;
-
-    virtual double getIris() override;
-
-    virtual yarp::os::Stamp getLastInputStamp() override;
-
-    virtual bool hasAudio() override;
-
-    virtual bool hasVideo() override;
-
-    virtual bool hasRawVideo() override;
+    bool setOnePush(int feature) override;
 
 private:
     yarp::sig::ImageOf<yarp::sig::PixelRgb> background, rgb_image;
@@ -173,6 +165,13 @@ private:
     bool makeSimpleBayer(yarp::sig::ImageOf<yarp::sig::PixelRgb>& src,
                          yarp::sig::ImageOf<yarp::sig::PixelMono>& bayer);
 
+    void printTime(unsigned char* pixbuf, int pixbuf_w, int pixbuf_h, int x, int y, char* s, int size);
+    struct txtnum_type
+    {
+        char data[16];
+    };
+    txtnum_type num[12];
+    double start_time;
 };
 
 

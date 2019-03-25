@@ -1,31 +1,36 @@
 /*
- * Copyright (C) 2006 RobotCub Consortium
- * Authors: Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2010 RobotCub Consortium
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
 #ifndef YARP_OS_OUTPUTPROTOCOL_H
 #define YARP_OS_OUTPUTPROTOCOL_H
 
-#include <yarp/os/Route.h>
-#include <yarp/os/InputStream.h>
-#include <yarp/os/ConnectionWriter.h>
-#include <yarp/os/SizedWriter.h>
-#include <yarp/os/Property.h>
 #include <yarp/os/Connection.h>
+#include <yarp/os/ConnectionWriter.h>
+#include <yarp/os/InputStream.h>
+#include <yarp/os/Property.h>
+#include <yarp/os/Route.h>
+#include <yarp/os/SizedWriter.h>
 
 namespace yarp {
-    namespace os {
-        class OutputProtocol;
-        class InputProtocol;
-        class Contactable;
-    }
-}
+namespace os {
+class InputProtocol;
+class Contactable;
+} // namespace os
+} // namespace yarp
 
+namespace yarp {
+namespace os {
 /**
  * The output side of an active connection between two ports.
  */
-class YARP_OS_API yarp::os::OutputProtocol {
+class YARP_OS_API OutputProtocol
+{
 public:
     /**
      * Destructor.
@@ -53,14 +58,14 @@ public:
      */
     virtual void close() = 0;
 
-    virtual const Route& getRoute() = 0;
+    virtual const Route& getRoute() const = 0;
 
     /**
      *
      * Check if the connection is valid and can be used.
      *
      */
-    virtual bool isOk() = 0;
+    virtual bool isOk() const = 0;
 
     /**
      *
@@ -139,7 +144,7 @@ public:
      * Set the port to be associated with the connection.
      *
      */
-    virtual void attachPort(Contactable *port) = 0;
+    virtual void attachPort(Contactable* port) = 0;
 
     /**
      *
@@ -149,5 +154,8 @@ public:
      */
     virtual void beginWrite() = 0;
 };
+
+} // namespace os
+} // namespace yarp
 
 #endif // YARP_OS_OUTPUTPROTOCOL_H

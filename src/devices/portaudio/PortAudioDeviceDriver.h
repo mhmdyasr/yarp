@@ -1,8 +1,19 @@
 /*
- * Copyright (C) 2013 Istituto Italiano di Tecnologia (IIT)
- * Authors: Marco Randazzo, Paul Fitzpatrick
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
  *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef PortAudioDeviceDriverh
@@ -45,9 +56,9 @@ class streamThread : public yarp::os::Thread
    bool         something_to_play;
    bool         something_to_record;
    PaStream*    stream;
-   virtual void threadRelease() override;
-   virtual bool threadInit() override;
-   virtual void run() override;
+   void threadRelease() override;
+   bool threadInit() override;
+   void run() override;
 
    private:
    PaError      err;
@@ -76,7 +87,7 @@ public:
 
     virtual ~PortAudioDeviceDriver();
 
-    virtual bool open(yarp::os::Searchable& config) override;
+    bool open(yarp::os::Searchable& config) override;
 
     /**
      * Configures the device.
@@ -97,11 +108,11 @@ public:
      */
     bool open(PortAudioDeviceDriverSettings& config);
 
-    virtual bool close(void) override;
-    virtual bool getSound(yarp::sig::Sound& sound) override;
-    virtual bool renderSound(yarp::sig::Sound& sound) override;
-    virtual bool startRecording() override;
-    virtual bool stopRecording() override;
+    bool close(void) override;
+    bool getSound(yarp::sig::Sound& sound) override;
+    bool renderSound(yarp::sig::Sound& sound) override;
+    bool startRecording() override;
+    bool stopRecording() override;
     
     bool abortSound(void);
     bool immediateSound(yarp::sig::Sound& sound);
