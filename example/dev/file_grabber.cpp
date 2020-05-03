@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     Network yarp;
 
     // give YARP a factory for creating instances of FileFrameGrabber
-    DriverCreator *file_grabber_factory = 
+    DriverCreator *file_grabber_factory =
         new DriverCreatorOf<FileFrameGrabber>("file_grabber",
                                               "grabber",
                                               "FileFrameGrabber");

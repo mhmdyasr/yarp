@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/LockGuard.h>
+#include <mutex>
 #include <cstdlib>
 
 using namespace yarp::sig;
@@ -33,13 +33,6 @@ using namespace yarp::dev;
 using namespace yarp::os;
 using namespace std;
 
-// needed for the driver factory.
-yarp::dev::DriverCreator *createFrameTransformServer() {
-    return new DriverCreatorOf<yarp::dev::FrameTransformServer>("transformServer",
-        "transformServer",
-        "yarp::dev::FrameTransformServer");
-}
-
 
 /**
   * Transforms storage
@@ -47,7 +40,7 @@ yarp::dev::DriverCreator *createFrameTransformServer() {
 
 bool Transforms_server_storage::delete_transform(int id)
 {
-    LockGuard lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     if (id >= 0 && (size_t)id < m_transforms.size())
     {
         m_transforms.erase(m_transforms.begin() + id);
@@ -58,7 +51,7 @@ bool Transforms_server_storage::delete_transform(int id)
 
 bool Transforms_server_storage::set_transform(const FrameTransform& t)
 {
-    LockGuard lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     for (auto& m_transform : m_transforms)
     {
        //@@@ this linear search requires optimization!
@@ -77,14 +70,58 @@ bool Transforms_server_storage::set_transform(const FrameTransform& t)
 
 bool Transforms_server_storage::delete_transform(string t1, string t2)
 {
-    LockGuard lock(m_mutex);
-    for (size_t i = 0; i < m_transforms.size(); i++)
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (t1=="*" && t2=="*")
     {
-        if ((m_transforms[i].dst_frame_id == t1 && m_transforms[i].src_frame_id == t2) ||
-            (m_transforms[i].dst_frame_id == t2 && m_transforms[i].src_frame_id == t1) )
+        m_transforms.clear();
+        return true;
+    }
+    else
+    if (t1=="*")
+    {
+        for (size_t i = 0; i < m_transforms.size(); )
         {
-            m_transforms.erase(m_transforms.begin() + i);
-            return true;
+            //source frame is jolly, thus delete all frames with destination == t2
+            if (m_transforms[i].dst_frame_id == t2)
+            {
+                m_transforms.erase(m_transforms.begin() + i);
+                i=0; //the erase operation invalidates the iteration, loop restart is required
+            }
+            else
+            {
+                i++;
+            }
+        }
+        return true;
+    }
+    else
+    if (t2=="*")
+    {
+        for (size_t i = 0; i < m_transforms.size(); )
+        {
+            //destination frame is jolly, thus delete all frames with source == t1
+            if (m_transforms[i].src_frame_id == t1)
+            {
+                m_transforms.erase(m_transforms.begin() + i);
+                i=0; //the erase operation invalidates the iteration, loop restart is required
+            }
+            else
+            {
+                i++;
+            }
+        }
+        return true;
+    }
+    else
+    {
+        for (size_t i = 0; i < m_transforms.size(); i++)
+        {
+            if ((m_transforms[i].dst_frame_id == t1 && m_transforms[i].src_frame_id == t2) ||
+                (m_transforms[i].dst_frame_id == t2 && m_transforms[i].src_frame_id == t1) )
+            {
+                m_transforms.erase(m_transforms.begin() + i);
+                return true;
+            }
         }
     }
     return false;
@@ -92,7 +129,7 @@ bool Transforms_server_storage::delete_transform(string t1, string t2)
 
 void Transforms_server_storage::clear()
 {
-    LockGuard lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_transforms.clear();
 }
 
@@ -170,7 +207,8 @@ void FrameTransformServer::list_response(yarp::os::Bottle& out)
             continue;
         }
         yDebug() << storages[s]->size();
-        out.addString(storageDescription[s] + ": ");
+        std::string text_to_print = storageDescription[s] + std::string("(") +std::to_string(storages[s]->size())+ std::string("): ");
+        out.addString(text_to_print);
 
         for(size_t i = 0; i < storages[s]->size(); i++)
         {
@@ -182,7 +220,7 @@ void FrameTransformServer::list_response(yarp::os::Bottle& out)
 
 bool FrameTransformServer::read(yarp::os::ConnectionReader& connection)
 {
-    LockGuard lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     yarp::os::Bottle in;
     yarp::os::Bottle out;
     bool ok = in.read(connection);
@@ -284,6 +322,7 @@ bool FrameTransformServer::read(yarp::os::ConnectionReader& connection)
         out.addString("'list': get all transforms stored");
         out.addString("'delete_all': delete all transforms");
         out.addString("'set_static_transform <src> <dst> <x> <y> <z> <roll> <pitch> <yaw>': create a static transform");
+        out.addString("'delete_static_transform <src> <dst>': delete a static transform");
     }
     else if (request == "set_static_transform")
     {
@@ -319,6 +358,14 @@ bool FrameTransformServer::read(yarp::os::ConnectionReader& connection)
     {
         out.addVocab(Vocab::encode("many"));
         list_response(out);
+    }
+    else if (request == "delete_static_transform")
+    {
+        std::string src = in.get(1).asString();
+        std::string dst = in.get(2).asString();
+        m_yarp_static_transform_storage->delete_transform(src,dst);
+        m_ros_static_transform_storage->delete_transform(src,dst);
+        out.addString("delete_static_transform done");
     }
     else
     {
@@ -604,7 +651,7 @@ void FrameTransformServer::threadRelease()
 
 void FrameTransformServer::run()
 {
-    LockGuard lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     if (true)
     {
         double current_time = yarp::os::Time::now();
@@ -666,7 +713,7 @@ void FrameTransformServer::run()
                         t.rotation.w() = tfs[i].transform.rotation.w;
                         t.src_frame_id = tfs[i].header.frame_id;
                         t.dst_frame_id = tfs[i].child_frame_id;
-                        //@@@ should we use yarp or ROS timestamps? 
+                        //@@@ should we use yarp or ROS timestamps?
                         t.timestamp = yarp::os::Time::now();
                         //t.timestamp = tfs[i].header.stamp.sec; //@@@this needs some revising
                         (*m_ros_timed_transform_storage).set_transform(t);

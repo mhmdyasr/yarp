@@ -1,13 +1,15 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
 # BSD-3-Clause license. See the accompanying LICENSE file for details.
 
-if(CREATE_YARPBATTERYGUI)
+if(YARP_COMPILE_yarpbatterygui)
 
   include(YarpUseQt5)
-  include(YarpOSXUtilities)
+  include(YarpMacOSUtilities)
+
+  add_executable(yarpbatterygui WIN32)
 
   set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 
@@ -34,26 +36,28 @@ if(CREATE_YARPBATTERYGUI)
   source_group("Generated Files" FILES ${yarpbatterygui_QRC_GEN_SRCS}
                                        ${yarpbatterygui_UI_GEN_SRCS})
 
-  add_executable(yarpbatterygui WIN32 ${yarpbatterygui_SRCS}
-                                      ${yarpbatterygui_HDRS}
-                                      ${yarpbatterygui_QRC_FILES}
-                                      ${yarpbatterygui_QRC_GEN_SRCS}
-                                      ${yarpbatterygui_UI_FILES}
-                                      ${yarpbatterygui_UI_GEN_SRCS})
+  target_sources(yarpbatterygui PRIVATE ${yarpbatterygui_SRCS}
+                                        ${yarpbatterygui_HDRS}
+                                        ${yarpbatterygui_QRC_FILES}
+                                        ${yarpbatterygui_QRC_GEN_SRCS}
+                                        ${yarpbatterygui_UI_FILES}
+                                        ${yarpbatterygui_UI_GEN_SRCS})
 
-  target_link_libraries(yarpbatterygui YARP::YARP_OS
-                                       YARP::YARP_init
-                                       YARP::YARP_sig
-                                       YARP::YARP_dev
-                                       Qt5::Widgets
-                                       Qt5::Gui)
+  target_link_libraries(yarpbatterygui PRIVATE YARP::YARP_os
+                                               YARP::YARP_init
+                                               YARP::YARP_sig
+                                               YARP::YARP_dev
+                                               Qt5::Widgets
+                                               Qt5::Gui)
 
-  install(TARGETS yarpbatterygui COMPONENT utilities DESTINATION ${CMAKE_INSTALL_BINDIR})
+  install(TARGETS yarpbatterygui
+          COMPONENT utilities
+          DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   set_property(TARGET yarpbatterygui PROPERTY FOLDER "Graphical User Interfaces")
 
-  yarp_osx_duplicate_and_add_bundle(TARGET yarpbatterygui
-                                    INSTALL_COMPONENT utilities
-                                    INSTALL_DESTINATION "${CMAKE_INSTALL_BINDIR}")
+  yarp_macos_duplicate_and_add_bundle(TARGET yarpbatterygui
+                                      INSTALL_COMPONENT utilities
+                                      INSTALL_DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
 endif()

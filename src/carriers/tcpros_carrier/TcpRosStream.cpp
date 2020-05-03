@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -16,9 +16,10 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Port.h>
 
-#include "WireBottle.h"
+#include <yarp/wire_rep_utils/WireBottle.h>
 
 using namespace yarp::os;
+using namespace yarp::wire_rep_utils;
 using namespace std;
 
 #define dbg_printf if (0) printf
@@ -219,5 +220,3 @@ bool TcpRosStream::configureTwiddler(WireTwiddler& twiddler, const char *txt, co
     }
     return twiddler.configure(str.c_str(),prompt);
 }
-
-

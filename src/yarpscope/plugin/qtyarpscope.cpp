@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ bool QtYARPScope::parseParameters(QStringList params)
     rf.setVerbose();
     // TODO Read default values from yarpscope.ini
     rf.setDefaultConfigFile("yarpscope.ini");
-    rf.setDefaultContext("yarpscope"); 
+    rf.setDefaultContext("yarpscope");
 
     // Transform Qt Params array in standard argc & argv
     int c = params.count();
@@ -280,9 +280,9 @@ void QtYARPScope::onRepaint()
 */
 void QtYARPScope::paint(QPainter *painter)
 {
-	if(!loader){
-		return;
-	}
+    if(!loader) {
+        return;
+    }
     int rows = loader->portscope_rows;
     int cols = loader->portscope_columns;
     int w = painter->device()->width();

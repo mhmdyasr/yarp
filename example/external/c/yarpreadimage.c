@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
         res = yarp_receive_data_header(con);
         if (res>=0) {
             // get image header, see YARPImagePortContentHeader
-            // class in src/libYARP_sig/src/Image.cpp
+            // class in src/libYARP_sig/src/yarp/sig/Image.cpp
             unsigned char header[4*15];
             int image_len = res - sizeof(header);
             int i;

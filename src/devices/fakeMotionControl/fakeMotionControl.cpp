@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -115,12 +115,6 @@ std::string toString(const T& value)
     std::ostringstream oss;
     oss << value;
     return oss.str();
-}
-
-yarp::dev::DriverCreator *createFakeMotionControl()
-{
-    return new yarp::dev::DriverCreatorOf<yarp::dev::FakeMotionControl>
-            ("fakeMotionControl", "controlboardwrapper2", "yarp::dev::FakeMotionControl");
 }
 
 //generic function that check is key1 is present in input bottle and that the result has size elements
@@ -2967,7 +2961,7 @@ bool FakeMotionControl::getInteractionModeRaw(int j, yarp::dev::InteractionModeE
 {
     if(verbose > VERY_VERY_VERBOSE)
         yTrace() << "j: " << j;
-    
+
     *_mode = (yarp::dev::InteractionModeEnum)_interactMode[j];
     return true;}
 
@@ -2979,7 +2973,7 @@ bool FakeMotionControl::getInteractionModesRaw(int n_joints, int *joints, yarp::
         ret = ret && getInteractionModeRaw(joints[j], &modes[j]);
     }
     return ret;
-    
+
 }
 
 bool FakeMotionControl::getInteractionModesRaw(yarp::dev::InteractionModeEnum* modes)
@@ -2997,9 +2991,9 @@ bool FakeMotionControl::setInteractionModeRaw(int j, yarp::dev::InteractionModeE
 {
     if(verbose >= VERY_VERBOSE)
         yTrace() << "j: " << j << " interaction mode: " << yarp::os::Vocab::decode(_mode);
-    
+
     _interactMode[j] = _mode;
-   
+
     return true;
 }
 
@@ -3022,7 +3016,7 @@ bool FakeMotionControl::setInteractionModesRaw(yarp::dev::InteractionModeEnum* m
         ret &= setInteractionModeRaw(i, modes[i]);
     }
     return ret;
-    
+
 }
 
 bool FakeMotionControl::getNumberOfMotorsRaw(int* num)

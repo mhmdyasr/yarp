@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  *
  * This library is free software; you can redistribute it and/or
@@ -42,7 +42,7 @@ sliderOptions::sliderOptions( QWidget *parent) :
     pos_step_validator = new QDoubleValidator(this);
     vel_step_validator = new QDoubleValidator(this);
     trq_step_validator = new QDoubleValidator(this);
-    vel_lims_validator = new QDoubleValidator(this); 
+    vel_lims_validator = new QDoubleValidator(this);
     vel_lims_validator->setRange(0 , 100);
 
     ui->pos_step->setValidator(vel_step_validator);
@@ -146,9 +146,3 @@ sliderOptions::~sliderOptions()
     delete vel_lims_validator;
     delete ui;
 }
-
-
-
-
-
-

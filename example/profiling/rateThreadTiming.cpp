@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -42,35 +42,35 @@ class Thread1 : public PeriodicThread {
     std::vector<double> measures;
 public:
     Thread1(double p=THREAD_PERIOD):PeriodicThread(p)
-    { 
-        cpuUsage=0; 
+    {
+        cpuUsage=0;
         iterations=-1;
     }
 
     virtual bool threadInit()
-	{ 
-		printf("Starting thread1\n");
-		return true; 
-	}
+    {
+        printf("Starting thread1\n");
+        return true;
+    }
 
-	//called by start after threadInit, s is true iff the thread started
-	//successfully
-	virtual void afterStart(bool s)
-	{
-		if (s)
-			printf("Thread1 started successfully\n");
-		else
-			printf("Thread1 did not start\n");
+    //called by start after threadInit, s is true iff the thread started
+    //successfully
+    virtual void afterStart(bool s)
+    {
+        if (s)
+            printf("Thread1 started successfully\n");
+        else
+            printf("Thread1 did not start\n");
 
-	}
+    }
 
     void setIterations(int it)
-    { 
+    {
         iterations=it;
         if (iterations>0)
             measures.reserve(iterations);
     }
-    
+
     void dump(const std::string &filename)
     {
         std::vector<double>::iterator it=measures.begin();
@@ -83,7 +83,7 @@ public:
         fclose(fp);
     }
 
-    virtual void run() 
+    virtual void run()
     {
         static int count=0;
         static double prev=Time::now();
@@ -107,7 +107,7 @@ public:
                 resetStat();
             }
 #endif
-        
+
         double time;
         time=getPeriod()*cpuUsage; //go to seconds
 
@@ -118,9 +118,9 @@ public:
     }
 
     virtual void threadRelease()
-	{
-		printf("Goodbye from thread1\n");
-	}
+    {
+        printf("Goodbye from thread1\n");
+    }
 
     void setCpuTime(double t)
     { cpuUsage=t;}
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
     Network yarp;
     Property p;
     Thread1 t1;
-    
+
     p.fromCommand(argc, argv);
 
     double period=p.check("period", Value(THREAD_PERIOD)).asFloat64();
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
 
     printf("Going to wait %.2lf seconds before quitting\n", time);
 
-    t1.start(); 
+    t1.start();
 
     Time::delay(time);
 

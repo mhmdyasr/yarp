@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -151,7 +151,7 @@ bool FakeBot::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image) {
         int x0 = int(x+m_x+m_dx_scaled*0.5+0.5);
         int y0 = int(y+m_y+m_dy_scaled*0.5+0.5);
         image(x,y) = back.safePixel(x0,y0);
-        
+
         if (fore.isPixel(int(x0-m_tx),int(y0-m_ty))) {
          PixelRgb& pix = fore(int(x0-m_tx),int(y0-m_ty));
          if (pix.r<200||pix.g>100||pix.b>100) {
@@ -169,11 +169,10 @@ bool FakeBot::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image) {
     Time::delay(0.1); // simulated hardware delay, using mutable clock
     return true;
 }
-    
+
 void FakeBot::run() {
     if (lifetime>=0) {
         Time::delay(lifetime);
         std::exit(0);
     }
 }
-

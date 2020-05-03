@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -39,6 +39,10 @@ struct DemoStruct {
 
 struct DemoStructList {
   1: list<DemoStruct> lst
+}
+
+struct DemoStructMap {
+  1: map<string, DemoStruct> mapValues;
 }
 
 struct DemoStructExt {
@@ -100,4 +104,6 @@ service Demo {
   void do_stop_a_service();
 
   DemoStruct get_demo_struct();
+
+  DemoStructMap get_demo_map_struct()
 }

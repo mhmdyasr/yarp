@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,20 +23,15 @@
 #include <yarp/dev/DeviceDriver.h>
 #include <SDL.h>
 #include <vector>
-#include <yarp/os/RateThread.h>
 
 
-namespace yarp {
-    namespace dev {
-        class  SDLJoypad;
-        namespace SDLJoypadImpl {
-            struct stick;
-        }
-    }
+
+namespace SDLJoypadImpl {
+    struct stick;
 }
 
 
-struct yarp::dev::SDLJoypadImpl::stick
+struct SDLJoypadImpl::stick
 {
     std::vector<unsigned int>  axes_ids;
     float                      deadZone;
@@ -62,10 +57,12 @@ struct yarp::dev::SDLJoypadImpl::stick
 * | invert_axis_[ID]      | bool   |       | false         | no                                          | invert the current axis                   | set it for each stick in the proper stick group                                                                                         |
 * | deadZone              | double |       | 0.0           | yes                                         | set the deadzone for this stick           | set it for each stick in the proper stick group                                                                                         |
 **/
-class yarp::dev::SDLJoypad : public yarp::dev::IJoypadEventDriven,//public yarp::dev::IJoypadController,
-                             public yarp::dev::DeviceDriver
+class SDLJoypad :
+        public yarp::dev::IJoypadEventDriven,
+        // public yarp::dev::IJoypadController,
+        public yarp::dev::DeviceDriver
 {
-    typedef std::vector<yarp::dev::SDLJoypadImpl::stick> stickVector;
+    typedef std::vector<SDLJoypadImpl::stick> stickVector;
 
     SDL_Event                  m_event;
     std::vector<SDL_Joystick*> m_device;

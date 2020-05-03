@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -6,21 +6,20 @@
 
 yarp_prepare_plugin(fakeDepthCamera
                     CATEGORY device
-                    TYPE yarp::dev::fakeDepthCameraDriver
+                    TYPE fakeDepthCameraDriver
                     INCLUDE fakeDepthCameraDriver.h
                     EXTRA_CONFIG WRAPPER=RGBDSensorWrapper)
 
 if(ENABLE_fakeDepthCamera)
+  yarp_add_plugin(yarp_fakeDepthCamera)
 
-  set(CMAKE_INCLUDE_CURRENT_DIR ON)
+  target_sources(yarp_fakeDepthCamera PRIVATE fakeDepthCameraDriver.cpp
+                                              fakeDepthCameraDriver.h)
 
-  yarp_add_plugin(yarp_fakeDepthCamera fakeDepthCameraDriver.cpp
-                                       fakeDepthCameraDriver.h)
-
-  target_link_libraries(yarp_fakeDepthCamera PRIVATE YARP::YARP_OS
+  target_link_libraries(yarp_fakeDepthCamera PRIVATE YARP::YARP_os
                                                      YARP::YARP_sig
                                                      YARP::YARP_dev)
-  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_os
                                                       YARP_sig
                                                       YARP_dev)
 
@@ -28,11 +27,8 @@ if(ENABLE_fakeDepthCamera)
                EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
-
-  yarp_install(FILES fakeDepthCamera.ini
-               COMPONENT ${YARP_PLUGIN_MASTER}
-               DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 

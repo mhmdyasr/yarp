@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +18,17 @@
 
 #define _USE_MATH_DEFINES
 
-#include <laserHokuyo.h>
+#include "laserHokuyo.h"
 
 #include <yarp/os/Time.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <limits>
+
 #include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <limits>
 
 //#define LASER_DEBUG
 
@@ -566,7 +567,7 @@ void laserHokuyo::run()
     yDebug ("time: %.3f %.3f\n",t2-t1, t2-old);
     old = t2;
     #endif
-    
+
     mutex.lock();
 
     if (rx_completed)

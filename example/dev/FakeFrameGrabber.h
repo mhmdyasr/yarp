@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -11,7 +11,7 @@
 #include <yarp/sig/all.h>
 #include <yarp/dev/all.h>
 
-class FakeFrameGrabber : public yarp::dev::IFrameGrabberImage, 
+class FakeFrameGrabber : public yarp::dev::IFrameGrabberImage,
                          public yarp::dev::DeviceDriver {
 private:
     int w, h;
@@ -30,7 +30,7 @@ public:
         return w>0 && h>0;
     }
 
-    virtual bool open(yarp::os::Searchable& config) { 
+    virtual bool open(yarp::os::Searchable& config) {
         // extract width and height configuration, if present
         // otherwise use 128x128
         int desiredWidth = config.check("w",yarp::os::Value(128)).asInt32();
@@ -38,7 +38,7 @@ public:
         return open(desiredWidth,desiredHeight);
     }
 
-    virtual bool close() { 
+    virtual bool close() {
         return true; // easy
     }
 
@@ -60,4 +60,3 @@ public:
         return w;
     }
 };
-

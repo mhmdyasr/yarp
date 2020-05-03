@@ -1,11 +1,11 @@
-% Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+% Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 % All rights reserved.
 %
 % This software may be modified and distributed under the terms of the
 % BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 % Setting yarp binding library path
-% you can avoid this if the 'yarp.oct' is already 
+% you can avoid this if the 'yarp.oct' is already
 % the octave load path
 addpath([getenv('YARP_ROOT') '/build/lib/octave']);
 
@@ -19,12 +19,12 @@ yarp.Network.init();
 % Create and open a port
 p = yarp.BufferedPortImageRgb();
 ret = p.open('/img/in');
-if ret == 0 
+if ret == 0
     return
 endif
 
 
-% read a single-frame image data from 
+% read a single-frame image data from
 % the port and show it using imshow
 img = p.read();
 img.width()
@@ -53,5 +53,3 @@ p.close();
 
 % Deinitialize yarp network
 yarp.Network.fini();
-
-

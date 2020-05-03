@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  *
  * This library is free software; you can redistribute it and/or
@@ -590,7 +590,7 @@ void SequenceTreeWidget::onContextMenuRequested(QPoint point)
     if (ret == clipboardAction)
     {
         QClipboard  *clipboard = QApplication::clipboard();
-       
+
         QString selected_test;
 
         for (int i = 2; i<columnCount(); i++)

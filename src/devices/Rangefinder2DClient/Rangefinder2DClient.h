@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,30 +22,26 @@
 
 #include <yarp/os/Network.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/dev/PreciselyTimed.h>
+#include <yarp/dev/IPreciselyTimed.h>
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/ControlBoardHelpers.h>
+#include <yarp/dev/LaserScan2D.h>
 #include <yarp/sig/Vector.h>
-#include <yarp/os/Mutex.h>
 #include <yarp/os/Time.h>
 #include <yarp/dev/PolyDriver.h>
 
-namespace yarp {
-    namespace dev {
-        class Rangefinder2DClient;
-    }
-}
+#include <mutex>
+
 
 #define DEFAULT_THREAD_PERIOD 20 //ms
 const int LASER_TIMEOUT=100; //ms
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-class Rangefinder2DInputPortProcessor : public yarp::os::BufferedPort<yarp::os::Bottle>
+class Rangefinder2DInputPortProcessor :
+        public yarp::os::BufferedPort<yarp::dev::LaserScan2D>
 {
-    yarp::os::Bottle lastBottle;
-    yarp::os::Mutex mutex;
+    yarp::dev::LaserScan2D lastScan;
+    std::mutex mutex;
     yarp::os::Stamp lastStamp;
     double deltaT;
     double deltaTMax;
@@ -62,10 +58,10 @@ public:
 
     Rangefinder2DInputPortProcessor();
 
-    using yarp::os::BufferedPort<yarp::os::Bottle>::onRead;
-    void onRead(yarp::os::Bottle &v) override;
+    using yarp::os::BufferedPort<yarp::dev::LaserScan2D>::onRead;
+    void onRead(yarp::dev::LaserScan2D&v) override;
 
-    inline int getLast(yarp::os::Bottle &data, yarp::os::Stamp &stmp);
+    inline int getLast(yarp::dev::LaserScan2D &data, yarp::os::Stamp &stmp);
 
     inline int getIterations();
 
@@ -76,7 +72,6 @@ public:
     yarp::dev::IRangefinder2D::Device_status getStatus();
 
 };
-#endif /*DOXYGEN_SHOULD_SKIP_THIS*/
 
 /**
 * @ingroup dev_impl_network_clients
@@ -84,11 +79,11 @@ public:
 * The client side of any ILaserRangefinder2D capable device.
 * Still single thread! concurrent access is unsafe.
 */
-class yarp::dev::Rangefinder2DClient: public DeviceDriver,
-                          public IPreciselyTimed,
-                          public IRangefinder2D
+class Rangefinder2DClient:
+        public yarp::dev::DeviceDriver,
+        public yarp::dev::IPreciselyTimed,
+        public yarp::dev::IRangefinder2D
 {
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 protected:
     Rangefinder2DInputPortProcessor inputPort;
     yarp::os::Port rpcPort;
@@ -104,8 +99,6 @@ protected:
     double device_position_theta;
     std::string laser_frame_name;
     std::string robot_frame_name;
-
-#endif /*DOXYGEN_SHOULD_SKIP_THIS*/
 
 public:
 
@@ -126,7 +119,7 @@ public:
     * @param data a vector containing the measurement data, expressed in cartesian/polar format
     * @return true/false..
     */
-    bool getLaserMeasurement(std::vector<LaserMeasurementData> &data) override;
+    bool getLaserMeasurement(std::vector<yarp::dev::LaserMeasurementData> &data) override;
 
     /**
     * Get the device measurements

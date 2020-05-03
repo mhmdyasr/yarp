@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,25 +21,24 @@
 
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/LockGuard.h>
 
 #include <OVR_CAPI_GL.h>
 
 
 inline void rgb2rgba(unsigned char* rgba, const yarp::sig::Image& img, unsigned char alpha)
 {
-    int wdt = img.width();
-    int hgt = img.height();
-    for (int h = 0; h < hgt; h++)
+    size_t wdt = img.width();
+    size_t hgt = img.height();
+    for (size_t h = 0; h < hgt; h++)
     {
-        for (int w = 0; w < wdt; w++)
+        for (size_t w = 0; w < wdt; w++)
         {
             rgba[(wdt * h + w) * 4]     = img.getPixelAddress(w, h)[0];
             rgba[(wdt * h + w) * 4 + 1] = img.getPixelAddress(w, h)[1];
             rgba[(wdt * h + w) * 4 + 2] = img.getPixelAddress(w, h)[2];
             rgba[(wdt * h + w) * 4 + 3] = alpha;
         }
-        
+
     }
 }
 
@@ -128,7 +127,7 @@ TextureBuffer::~TextureBuffer()
     deleteTextureAndBuffers();
 }
 
-void TextureBuffer::resize(int w, int h)
+void TextureBuffer::resize(size_t w, size_t h)
 {
     yTrace();
     deleteTextureAndBuffers();
@@ -321,7 +320,7 @@ void TextureBuffer::deleteTextureAndBuffers()
         glDeleteBuffers(textureSwapChainSize, pboIds);
         delete pboIds;
     }
-    
+
 
     ovr_DestroyTextureSwapChain(session, textureSwapChain);
     unlock();

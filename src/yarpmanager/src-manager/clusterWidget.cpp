@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,8 @@
 #include <yarp/os/impl/NameClient.h>
 #include <yarp/profiler/NetworkProfiler.h>
 
+#include <algorithm>
+
 #include <mainwindow.h>
 
 using namespace std;
@@ -39,7 +41,7 @@ using namespace yarp::manager;
 
 ClusterWidget::ClusterWidget(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ClusterWidget), confFile(""), clusLoader(nullptr)
+    ui(new Ui::ClusterWidget), confFile(""), clusLoader(nullptr), checkNs(false)
 {
 
 #ifdef WIN32
@@ -47,11 +49,8 @@ ClusterWidget::ClusterWidget(QWidget *parent) :
     return;
 #endif
     ui->setupUi(this);
-
-    ui->checkNs->setAttribute(Qt::WA_TransparentForMouseEvents);
-    ui->checkNs->setFocusPolicy(Qt::NoFocus);
-
-    ui->checkNs->setStyleSheet("QCheckBox { color: green }");
+    ui->executeBtn->setDisabled(true);
+    ui->labelNs->setPixmap(QPixmap(":/close.svg").scaledToHeight(ui->checkRos->height()));
 
     //Connections to slots
 
@@ -68,6 +67,7 @@ ClusterWidget::ClusterWidget(QWidget *parent) :
     connect(ui->executeBtn, SIGNAL(clicked(bool)), this, SLOT(onExecute()));
 
     connect(ui->nodestreeWidget, SIGNAL(itemSelectionChanged()), this, SLOT(onNodeSelectionChanged()));
+    connect(ui->lineEditExecute, SIGNAL(textChanged(QString)), SLOT(onExecuteTextChanged()));
 
 }
 
@@ -91,22 +91,34 @@ void ClusterWidget::init()
 
     ui->lineEditUser->setText(cluster.user.c_str());
     ui->lineEditNs->setText(cluster.nameSpace.c_str());
-    ui->lineEditNsNode->setText(cluster.nsNode.c_str());
 
     //check if yarpserver is running
 
     onCheckServer();
 
+    QStringList l;
     //Adding nodes
 
-    for (size_t i = 0; i<cluster.nodes.size(); i++)
+    l.push_back(cluster.nsNode.c_str());
+    int i{0};
+    for (auto& node:cluster.nodes)
     {
-        ClusterNode node = cluster.nodes[i];
-        addRow(node.name, node.displayValue, node.user, node.onOff, node.log, i);
+        addRow(node.name, node.displayValue, node.user, node.address, node.onOff, node.log, i);
+        i++;
+        if (cluster.nsNode == node.name)
+            continue;
+        l.push_back(node.name.c_str());
     }
 
+    // populate the execute combo box
+    ui->executeComboBox->addItems(l);
+    ui->executeComboBox->setEditable(true);
+
+    ui->nsNodeComboBox->addItems(l);
+    ui->nsNodeComboBox->setEditable(true);
+
     //check if all the nodes are up
-    if (ui->checkNs->isChecked())
+    if (checkNs)
     {
         onCheckAll();
     }
@@ -122,7 +134,7 @@ void ClusterWidget::onCheckAll()
     for (int i = 0; i<ui->nodestreeWidget->topLevelItemCount(); i++)
     {
         QTreeWidgetItem *it = ui->nodestreeWidget->topLevelItem(i);
-        int itr = it->text(5).toInt();
+        int itr = it->text(6).toInt();
         ClusterNode node = cluster.nodes[itr];
         if (checkNode(node.name))
         {
@@ -140,7 +152,18 @@ void ClusterWidget::onCheckAll()
 
 void ClusterWidget::onCheckServer()
 {
-    ui->checkNs->setChecked(checkNameserver());
+    checkNs = checkNameserver();
+    if (checkNs) {
+        ui->labelNs->setPixmap(QPixmap(":/apply.svg").scaledToHeight(ui->checkRos->height()));
+    }
+    else {
+        ui->labelNs->setPixmap(QPixmap(":/close.svg").scaledToHeight(ui->checkRos->height()));
+    }
+
+    ui->checkRos->setDisabled(checkNs);
+    ui->runServerBtn->setDisabled(checkNs);
+    ui->nsNodeComboBox->setDisabled(checkNs);
+    ui->stopServerBtn->setDisabled(!checkNs);
 }
 
 void ClusterWidget::onRunServer()
@@ -172,6 +195,21 @@ void ClusterWidget::onStopServer()
 {
     updateServerEntries();
 
+    auto count = std::count_if(cluster.nodes.begin(), cluster.nodes.end(),
+                               [](const ClusterNode& e){ return e.onOff; });
+
+    if (count > 0) {
+
+        auto reply = QMessageBox::warning(this, "Shutting down yarpserver",
+                                           "You have some yarprun on execution."
+                                           " After shutting down yarpserver you might not be able to recover them."
+                                           " Are you sure?",
+                                           QMessageBox::Yes|QMessageBox::No);
+        if (reply== QMessageBox::No) {
+            return;
+        }
+    }
+
     string cmdStopServer = getSSHCmd(cluster.user, cluster.nsNode, cluster.ssh_options);
 
     cmdStopServer = cmdStopServer + " killall yarpserver &";
@@ -188,7 +226,7 @@ void ClusterWidget::onStopServer()
     }
 
     // if it fails to stop, kill it
-    if (ui->checkNs->isChecked())
+    if (checkNs)
     {
         onKillServer();
     }
@@ -226,7 +264,7 @@ void ClusterWidget::onRunSelected()
     QList<QTreeWidgetItem*> selectedItems = ui->nodestreeWidget->selectedItems();
     foreach (QTreeWidgetItem *it, selectedItems)
     {
-        int itr = it->text(5).toInt();
+        int itr = it->text(6).toInt();
         ClusterNode node = cluster.nodes[itr];
         string portName = node.name;
 
@@ -240,13 +278,13 @@ void ClusterWidget::onRunSelected()
             continue;
         }
 
-        string cmdRunYarprun = getSSHCmd(node.user, node.name, node.ssh_options);
+        string cmdRunYarprun = getSSHCmd(node.user, node.address, node.ssh_options);
         if (node.display)
         {
             cmdRunYarprun.append(" 'export DISPLAY=").append(node.displayValue).append(" && ");
 
         }
-        if (qobject_cast<QCheckBox*>(ui->nodestreeWidget->itemWidget((QTreeWidgetItem *)it, 4))->isChecked())
+        if (qobject_cast<QCheckBox*>(ui->nodestreeWidget->itemWidget((QTreeWidgetItem *)it, 5))->isChecked())
         {
             cmdRunYarprun.append(" yarprun --server ").append(portName).append(" --log 2>&1 2>/tmp/yarprunserver.log");
         }
@@ -281,7 +319,7 @@ void ClusterWidget::onStopSelected()
     QList<QTreeWidgetItem*> selectedItems = ui->nodestreeWidget->selectedItems();
     foreach (QTreeWidgetItem *it, selectedItems)
     {
-        int itr = it->text(5).toInt();
+        int itr = it->text(6).toInt();
         ClusterNode node = cluster.nodes[itr];
         if (!node.onOff)
         {
@@ -293,7 +331,7 @@ void ClusterWidget::onStopSelected()
             portName.insert(0, 1, '/');
         }
 
-        string cmdStopYarprun = getSSHCmd(node.user, node.name, node.ssh_options);
+        string cmdStopYarprun = getSSHCmd(node.user, node.address, node.ssh_options);
 
         cmdStopYarprun.append(" yarprun --exit --on ").append(portName).append(" &");
 
@@ -318,14 +356,14 @@ void ClusterWidget::onKillSelected()
     QList<QTreeWidgetItem*> selectedItems = ui->nodestreeWidget->selectedItems();
     foreach (QTreeWidgetItem *it, selectedItems)
     {
-        int itr = it->text(5).toInt();
+        int itr = it->text(6).toInt();
         ClusterNode node = cluster.nodes[itr];
         if (!node.onOff)
         {
             continue;
         }
 
-        string cmdKillYarprun = getSSHCmd(node.user, node.name, node.ssh_options);
+        string cmdKillYarprun = getSSHCmd(node.user, node.address, node.ssh_options);
 
         cmdKillYarprun.append(" killall -9 yarprun &");
 
@@ -351,27 +389,40 @@ void ClusterWidget::onExecute()
         return;
     }
 
-    QList<QTreeWidgetItem*> selectedItems = ui->nodestreeWidget->selectedItems();
-    foreach (QTreeWidgetItem *it, selectedItems)
+    auto nodeName = ui->executeComboBox->currentText();
+
+    if (nodeName.trimmed().size() == 0)
     {
-        int itr = it->text(5).toInt();
-        ClusterNode node = cluster.nodes[itr];
-
-        string cmdExecute = getSSHCmd(node.user, node.name, node.ssh_options);
-
-        cmdExecute.append(" ").append(ui->lineEditExecute->text().toStdString());
-
-        if (system(cmdExecute.c_str()) != 0)
-        {
-            std::string err = "ClusterWidget: failed to run "+ ui->lineEditExecute->text().toStdString() + " on " + node.name;
-            logError(QString(err.c_str()));
-        }
-        else
-        {
-            std::string info = "ClusterWidget: command "+ ui->lineEditExecute->text().toStdString() + " successfully executed on " + node.name;
-            logMessage(QString(info.c_str()));
-        }
+        return;
     }
+
+    auto nodeItr = std::find_if(cluster.nodes.begin(), cluster.nodes.end(),
+                               [&nodeName](const ClusterNode& n){ return n.name == nodeName.toStdString(); });
+
+
+    if (nodeItr == cluster.nodes.end())
+    {
+        return;
+    }
+
+    auto node = *nodeItr;
+    auto command = ui->lineEditExecute->text().toStdString();
+
+    string cmdExecute = getSSHCmd(node.user, node.address, node.ssh_options);
+
+    cmdExecute.append(" ").append(command);
+
+    if (system(cmdExecute.c_str()) != 0)
+    {
+        std::string err = "ClusterWidget: failed to run "+ command + " on " + node.name;
+        logError(QString(err.c_str()));
+    }
+    else
+    {
+        std::string info = "ClusterWidget: command "+ command + " successfully executed on " + node.name;
+        logMessage(QString(info.c_str()));
+    }
+
     ui->lineEditExecute->clear();
 }
 
@@ -382,30 +433,38 @@ void ClusterWidget::onNodeSelectionChanged()
         ui->runSelBtn->setDisabled(true);
         ui->stopSelBtn->setDisabled(true);
         ui->killSelBtn->setDisabled(true);
-        ui->executeBtn->setDisabled(true);
     }
     else
     {
-        ui->runSelBtn->setDisabled(false);
-        ui->stopSelBtn->setDisabled(false);
-        ui->killSelBtn->setDisabled(false);
-        ui->executeBtn->setDisabled(false);
+        ui->runSelBtn->setDisabled(!checkNs);
+        ui->stopSelBtn->setDisabled(!checkNs);
+        ui->killSelBtn->setDisabled(!checkNs);
     }
+}
+
+
+void ClusterWidget::onExecuteTextChanged()
+{
+    if (ui->lineEditExecute->text().trimmed().size() > 0)
+        ui->executeBtn->setDisabled(false);
+    else
+        ui->executeBtn->setDisabled(true);
 }
 
 
 
 void ClusterWidget::addRow(const std::string& name,const std::string& display,
-                           const std::string& user, bool onOff, bool log, int id)
+                           const std::string& user, const std::string& address,
+                           bool onOff, bool log, int id)
 {
     QStringList stringList;
-    stringList <<""<< QString(name.c_str()) << QString(display.c_str()) << QString(user.c_str())<< "" <<QString(std::to_string(id).c_str());
+    stringList <<""<< QString(name.c_str()) << QString(display.c_str()) << QString(user.c_str()) << QString(address.c_str())<< "" <<QString(std::to_string(id).c_str());
     auto* it = new QTreeWidgetItem(stringList);
     ui->nodestreeWidget->addTopLevelItem(it);
-    ui->nodestreeWidget->setItemWidget((QTreeWidgetItem *) it, 4, new QCheckBox(this));
+    ui->nodestreeWidget->setItemWidget((QTreeWidgetItem *) it, 5, new QCheckBox(this));
 
     //initialize checkboxes
-    qobject_cast<QCheckBox*>(ui->nodestreeWidget->itemWidget((QTreeWidgetItem *)it, 4))->setChecked(log);
+    qobject_cast<QCheckBox*>(ui->nodestreeWidget->itemWidget((QTreeWidgetItem *)it, 5))->setChecked(log);
 
     //initialize icon
     if (onOff)
@@ -543,8 +602,8 @@ bool ClusterWidget::checkNode(const string &name)
 void ClusterWidget::updateServerEntries()
 {
     // remove all the whitespaces
-    cluster.user   = ui->lineEditUser->text().simplified().replace( " ", "" ).toStdString();
-    cluster.nsNode = ui->lineEditNsNode->text().simplified().replace( " ", "" ).toStdString();
+    cluster.user   = ui->lineEditUser->text().simplified().trimmed().toStdString();
+    cluster.nsNode = ui->nsNodeComboBox->currentText().simplified().trimmed().toStdString();
 }
 
 ClusterWidget::~ClusterWidget()

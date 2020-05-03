@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 
 #include <GL/glew.h>
 #include <OVR_Math.h>
-#include <yarp/os/Mutex.h>
+#include <mutex>
 #include <yarp/sig/Image.h>
 
 
@@ -39,7 +39,7 @@ public:
 
     ~TextureBuffer();
 
-    void resize(int w = 0, int h = 0);
+    void resize(size_t w = 0, size_t h = 0);
     void update(const yarp::sig::Image& img);
     void update();
     void lock();
@@ -49,13 +49,13 @@ public:
     ovrTextureSwapChain textureSwapChain;
     int textureSwapChainSize;
 
-    unsigned int width;
-    unsigned int height;
+    size_t width;
+    size_t height;
     unsigned int components;
     unsigned int padding;
-    unsigned int rowSize;
-    unsigned int bufferSize;
-    double       alpha;
+    size_t rowSize;
+    size_t bufferSize;
+    double alpha;
 
     ovrPosef eyePose;
 
@@ -63,12 +63,12 @@ public:
 
     GLubyte* ptr;
     bool dataReady;
-    yarp::os::Mutex mutex;
+    std::mutex mutex;
 
     unsigned int missingFrames;
 
-    unsigned int imageWidth;
-    unsigned int imageHeight;
+    size_t imageWidth;
+    size_t imageHeight;
 
 private:
 

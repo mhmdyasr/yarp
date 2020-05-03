@@ -1,34 +1,31 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
 # BSD-3-Clause license. See the accompanying LICENSE file for details.
 
-if(CREATE_YARPMANAGER_CONSOLE)
+if(YARP_COMPILE_yarpmanager-console)
+  add_executable(yarpmanager-console)
+
   set(yarpmanager_console_SRCS yarpmanager.cpp
                                ymanager.cpp)
   set(yarpmanager_console_HDRS ymanager.h)
 
-  include_directories(SYSTEM ${ACE_INCLUDE_DIRS})
+
+  target_sources(yarpmanager-console PRIVATE ${yarpmanager_console_SRCS}
+                                             ${yarpmanager_console_HDRS})
+
+  target_link_libraries(yarpmanager-console PRIVATE YARP::YARP_init
+                                                    YARP::YARP_os
+                                                    YARP::YARP_manager)
+
   if(MSVC)
-    include_directories(SYSTEM ${dirent_INCLUDE_DIRS})
+    target_include_directories(yarpmanager-console SYSTEM PRIVATE ${dirent_INCLUDE_DIRS})
   endif()
 
-  if (YARP_HAS_LIBEDIT)
-    add_definitions( -DWITH_LIBEDIT )
-    include_directories(${Libedit_INCLUDE_DIR})
-  endif()
-
-  add_executable(yarpmanager-console ${yarpmanager_console_SRCS}
-                                     ${yarpmanager_console_HDRS})
-
-  target_link_libraries(yarpmanager-console YARP::YARP_init
-                                            YARP::YARP_OS
-                                            YARP::YARP_manager
-                                            ${ACE_LIBRARIES})
-
-  if(YARP_HAS_LIBEDIT)
-    target_link_libraries(yarpmanager-console Libedit::libedit)
+  if(YARP_HAS_Libedit)
+    target_compile_definitions(yarpmanager-console PRIVATE YARP_HAS_Libedit)
+    target_link_libraries(yarpmanager-console PRIVATE Libedit::libedit)
   endif()
 
   install(TARGETS yarpmanager-console

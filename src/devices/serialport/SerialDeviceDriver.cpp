@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2007 Alexandre Bernardino
  * Copyright (C) 2007 Carlos Beltran-Gonzalez
  * All rights reserved.
@@ -8,13 +8,12 @@
  * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
-#include <SerialDeviceDriver.h>
+#include "SerialDeviceDriver.h"
+
+#include <yarp/os/Log.h>
 
 #include <cstdio>
 #include <cstdlib>
-
-///#include <yarp/os/Time.h>
-#include <yarp/os/Log.h>
 
 using namespace yarp::os;
 using namespace yarp::dev;

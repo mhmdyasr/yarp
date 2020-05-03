@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -8,6 +8,7 @@
  */
 
 #include <yarp/os/all.h>
+#include <mutex>
 
 using namespace yarp::os;
 
@@ -17,7 +18,7 @@ using namespace yarp::os;
 class Count {
 public:
     int counts[R];
-    Mutex mutex;
+    std::mutex mutex;
 
     Count() : mutex() {
         for (int i=0; i<R; i++) { counts[i] = 0; }
@@ -30,7 +31,7 @@ public:
     }
 
     void show() {
-        for (int i=0; i<R; i++) { 
+        for (int i=0; i<R; i++) {
             printf("Number %d: got %d (target %d)\n", i, counts[i], N*N);
         }
     }

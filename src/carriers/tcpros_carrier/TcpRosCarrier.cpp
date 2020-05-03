@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -8,7 +8,6 @@
 
 #include "TcpRosCarrier.h"
 #include "RosSlave.h"
-#include "WireImage.h"
 
 #include <string>
 #include <map>
@@ -18,9 +17,11 @@
 #include <yarp/os/NetType.h>
 #include <yarp/os/Name.h>
 #include <yarp/os/Route.h>
+#include <yarp/wire_rep_utils/WireImage.h>
 
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::wire_rep_utils;
 using namespace std;
 
 #define dbg_printf if (0) printf
@@ -53,7 +54,7 @@ std::string TcpRosCarrier::getRosType(ConnectionState& proto) {
     std::string typ;
     std::string rtyp;
     if (proto.getContactable()) {
-        Type t = proto.getContactable()->getType(); 
+        Type t = proto.getContactable()->getType();
         typ = t.getName();
         md5sum = t.readProperties().find("md5sum").asString();
         message_definition = t.readProperties().find("message_definition").asString();
@@ -119,7 +120,7 @@ bool TcpRosCarrier::sendHeader(ConnectionState& proto) {
     }
 
     RosHeader header;
-    dbg_printf("Writing to %s\n", proto.getStreams().getRemoteAddress().toString().c_str()); 
+    dbg_printf("Writing to %s\n", proto.getStreams().getRemoteAddress().toString().c_str());
     dbg_printf("Writing from %s\n", proto.getStreams().getLocalAddress().toString().c_str());
 
     std::string rtyp = getRosType(proto);
@@ -138,13 +139,13 @@ bool TcpRosCarrier::sendHeader(ConnectionState& proto) {
     string header_len(4,'\0');
     char *at = (char*)header_len.c_str();
     RosHeader::appendInt32(at,header_serial.length());
-    dbg_printf("Writing %s -- %d bytes\n", 
+    dbg_printf("Writing %s -- %d bytes\n",
                RosHeader::showMessage(header_len).c_str(),
                (int)header_len.length());
 
     Bytes b1((char*)header_len.c_str(),header_len.length());
     proto.os().write(b1);
-    dbg_printf("Writing %s -- %d bytes\n", 
+    dbg_printf("Writing %s -- %d bytes\n",
                RosHeader::showMessage(header_serial).c_str(),
                (int)header_serial.length());
     Bytes b2((char*)header_serial.c_str(),header_serial.length());
@@ -285,13 +286,13 @@ bool TcpRosCarrier::expectSenderSpecifier(ConnectionState& proto) {
     string header_len(4,'\0');
     char *at = (char*)header_len.c_str();
     RosHeader::appendInt32(at,header_serial.length());
-    dbg_printf("Writing %s -- %d bytes\n", 
+    dbg_printf("Writing %s -- %d bytes\n",
                RosHeader::showMessage(header_len).c_str(),
                (int)header_len.length());
-    
+
     Bytes b1((char*)header_len.c_str(),header_len.length());
     proto.os().write(b1);
-    dbg_printf("Writing %s -- %d bytes\n", 
+    dbg_printf("Writing %s -- %d bytes\n",
                RosHeader::showMessage(header_serial).c_str(),
                (int)header_serial.length());
     Bytes b2((char*)header_serial.c_str(),header_serial.length());
@@ -315,7 +316,7 @@ bool TcpRosCarrier::expectSenderSpecifier(ConnectionState& proto) {
     } else {
         rosname = "";
     }
-    sender = isService; 
+    sender = isService;
 
     processRosHeader(header);
 
@@ -351,7 +352,7 @@ bool TcpRosCarrier::write(ConnectionState& proto, SizedWriter& writer) {
                 translate = TCPROS_TRANSLATE_IMAGE;
                 std::string frame = "/frame";
                 ri.init(*img,frame);
-            } else { 
+            } else {
                 if (WireBottle::extractBlobFromBottle(writer,wt)) {
                     translate = TCPROS_TRANSLATE_BOTTLE_BLOB;
                 } else {
@@ -415,7 +416,7 @@ bool TcpRosCarrier::write(ConnectionState& proto, SizedWriter& writer) {
     for (size_t i=0; i<flex_writer->length(); i++) {
         len += (int)flex_writer->length(i);
     }
-    dbg_printf("Prepping to write %d blocks (%d bytes)\n", 
+    dbg_printf("Prepping to write %d blocks (%d bytes)\n",
                (int)flex_writer->length(),
                len);
 
@@ -427,7 +428,7 @@ bool TcpRosCarrier::write(ConnectionState& proto, SizedWriter& writer) {
     flex_writer->write(proto.os());
 
     dbg_printf("done sending\n");
-    
+
     if (isService) {
         if (!sender) {
             if (!persistent) {
@@ -493,7 +494,7 @@ int TcpRosCarrier::connect(const yarp::os::Contact& src,
     cmd.addString(topic);
     Bottle& lst = cmd.addList();
     char buf[1000];
-    sprintf(buf,"http://%s:%d/", addr_slave.getHost().c_str(), 
+    sprintf(buf,"http://%s:%d/", addr_slave.getHost().c_str(),
             addr_slave.getPort());
     lst.addString(buf);
     ContactStyle req;

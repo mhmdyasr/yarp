@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -27,78 +27,78 @@ MACHINES=( pc104 )
 
 case $1 in
     killall)
-		
-		for machine in ${MACHINES[@]}
-		  do
-		  echo "Killing client on $machine"
-		  yarp run --on /$machine --kill profTag 
-		  echo echo "done"
-		done
-		
-		killall port_latency
-		;;
-	*)
-	for rate in $RATES
-	  do
-	  for protocol in $PROTOCOLS
-		do
-		echo "Starting server"
-		../port_latency --server --period $rate &
-		jobServer=$!
 
-		yarp wait $SERVER_PORT
-		echo "Ok server exists"
+        for machine in ${MACHINES[@]}
+        do
+            echo "Killing client on $machine"
+            yarp run --on /$machine --kill profTag
+            echo echo "done"
+        done
 
-		for machine in ${MACHINES[@]}
-		  do
-		  echo "Starting client on $machine"
-		  cmd="$YARP_ROOT/example/profiling/port_latency --client --name $machine --nframes -1"
-		  yarp run --on /$machine --cmd "$cmd" --as profTag 
-		  yarp wait /profiling/client/$machine/port:i
-		  yarp wait /profiling/client/$machine/port:o
-		  echo echo "done"
-		done
+        killall port_latency
+        ;;
+    *)
+        for rate in $RATES
+        do
+            for protocol in $PROTOCOLS
+            do
+                echo "Starting server"
+                ../port_latency --server --period $rate &
+                jobServer=$!
 
-		numMachines=${#MACHINES[@]}
-		for (( i = 1 ; i < ($numMachines) ; i++ ))
-		  do
-		  prev=${MACHINES[$(i-1)]}
-		  machine=${MACHINES[$i]}
-		  echo "Connecting $prev to $machine"
-		  yarp connect /profiling/client/$prev/port:o /profiling/client/$machine/port:i $protocol
-		  echo "done"
-		done
+                yarp wait $SERVER_PORT
+                echo "Ok server exists"
 
-		echo "Starting client on local machine"
-		../port_latency --client --name end --nframes $NFRAMES &
-		jobClient=$!
-		echo $jobClient
+                for machine in ${MACHINES[@]}
+                do
+                    echo "Starting client on $machine"
+                    cmd="$YARP_ROOT/example/profiling/port_latency --client --name $machine --nframes -1"
+                    yarp run --on /$machine --cmd "$cmd" --as profTag
+                    yarp wait /profiling/client/$machine/port:i
+                    yarp wait /profiling/client/$machine/port:o
+                    echo echo "done"
+                done
 
-		yarp wait $CLIENT_PORT
+                numMachines=${#MACHINES[@]}
+                for (( i = 1 ; i < ($numMachines) ; i++ ))
+                do
+                    prev=${MACHINES[$(i-1)]}
+                    machine=${MACHINES[$i]}
+                    echo "Connecting $prev to $machine"
+                    yarp connect /profiling/client/$prev/port:o /profiling/client/$machine/port:i $protocol
+                    echo "done"
+                done
 
-		lastMachine=${MACHINES[($numMachines)-1]}
-		yarp connect /profiling/client/$lastMachine/port:o $CLIENT_PORT
-		fistMachine=${MACHINES[0]}
-		yarp connect $SERVER_PORT /profiling/client/$fistMachine/port:i
+                echo "Starting client on local machine"
+                ../port_latency --client --name end --nframes $NFRAMES &
+                jobClient=$!
+                echo $jobClient
 
-		echo "Now waiting for test"
-		wait $jobClient
+                yarp wait $CLIENT_PORT
 
-		echo "Now killing server"
-		kill $jobServer
+                lastMachine=${MACHINES[($numMachines)-1]}
+                yarp connect /profiling/client/$lastMachine/port:o $CLIENT_PORT
+                fistMachine=${MACHINES[0]}
+                yarp connect $SERVER_PORT /profiling/client/$fistMachine/port:i
 
-		for machine in ${MACHINES[@]}
-		  do
-		  echo "Killing client on $machine"
-		  yarp run --on /$machine --kill profTag 
-		  echo echo "done"
-		done
+                echo "Now waiting for test"
+                wait $jobClient
 
-		echo "Moving report file"
-		nodes=$(($numMachines+1))
-		reportFile="rep-$rate-$protocol-$nodes.txt"
-		mv timing.txt $reportFile
-	  done
-	done
-	;;
+                echo "Now killing server"
+                kill $jobServer
+
+                for machine in ${MACHINES[@]}
+                do
+                    echo "Killing client on $machine"
+                    yarp run --on /$machine --kill profTag
+                    echo echo "done"
+                done
+
+                echo "Moving report file"
+                nodes=$(($numMachines+1))
+                reportFile="rep-$rate-$protocol-$nodes.txt"
+                mv timing.txt $reportFile
+            done
+        done
+        ;;
 esac

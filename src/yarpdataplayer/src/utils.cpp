@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,6 +43,14 @@
 #include <utility>
 #include "include/mainwindow.h"
 #include "include/log.h"
+
+ //ROS messages
+#include <yarp/rosmsg/sensor_msgs/LaserScan.h>
+#include <yarp/rosmsg/nav_msgs/Odometry.h>
+#include <yarp/rosmsg/tf/tfMessage.h>
+#include <yarp/rosmsg/tf2_msgs/TFMessage.h>
+#include <yarp/rosmsg/geometry_msgs/Pose.h>
+#include <yarp/rosmsg/geometry_msgs/Pose2D.h>
 
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -106,8 +114,7 @@ string Utilities::getCurrentPath()
     return currentPath;
 }
 /**********************************************************/
-int Utilities::getRecSubDirList(string dir, vector<string> &names, vector<string> &info,
-                                vector<string> &logs, vector<string> &paths, int recursive)
+int Utilities::getRecSubDirList(const string& dir, vector<RowInfo>& rowInfoVec, int recursive)
 {
 
     struct dirent *direntp = nullptr;
@@ -169,16 +176,18 @@ int Utilities::getRecSubDirList(string dir, vector<string> &names, vector<string
                 //check log file validity before proceeding
                 if ( checkLog && checkData && (stat(dataFileName.c_str(), &st) == 0)) {
                     LOG(" %s IS present adding it to the gui\n",filename);
+                    RowInfo row;
 
                     if (recursiveName.empty()){
-                        names.emplace_back( direntp->d_name );//pass also previous subDir name
+                        row.name = direntp->d_name;//pass also previous subDir name
                     } else {
-                        names.emplace_back(recursiveName + "_" + direntp->d_name );//pass only subDir name
+                        row.name = recursiveName + "_" + direntp->d_name;//pass only subDir name
                     }
 
-                    info.emplace_back(dir + "/" + direntp->d_name + "/info.log" );
-                    logs.emplace_back(dir + "/" + direntp->d_name + "/data.log" );
-                    paths.emplace_back(dir + "/" + direntp->d_name + "/" ); //pass full path
+                    row.info  = dir + "/" + direntp->d_name + "/info.log";
+                    row.log   = dir + "/" + direntp->d_name + "/data.log";
+                    row.path = dir + "/" + direntp->d_name + "/"; //pass full path
+                    rowInfoVec.emplace_back(row);
                     dir_count++;
                 } else {
                     if (!checkLog){
@@ -204,7 +213,7 @@ int Utilities::getRecSubDirList(string dir, vector<string> &names, vector<string
                     recursiveName = string( direntp->d_name );
                 }
 
-                getRecSubDirList(recDir, names, info, logs, paths, 1);
+                getRecSubDirList(recDir, rowInfoVec, 1);
             }
             if (recursiveIterations < 2 || recursiveIterations > 2){
                 recursiveName.erase();
@@ -215,17 +224,17 @@ int Utilities::getRecSubDirList(string dir, vector<string> &names, vector<string
     /* close the dir */
     (void)closedir(dirp);
     //avoid this for alphabetical order in linux
-    sort(names.begin(), names.end());
-    sort(info.begin(), info.end());
-    sort(logs.begin(), logs.end());
-    sort(paths.begin(), paths.end());
+    std::sort(rowInfoVec.begin(), rowInfoVec.end(), [](const RowInfo& lhs, const RowInfo& rhs)
+    {
+        return lhs.name < rhs.name;
+    });
 
     return dir_count;
 }
 /**********************************************************/
 bool Utilities::checkLogValidity(const char *filename)
 {
-    bool check = false;
+    bool check = true;
     fstream str;
     str.open (filename, ios_base::in);//, ios::binary);
 
@@ -234,17 +243,14 @@ bool Utilities::checkLogValidity(const char *filename)
         int itr = 0;
         while( getline( str, line ) && itr < 3){
             Bottle b( line );
-            if (itr >= 0){
-                if ( b.size() < 1){
-                    check = false;
-                } else {
-                    check = true;
-                }
+            if ( b.size() == 0){
+                check = false;
+                break;
             }
             itr++;
         }
         str.close();
-        fprintf (stdout, "The size of the file is %d \n",itr );
+        fprintf (stdout, "The file contains at least %d non-empty lines\n",itr );
     }
     return check;
 }
@@ -260,15 +266,19 @@ bool Utilities::setupDataFromParts(partsData &part)
     if (str.is_open()){
         string line;
         int itr = 0;
-        while( getline( str, line ) && (itr <= 1) ){
+        while( getline( str, line ) && (itr < 3) ){
             Bottle b( line );
             if (itr == 0){
                 part.type = b.get(1).toString();
-                part.type.erase(part.type.size() -1 );      // remove the ";" character
+                part.type.erase(part.type.size() -1 );          // remove the ";" character
             }
-            if (itr == 1){
-                part.portName = b.get(1).toString();
-                LOG( "the name of the port is %s\n",part.portName.c_str());
+            else{
+                string stamp_tag = b.get(0).toString();
+                if (stamp_tag.find("Stamp") == string::npos){   // skip stamp information
+                    part.portName = b.get(1).toString();
+                    LOG( "the name of the port is %s\n",part.portName.c_str());
+                    break;
+                }
             }
             itr++;
         }
@@ -364,49 +374,64 @@ bool Utilities::configurePorts(partsData &part)
         tmp_port_name="/"+moduleName+tmp_port_name;
     }
 
-    if (strcmp (part.type.c_str(),"Bottle") == 0){
-        if ( !yarp::os::Network::exists(tmp_port_name) ){
-            LOG("need to create new port %s for %s\n",part.type.c_str(), part.name.c_str());
-            part.bottlePort.close();
-            LOG("creating and opening %s port for part %s\n",part.type.c_str(), part.name.c_str());
-            part.bottlePort.open(tmp_port_name);
-        }
-    } else if (strcmp (part.type.c_str(),"Image:ppm") == 0 || strcmp (part.type.c_str(),"Image") == 0){
-        if ( !yarp::os::Network::exists(tmp_port_name) ){
-            LOG("need to create new port %s for %s\n",part.type.c_str(), part.name.c_str());
-            part.imagePort.close();
-            LOG("creating and opening image port for part %s\n",part.name.c_str());
-            part.imagePort.open(tmp_port_name);
-        }
+    if (strcmp (part.type.c_str(),"Bottle") == 0)   {
+        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::os::Bottle>; }
     }
-    else {
+    else if (strcmp (part.type.c_str(),"Image:ppm") == 0 || strcmp (part.type.c_str(),"Image") == 0)  {
+        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::sig::Image>; }
+    }
+    else if (strcmp(part.type.c_str(), "sensor_msgs/LaserScan") == 0 ) {
+        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::sensor_msgs::LaserScan>; }
+    }
+    else if (strcmp(part.type.c_str(), "nav_msgs/Odometry") == 0) {
+        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::nav_msgs::Odometry>; }
+    }
+    else if (strcmp(part.type.c_str(), "tf2_msgs/tf") == 0) {
+        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::tf2_msgs::TFMessage>; }
+    }
+    else if (strcmp(part.type.c_str(), "geometry_msgs/Pose") == 0) {
+        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::geometry_msgs::Pose>; }
+    }
+    else if (strcmp(part.type.c_str(), "geometry_msgs/Pose2D") == 0) {
+        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::geometry_msgs::Pose2D>; }
+    }
+    else
+    {
         LOG("Something is wrong with the data...%s\nIt seems its missing a type \n",part.name.c_str());
         return false;
     }
+
+    if (!yarp::os::Network::exists(tmp_port_name))
+    {
+        LOG("need to create new port %s for %s\n", part.type.c_str(), part.name.c_str());
+        part.outputPort->close();
+        LOG("creating and opening %s port for part %s\n", part.type.c_str(), part.name.c_str());
+        part.outputPort->open(tmp_port_name);
+    }
+    else
+    {
+        LOG("port %s already exists, skipping\n", tmp_port_name.c_str());
+    }
+
+
     return true;
 }
 /**********************************************************/
 bool Utilities::interruptPorts(partsData &part)
 {
-    if (strcmp (part.type.c_str(),"Bottle") == 0){
-        part.bottlePort.interrupt();
-    } else if (strcmp (part.type.c_str(),"Image:ppm") == 0 || strcmp (part.type.c_str(),"Image") == 0){
-        part.imagePort.interrupt();
-    } else {
+    if (part.outputPort == nullptr)  {
         return false;
     }
+    part.outputPort->interrupt();
     return true;
 }
 /**********************************************************/
 bool Utilities::closePorts(partsData &part)
 {
-    if (strcmp (part.type.c_str(),"Bottle") == 0){
-        part.bottlePort.close();
-    } else if (strcmp (part.type.c_str(),"Image:ppm") == 0 || strcmp (part.type.c_str(),"Image") == 0) {
-        part.imagePort.close();
-    } else {
+    if (part.outputPort == nullptr)  {
         return false;
     }
+    part.outputPort->close();
     return true;
 }
 
@@ -446,6 +471,3 @@ void Utilities::pauseThread()
     LOG( "ok................ \n");
     masterThread->stepfromCmd = false;
 }
-
-
-

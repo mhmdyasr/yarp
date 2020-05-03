@@ -1,5 +1,5 @@
 <!--
-  Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+  Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
   Copyright (C) 2006-2010 RobotCub Consortium
   All rights reserved.
 
@@ -8,28 +8,26 @@
 -->
 
 <application>
-	<name>mcast Test 1 -- Single source single target</name>
-	<module>
-	<name>yarpdev</name>
-	<node>pc104</node>
-	<parameters>--device test_grabber --name /grabber1 --framerate 30</parameters>
-	<tag>grabber1</tag>
-	<stdio>icub15</stdio>
-	</module>
+    <name>mcast Test 1 -- Single source single target</name>
+    <module>
+        <name>yarpdev</name>
+        <node>pc104</node>
+        <parameters>--device test_grabber --name /grabber1 --framerate 30</parameters>
+        <tag>grabber1</tag>
+        <stdio>icub15</stdio>
+    </module>
 
-	<module>
-	<name>framerate</name>
-	<parameters>--local /fr1</parameters>
-	<tag>fr1</tag>
-	<node>icub15</node>
-	<stdio>icub15</stdio>
-	</module>
+    <module>
+        <name>framerate</name>
+        <parameters>--local /fr1</parameters>
+        <tag>fr1</tag>
+        <node>icub15</node>
+        <stdio>icub15</stdio>
+    </module>
 
-	<connection>
-	<from>/grabber1</from>
-	<to>/fr1</to>
-	<protocol>mcast</protocol>
-	</connection>	
+    <connection>
+        <from>/grabber1</from>
+        <to>/fr1</to>
+        <protocol>mcast</protocol>
+    </connection>
 </application>
-
-

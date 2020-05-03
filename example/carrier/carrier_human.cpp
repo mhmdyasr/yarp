@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -216,7 +216,7 @@ public:
 
     /////////////////////////////////////////////////
     // Now, the initial hand-shaking
-    
+
     virtual bool prepareSend(yarp::os::ConnectionState& proto) {
         // nothing special to do
         return true;
@@ -362,5 +362,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-

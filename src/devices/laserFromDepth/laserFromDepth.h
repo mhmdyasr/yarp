@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,8 +19,6 @@
 #ifndef LASER_FROM_DEPTH_H
 #define LASER_FROM_DEPTH_H
 
-#include <string>
-
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
@@ -28,6 +26,9 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/IRGBDSensor.h>
+
+#include <mutex>
+#include <string>
 #include <vector>
 
 using namespace yarp::os;
@@ -49,7 +50,7 @@ class LaserFromDepth : public PeriodicThread, public yarp::dev::IRangefinder2D, 
 protected:
     PolyDriver driver;
     IRGBDSensor* iRGBD;
-    yarp::os::Mutex mutex;
+    std::mutex m_mutex;
 
     int m_depth_width;
     int m_depth_height;

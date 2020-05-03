@@ -1,4 +1,4 @@
--- Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+-- Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 -- All rights reserved.
 --
 -- This software may be modified and distributed under the terms of the
@@ -37,14 +37,13 @@ PortMonitor.accept = function(thing)
         print("\nRate of", sourceName, ":", yarp.Time_now() - prev_time)
         prev_time = yarp.Time_now()
         return true
-    end 
+    end
 
     -- filter with the desired frequency. e.g, 300ms
     if yarp.Time_now() - prev_time < 0.300 then
         return false
     end
-    
+
     prev_time = yarp.Time_now()
     return true
 end
-

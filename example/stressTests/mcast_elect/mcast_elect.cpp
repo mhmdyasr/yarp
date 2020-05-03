@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -70,17 +70,17 @@ int main() {
       p.open("/reader");
       Porter writer[N];
       for (int i=0; i<N; i++) {
-	std::string name = std::string("/writer/") + std::string::toString(i);
-	writer[i].name = name;
-	writer[i].port.open(name);
+        std::string name = std::string("/writer/") + std::string::toString(i);
+        writer[i].name = name;
+        writer[i].port.open(name);
       }
       for (int i=0; i<N; i++) {
-	writer[i].start();
+        writer[i].start();
       }
       Time::delay(20);
       printf("Shutting down\n");
       for (int i=0; i<N; i++) {
-	writer[i].stop();
+        writer[i].stop();
       }
     }
 
@@ -89,4 +89,3 @@ int main() {
 
   return 0;
 }
-

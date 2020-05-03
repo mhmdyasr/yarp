@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -14,18 +14,15 @@
 #include "MultipleAnalogSensorsMetadata.h"
 #include "SensorStreamingData.h"
 
+#include <yarp/os/BufferedPort.h>
 #include <yarp/os/Network.h>
+#include <yarp/dev/DeviceDriver.h>
 
 #include <mutex>
 
-namespace yarp {
-    namespace dev {
-        class SensorStreamingDataInputPort;
-        class MultipleAnalogSensorsClient;
-    }
-}
 
-class yarp::dev::SensorStreamingDataInputPort: public yarp::os::BufferedPort<SensorStreamingData>
+class SensorStreamingDataInputPort :
+        public yarp::os::BufferedPort<SensorStreamingData>
 {
 public:
     SensorStreamingData receivedData;
@@ -43,29 +40,32 @@ public:
 * @ingroup dev_impl_network_clients
 *
 * \brief `multipleanalogsensorsclient`: The client side of a device exposing MultipleAnalogSensors interfaces.
-* 
+*
 * | YARP device name |
 * |:-----------------:|
 * | `multipleanalogsensorsclient` |
 *
 * The parameters accepted by this device are:
-* | Parameter name | SubParameter   | Type    | Units          | Default Value | Required     | Description                                                                            | Notes |
-* |:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:------------:|:--------------------------------------------------------------------------------------:|:-----:|
-* | remote         |       -        | string  | -              |   -           | Yes          | Prefix of the ports to which to connect, opened by MultipleAnalogSensorsServer device. |       |
-* | local          |       -        | string  | -              |   -           | Yes          | Port prefix of the ports opened by this device.                                        |       |
-* | timeout        |       -        | double  | seconds        | 0.01          | No           | Timeout after which the device reports an error if no measurement was received.        |       |
+* | Parameter name     | SubParameter   | Type    | Units          | Default Value | Required     | Description                                                                            | Notes |
+* |:------------------:|:--------------:|:-------:|:--------------:|:-------------:|:------------:|:--------------------------------------------------------------------------------------:|:-----:|
+* | remote             |       -        | string  | -              |   -           | Yes          | Prefix of the ports to which to connect, opened by MultipleAnalogSensorsServer device. |       |
+* | local              |       -        | string  | -              |   -           | Yes          | Port prefix of the ports opened by this device.                                        |       |
+* | timeout            |       -        | double  | seconds        | 0.01          | No           | Timeout after which the device reports an error if no measurement was received.        |       |
+* | externalConnection |       -        | bool    | -              | false         | No           | If set to true, the connection to the rpc port of the MAS server is skipped and it is possible to connect to the data source externally after being opened | Use case: e.g yarpdataplayer source. Note that with this configuration some information like sensor name, frame name and sensor number will be not available.|
 *
 */
-class yarp::dev::MultipleAnalogSensorsClient: public DeviceDriver,
-                                              public IThreeAxisGyroscopes,
-                                              public IThreeAxisLinearAccelerometers,
-                                              public IThreeAxisMagnetometers,
-                                              public IOrientationSensors,
-                                              public ITemperatureSensors,
-                                              public ISixAxisForceTorqueSensors, 
-                                              public IContactLoadCellArrays,
-                                              public IEncoderArrays,
-                                              public ISkinPatches
+class MultipleAnalogSensorsClient :
+        public yarp::dev::DeviceDriver,
+        public yarp::dev::IThreeAxisGyroscopes,
+        public yarp::dev::IThreeAxisLinearAccelerometers,
+        public yarp::dev::IThreeAxisMagnetometers,
+        public yarp::dev::IPositionSensors,
+        public yarp::dev::IOrientationSensors,
+        public yarp::dev::ITemperatureSensors,
+        public yarp::dev::ISixAxisForceTorqueSensors,
+        public yarp::dev::IContactLoadCellArrays,
+        public yarp::dev::IEncoderArrays,
+        public yarp::dev::ISkinPatches
 {
     SensorStreamingDataInputPort m_streamingPort;
     yarp::os::Port m_rpcPort;
@@ -75,12 +75,14 @@ class yarp::dev::MultipleAnalogSensorsClient: public DeviceDriver,
     std::string m_remoteStreamingPortName;
     bool m_RPCConnectionActive{false};
     bool m_StreamingConnectionActive{false};
+    bool m_externalConnection{false};
 
     MultipleAnalogSensorsMetadata m_RPCInterface;
     SensorRPCData m_sensorsMetadata;
 
-    size_t genericGetNrOfSensors(const std::vector<SensorMetadata>& metadataVector) const;
-    MAS_status genericGetStatus() const;
+    size_t genericGetNrOfSensors(const std::vector<SensorMetadata>& metadataVector,
+                                 const SensorMeasurements& measurementsVector) const;
+    yarp::dev::MAS_status genericGetStatus() const;
     bool genericGetName(const std::vector<SensorMetadata>& metadataVector, const std::string& tag,
                           size_t sens_index, std::string &name) const;
     bool genericGetFrameName(const std::vector<SensorMetadata>& metadataVector, const std::string& tag,
@@ -117,6 +119,13 @@ public:
     bool getThreeAxisMagnetometerName(size_t sens_index, std::string &name) const override;
     bool getThreeAxisMagnetometerFrameName(size_t sens_index, std::string &frameName) const override;
     bool getThreeAxisMagnetometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
+
+    /* IPositionSensors methods */
+    size_t getNrOfPositionSensors() const override;
+    yarp::dev::MAS_status getPositionSensorStatus(size_t sens_index) const override;
+    bool getPositionSensorName(size_t sens_index, std::string& name) const override;
+    bool getPositionSensorFrameName(size_t sens_index, std::string& frameName) const override;
+    bool getPositionSensorMeasure(size_t sens_index, yarp::sig::Vector& xyz, double& timestamp) const override;
 
     /* IOrientationSensors methods */
     size_t getNrOfOrientationSensors() const override;
@@ -162,4 +171,4 @@ public:
     size_t getSkinPatchSize(size_t sens_index) const override;
 };
 
-#endif 
+#endif

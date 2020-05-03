@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -16,12 +16,11 @@ using namespace yarp::os;
 using namespace yarp::dev;
 
 int main(int argc, char *argv[]) {
-	Network yarp;
+    Network yarp;
 
     adder();
 
     int result = Drivers::yarpdev(argc,argv);
-    
+
     return result;
 }
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  *
  * This library is free software; you can redistribute it and/or
@@ -178,14 +178,6 @@ public:
         return speedsList;
     }
 
-    SequenceItem &operator =(const SequenceItem &other){
-        sequenceNumber = other.sequenceNumber;
-        timing = other.timing;
-        positionsList = other.positionsList;
-        speedsList = other.speedsList;
-        return *this;
-    }
-
 private:
 
     int sequenceNumber;
@@ -197,4 +189,3 @@ private:
 
 
 #endif // SEQUENCEWINDOW_H
-

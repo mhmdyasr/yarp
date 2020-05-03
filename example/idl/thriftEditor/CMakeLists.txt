@@ -1,15 +1,18 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
 # BSD-3-Clause license. See the accompanying LICENSE file for details.
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.12)
+project(thriftEditor_example)
 
-find_package(YARP REQUIRED)
+find_package(YARP COMPONENTS os idl_tools REQUIRED)
+set(CMAKE_CXX_FLAGS "-Weverything -Wno-c++98-compat -Wno-padded -Wno-shadow")
 
-yarp_idl_to_dir(settings.thrift ${CMAKE_BINARY_DIR}/settings SRC HDR INCLUDES)
-
-include_directories(${INCLUDES})
-add_executable(main main.cpp ${SRC} ${HDR})
-target_link_libraries(main ${YARP_LIBRARIES})
+yarp_add_idl(IDL_GEN_FILES settings.thrift)
+add_executable(thriftEditor_example)
+target_sources(thriftEditor_example PRIVATE main.cpp
+                                            ${IDL_GEN_FILES})
+target_link_libraries(thriftEditor_example PRIVATE YARP::YARP_os
+                                                   YARP::YARP_init)

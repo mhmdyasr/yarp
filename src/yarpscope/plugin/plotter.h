@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -172,7 +172,6 @@ signals:
     void minValueChanged();
     void internalAppendGraph(int index, QString title, QString color, QString type, int size, int buffer_size);
     void plotSampleSizeChanged();
-    void newGraphValue(int graphIndex, double x, double y, double t);
     void duplicateLastGraphValue(int graphIndex);
 public slots:
     void onInteract();

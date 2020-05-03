@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -19,5 +19,3 @@ echo "Now running stressrpc"
 ./stressrpc --id 1 --time 10 --prot udp &
 ./stressrpc --id 2 --time 10 --prot udp &
 ./stressrpc --id 3 --time 10 --prot udp &
-
-

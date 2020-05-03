@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,30 +22,25 @@
 
 #include <yarp/os/Network.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/dev/PreciselyTimed.h>
+#include <yarp/dev/IPreciselyTimed.h>
 #include <yarp/dev/IBattery.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/sig/Vector.h>
-#include <yarp/os/Mutex.h>
 #include <yarp/os/Time.h>
 #include <yarp/dev/PolyDriver.h>
 
-namespace yarp {
-    namespace dev {
-        class BatteryClient;
-    }
-}
+#include <mutex>
+
 
 #define DEFAULT_THREAD_PERIOD 20 //ms
 const int BATTERY_TIMEOUT=100; //ms
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 class BatteryInputPortProcessor : public yarp::os::BufferedPort<yarp::os::Bottle>
 {
     yarp::os::Bottle lastBottle;
-    yarp::os::Mutex mutex;
+    std::mutex mutex;
     yarp::os::Stamp lastStamp;
     double deltaT;
     double deltaTMax;
@@ -79,7 +74,6 @@ public:
     int getStatus();
 
 };
-#endif /*DOXYGEN_SHOULD_SKIP_THIS*/
 
 /**
 * @ingroup dev_impl_network_clients
@@ -87,11 +81,11 @@ public:
 * The client side of any IBattery capable device.
 * Still single thread! concurrent access is unsafe.
 */
-class yarp::dev::BatteryClient: public DeviceDriver,
-                          public IPreciselyTimed,
-                          public IBattery
+class BatteryClient :
+        public yarp::dev::DeviceDriver,
+        public yarp::dev::IPreciselyTimed,
+        public yarp::dev::IBattery
 {
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 protected:
     BatteryInputPortProcessor inputPort;
     yarp::os::Port rpcPort;
@@ -99,12 +93,10 @@ protected:
     std::string remote;
     yarp::os::Stamp lastTs; //used by IPreciselyTimed
     std::string deviceId;
-    int _rate;
-#endif /*DOXYGEN_SHOULD_SKIP_THIS*/
 
 public:
 
-    /* DevideDriver methods */
+    /* DeviceDriver methods */
     bool open(yarp::os::Searchable& config) override;
     bool close() override;
 
@@ -142,7 +134,7 @@ public:
     * @param status the battery status
     * @return true/false.
     */
-    bool getBatteryStatus(int &status) override;
+    bool getBatteryStatus(Battery_status &status) override;
 
     /**
     * get the battery hardware charactestics (e.g. max voltage etc)

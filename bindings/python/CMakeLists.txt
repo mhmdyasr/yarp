@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -16,6 +16,7 @@ if(CREATE_PYTHON_VERSION)
 else()
   set(YARP_USE_PYTHON_VERSION "" CACHE STRING "Specify python version to use" )
 endif()
+mark_as_advanced(YARP_USE_PYTHON_VERSION)
 find_package(PythonInterp ${YARP_USE_PYTHON_VERSION} REQUIRED)
 set(YARP_USE_PYTHON_VERSION_ARGS)
 if(NOT YARP_USE_PYTHON_VERSION)
@@ -26,7 +27,7 @@ find_package(PythonLibs ${YARP_USE_PYTHON_VERSION} EXACT)
 
 ## in Windows it seems necessary to declare explictly the link_directory
 if(WIN32)
-  get_filename_component(PYTHON_DIR ${PYTHON_LIBRARY} PATH)
+  get_filename_component(PYTHON_DIR ${PYTHON_LIBRARY} DIRECTORY)
   link_directories(${PYTHON_DIR})
 endif()
 

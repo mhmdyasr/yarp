@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -8,11 +8,8 @@
  */
 
 #include "bazdevice.h"
-using namespace yarp::dev;
 
 bool bazdevice::open(yarp::os::Searchable& config)
 {
     return true;
 }
-
-

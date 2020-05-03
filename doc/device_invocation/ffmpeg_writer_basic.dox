@@ -3,7 +3,7 @@
  *
  * \defgroup ffmpeg_writer_basic Example for pipe (ffmpeg_writer_basic)
 
-Instantiates \ref cmd_device_pipe "pipe" device implemented by yarp::dev::DevicePipe.
+Instantiates \ref cmd_device_pipe "pipe" device implemented by DevicePipe.
 \verbatim
 # Start up a pipe from a test_grabber to an ffmpeg_writer.
 # this will save the output of test_grabber into a movie.
@@ -35,7 +35,10 @@ PolyDriver dev;
 dev.open(p);
 if (dev.isValid()) { /* use the device via view method */ }
 \endcode
-Here is a list of properties checked when starting up a device based on this configuration file.  Note that which properties are checked can depend on whether other properties are present.  In some cases properties can also vary between operating systems.  So this is just an example
+Here is a list of properties checked when starting up a device based on this configuration file.
+Note that which properties are checked can depend on whether other properties are present.
+In some cases properties can also vary between operating systems.
+So this is just an example
 
 <table>
 <tr><td>PROPERTY</td><td>DESCRIPTION</td><td>DEFAULT</td></tr>
@@ -44,6 +47,6 @@ Here is a list of properties checked when starting up a device based on this con
 <tr><td>sink</td><td>device to write to (string or nested properties)</td><td></td></tr>
 </table>
 
-\sa yarp::dev::DevicePipe
+\sa DevicePipe
 
  */

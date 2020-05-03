@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -14,4 +14,3 @@ while [ $x -le $top ]; do
     echo Hello | yarp write /write
     let x=x+1
 done
-

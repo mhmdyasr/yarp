@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  *
  * This library is free software; you can redistribute it and/or
@@ -20,6 +20,7 @@
 #include "partitem.h"
 #include "log.h"
 
+#include <yarp/os/LogStream.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
 
@@ -141,7 +142,7 @@ PartItem::PartItem(QString robotName, int id, QString partName, ResourceFinder& 
 
     if (m_interfaceError == false)
     {
-        int i = 0; 
+        int i = 0;
         std::string jointname;
         int number_of_joints;
         m_iPos->getAxes(&number_of_joints);
@@ -207,7 +208,7 @@ PartItem::PartItem(QString robotName, int id, QString partName, ResourceFinder& 
             Pid myPid(0,0,0,0,0,0);
             yarp::os::SystemClock::delaySystem(0.005);
             m_iPid->getPid(VOCAB_PIDTYPE_POSITION, k, &myPid);
-            
+
             auto* joint = new JointItem(k);
             joint->setJointName(jointname.c_str());
             joint->setPWMRange(-100.0, 100.0);
@@ -565,7 +566,7 @@ void PartItem::onSliderTrajectoryPositionCommand(double posVal, int index)
     int mode;
     m_ictrlmode->getControlMode(index, &mode);
 
-    if ( mode == VOCAB_CM_POSITION) 
+    if ( mode == VOCAB_CM_POSITION)
     {
         m_iPos->positionMove(index, posVal);
     }
@@ -1959,7 +1960,7 @@ void PartItem::onSetPosSliderOptionPI(int mode, double step)
         {
             joint->enablePositionSliderDoubleValue(1.0);
         }
-        else 
+        else
         {
             joint->disablePositionSliderDouble();
         }
@@ -1985,7 +1986,7 @@ void PartItem::onSetVelSliderOptionPI(int mode, double step)
             joint->enableVelocitySliderDoubleValue(1.0);
             joint->enableTrajectoryVelocitySliderDoubleValue(1.0);
         }
-        else 
+        else
         {
             joint->disableVelocitySliderDouble();
             joint->disableTrajectoryVelocitySliderDouble();
@@ -2034,7 +2035,7 @@ void PartItem::onSetTrqSliderOptionPI(int mode, double step)
         {
             joint->enableTorqueSliderDoubleValue(1.0);
         }
-        else 
+        else
         {
             joint->disableTorqueSliderDouble();
         }
@@ -2152,12 +2153,12 @@ bool PartItem::updatePart()
     {
         b = m_iCur->getCurrents(m_currents);
         if (!b) { yWarning("Unable to update currents"); }
-    } 
+    }
     if (this->m_part_speedVisible)
     {
         b = m_iencs->getEncoderSpeeds(m_speeds);
         if (!b) { yWarning("Unable to update speeds"); }
-    } 
+    }
     if (this->m_part_motorPositionVisible)
     {
         b = m_iMot->getMotorEncoders(m_motorPositions);
@@ -2215,7 +2216,7 @@ bool PartItem::updatePart()
         if (true) { joint->setDutyCycles(m_dutyCycles[jk]); }
         else {}
     }
-    
+
     // *** update the widget NOT every cycle ***
     {
         auto* joint_slow_k = (JointItem*)m_layout->itemAt(m_slow_k)->widget();

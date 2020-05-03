@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -83,19 +83,19 @@ int main() {
 
     FakeFrameGrabber fake;
     fake.start();
-    
+
     PolyDriver dd("(device test_grabber) (local /client) (remote /server)");
-    
+
     if (!dd.isValid()) {
         printf("Device not available\n");
         exit(1);
     }
-    
+
     printf("*** Device created\n");
-    
+
     IFrameGrabberImage *grabber;
     dd.view(grabber);
-    
+
     if (grabber!=NULL) {
         printf("*** It can supply images\n");
         ImageOf<PixelRgb> img;
@@ -125,7 +125,7 @@ int main() {
 
     IPidControl *pid;
     dd.view(pid);
-    
+
     if (pid!=NULL) {
         printf("*** It can do PID control\n");
     } else {
@@ -134,6 +134,3 @@ int main() {
 
     return 0;
 }
-
-
-

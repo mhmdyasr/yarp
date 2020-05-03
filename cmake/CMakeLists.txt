@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -9,35 +9,51 @@
 set(YARP_CMAKE_FILES YarpPlugin.cmake
                      YarpIDL.cmake
                      YarpInstallationHelpers.cmake
-                     YarpPrintFeature.cmake)
+                     YarpPrintFeature.cmake
+                     YarpDeprecatedOption.cmake)
 install(FILES ${YARP_CMAKE_FILES}
-        COMPONENT scripts
-        DESTINATION share/yarp/cmake)
+        DESTINATION share/yarp/cmake
+        COMPONENT YARP_conf-dev)
 
 # Templates used by modules
 set(YARP_TEMPLATE_FILES template/yarp_plugin_carrier.cpp.in
+                        template/yarp_plugin_RFModule.cpp.in
                         template/yarp_plugin_device.cpp.in
                         template/yarp_plugin_portmonitor.cpp.in
                         template/yarp_plugin_library.cpp.in
-                        template/yarp_plugin_yarpdev_main.cpp.in
-                        template/YarpTweakIDL.cmake.in
-                        template/placeGeneratedYarpIdlFiles.cmake.in)
+                        template/yarp_plugin_yarpdev_main.cpp.in)
 
 install(FILES ${YARP_TEMPLATE_FILES}
-        COMPONENT scripts
-        DESTINATION share/yarp/cmake/template)
+        DESTINATION share/yarp/cmake/template
+        COMPONENT YARP_conf-dev)
 
 # Remove renamed files from installation
+include(YarpRemoveFile)
 foreach(_f YarpDeprecatedWarning.cmake   # since YARP 3.0.0
-           deprecated/YarpDeprecatedOption.cmake
            deprecated/YarpRenamedOption.cmake
            deprecated/YarpBackupVariable.cmake)
-  if(EXISTS "${CMAKE_INSTALL_PREFIX}/share/yarp/cmake/${_f}")
-    install(CODE
- "if(EXISTS \"${CMAKE_INSTALL_PREFIX}/share/yarp/cmake/${_f}\")
-    message(STATUS \"Deleted: \\\"${CMAKE_INSTALL_PREFIX}/share/yarp/cmake/${_f}\\\"\")
-    file(REMOVE \"${CMAKE_INSTALL_PREFIX}/share/yarp/cmake/${_f}\")
-  endif()"
-           COMPONENT scripts)
-  endif()
+  yarp_remove_file("share/yarp/cmake/${_f}")
+endforeach()
+
+# Remove old YCM internal installations
+foreach(_d ycm-0.6.0   # since YARP 3.0.0
+           ycm-0.7.0
+           ycm-0.8.0
+           ycm-0.8.1   # since YARP 3.0.1
+           ycm-0.8.20180628.11
+           ycm-0.8.20180712.5
+           ycm-0.8.20180720.3
+           ycm-0.9.0   # since YARP 3.1.1
+           ycm-0.9.0.8
+           ycm-0.9.20181128.10
+           ycm-0.9.20181204.8
+           ycm-0.9.20190213.9
+           ycm-0.9.20190315.16
+           ycm-0.9.20190329.27
+           ycm-0.10.0
+           ycm-0.10.1
+           ycm-0.10.2
+           ycm-0.10.3
+           ycm-0.11.0) # since YARP 3.3.0
+  yarp_remove_directory("share/yarp/cmake/${_d}")
 endforeach()

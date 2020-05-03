@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,7 +57,7 @@ Rangefinder2DInputPortProcessor::Rangefinder2DInputPortProcessor()
     resetStat();
 }
 
-void Rangefinder2DInputPortProcessor::onRead(yarp::os::Bottle &b)
+void Rangefinder2DInputPortProcessor::onRead(yarp::dev::LaserScan2D&b)
 {
     now=SystemClock::nowSystem();
     mutex.lock();
@@ -74,7 +74,7 @@ void Rangefinder2DInputPortProcessor::onRead(yarp::os::Bottle &b)
         //compare network time
         if (tmpDT*1000<LASER_TIMEOUT)
         {
-            state = b.get(1).asInt32();
+            state = b.status;
         }
         else
         {
@@ -85,7 +85,7 @@ void Rangefinder2DInputPortProcessor::onRead(yarp::os::Bottle &b)
     prev=now;
     count++;
 
-    lastBottle=b;
+    lastScan=b;
     Stamp newStamp;
     getEnvelope(newStamp);
 
@@ -98,7 +98,7 @@ void Rangefinder2DInputPortProcessor::onRead(yarp::os::Bottle &b)
     //now compare timestamps
     if ((1000*(newStamp.getTime()-lastStamp.getTime()))<LASER_TIMEOUT)
     {
-        state = b.get(1).asInt32();
+        state = b.status;
     }
     else
     {
@@ -109,13 +109,13 @@ void Rangefinder2DInputPortProcessor::onRead(yarp::os::Bottle &b)
     mutex.unlock();
 }
 
-inline int Rangefinder2DInputPortProcessor::getLast(yarp::os::Bottle &data, Stamp &stmp)
+inline int Rangefinder2DInputPortProcessor::getLast(yarp::dev::LaserScan2D&data, Stamp &stmp)
 {
     mutex.lock();
     int ret=state;
     if (ret != IRangefinder2D::DEVICE_GENERAL_ERROR)
     {
-        data=lastBottle;
+        data=lastScan;
         stmp = lastStamp;
     }
     mutex.unlock();
@@ -126,11 +126,7 @@ inline int Rangefinder2DInputPortProcessor::getLast(yarp::os::Bottle &data, Stam
 bool Rangefinder2DInputPortProcessor::getData(yarp::sig::Vector &ranges)
 {
     mutex.lock();
-    if (lastBottle.size()==0) { mutex.unlock(); return false; }
-    unsigned int size = lastBottle.get(0).asList()->size();
-    ranges.resize(size);
-    for (unsigned int i = 0; i < size; i++)
-        ranges[i] = lastBottle.get(0).asList()->get(i).asFloat64();
+    ranges= lastScan.scans;
     mutex.unlock();
     return true;
 }
@@ -138,7 +134,7 @@ bool Rangefinder2DInputPortProcessor::getData(yarp::sig::Vector &ranges)
 yarp::dev::IRangefinder2D::Device_status Rangefinder2DInputPortProcessor::getStatus()
 {
     mutex.lock();
-    auto status = (yarp::dev::IRangefinder2D::Device_status) lastBottle.get(3).asInt32();
+    auto status = (yarp::dev::IRangefinder2D::Device_status) lastScan.status;
     mutex.unlock();
     return status;
 }
@@ -170,7 +166,7 @@ void Rangefinder2DInputPortProcessor::getEstFrequency(int &ite, double &av, doub
     mutex.unlock();
 }
 
-bool yarp::dev::Rangefinder2DClient::open(yarp::os::Searchable &config)
+bool Rangefinder2DClient::open(yarp::os::Searchable &config)
 {
     local.clear();
     remote.clear();
@@ -292,20 +288,20 @@ bool yarp::dev::Rangefinder2DClient::open(yarp::os::Searchable &config)
     return true;
 }
 
-bool yarp::dev::Rangefinder2DClient::close()
+bool Rangefinder2DClient::close()
 {
     rpcPort.close();
     inputPort.close();
     return true;
 }
 
-bool yarp::dev::Rangefinder2DClient::getRawData(yarp::sig::Vector &data)
+bool Rangefinder2DClient::getRawData(yarp::sig::Vector &data)
 {
     inputPort.getData(data);
     return true;
 }
 
-bool yarp::dev::Rangefinder2DClient::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
+bool Rangefinder2DClient::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
 {
     yarp::sig::Vector ranges;
     inputPort.getData(ranges);
@@ -326,7 +322,7 @@ bool yarp::dev::Rangefinder2DClient::getLaserMeasurement(std::vector<LaserMeasur
     return true;
 }
 
-bool yarp::dev::Rangefinder2DClient::getDistanceRange(double& min, double& max)
+bool Rangefinder2DClient::getDistanceRange(double& min, double& max)
 {
     Bottle cmd, response;
     cmd.addVocab(VOCAB_GET);
@@ -342,7 +338,7 @@ bool yarp::dev::Rangefinder2DClient::getDistanceRange(double& min, double& max)
     return false;
 }
 
-bool yarp::dev::Rangefinder2DClient::setDistanceRange(double min, double max)
+bool Rangefinder2DClient::setDistanceRange(double min, double max)
 {
     Bottle cmd, response;
     cmd.addVocab(VOCAB_SET);
@@ -359,7 +355,7 @@ bool yarp::dev::Rangefinder2DClient::setDistanceRange(double min, double max)
     return (CHECK_FAIL(ok, response));
 }
 
-bool yarp::dev::Rangefinder2DClient::getScanLimits(double& min, double& max)
+bool Rangefinder2DClient::getScanLimits(double& min, double& max)
 {
     Bottle cmd, response;
     cmd.addVocab(VOCAB_GET);
@@ -375,7 +371,7 @@ bool yarp::dev::Rangefinder2DClient::getScanLimits(double& min, double& max)
     return false;
 }
 
-bool yarp::dev::Rangefinder2DClient::setScanLimits(double min, double max)
+bool Rangefinder2DClient::setScanLimits(double min, double max)
 {
     Bottle cmd, response;
     cmd.addVocab(VOCAB_SET);
@@ -387,7 +383,7 @@ bool yarp::dev::Rangefinder2DClient::setScanLimits(double min, double max)
     return (CHECK_FAIL(ok, response));
 }
 
-bool yarp::dev::Rangefinder2DClient::getHorizontalResolution(double& step)
+bool Rangefinder2DClient::getHorizontalResolution(double& step)
 {
     Bottle cmd, response;
     cmd.addVocab(VOCAB_GET);
@@ -402,7 +398,7 @@ bool yarp::dev::Rangefinder2DClient::getHorizontalResolution(double& step)
     return false;
 }
 
-bool yarp::dev::Rangefinder2DClient::setHorizontalResolution(double step)
+bool Rangefinder2DClient::setHorizontalResolution(double step)
 {
     Bottle cmd, response;
     cmd.addVocab(VOCAB_SET);
@@ -413,7 +409,7 @@ bool yarp::dev::Rangefinder2DClient::setHorizontalResolution(double step)
     return (CHECK_FAIL(ok, response));
 }
 
-bool yarp::dev::Rangefinder2DClient::getScanRate(double& rate)
+bool Rangefinder2DClient::getScanRate(double& rate)
 {
     Bottle cmd, response;
     cmd.addVocab(VOCAB_GET);
@@ -428,7 +424,7 @@ bool yarp::dev::Rangefinder2DClient::getScanRate(double& rate)
     return false;
 }
 
-bool yarp::dev::Rangefinder2DClient::setScanRate(double rate)
+bool Rangefinder2DClient::setScanRate(double rate)
 {
     Bottle cmd, response;
     cmd.addVocab(VOCAB_SET);
@@ -439,13 +435,13 @@ bool yarp::dev::Rangefinder2DClient::setScanRate(double rate)
     return (CHECK_FAIL(ok, response));
 }
 
-bool yarp::dev::Rangefinder2DClient::getDeviceStatus(Device_status &status)
+bool Rangefinder2DClient::getDeviceStatus(Device_status &status)
 {
     status = inputPort.getStatus();
     return true;
 }
 
-bool yarp::dev::Rangefinder2DClient::getDeviceInfo(std::string &device_info)
+bool Rangefinder2DClient::getDeviceInfo(std::string &device_info)
 {
     Bottle cmd, response;
     cmd.addVocab(VOCAB_GET);
@@ -460,13 +456,7 @@ bool yarp::dev::Rangefinder2DClient::getDeviceInfo(std::string &device_info)
     return false;
 }
 
-Stamp yarp::dev::Rangefinder2DClient::getLastInputStamp()
+Stamp Rangefinder2DClient::getLastInputStamp()
 {
     return lastTs;
-}
-
-yarp::dev::DriverCreator *createRangefinder2DClient() {
-    return new DriverCreatorOf<Rangefinder2DClient>("Rangefinder2DClient",
-        "",
-        "Rangefinder2DClient");
 }

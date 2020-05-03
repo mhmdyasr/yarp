@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         }
     local+=string("/stress");
 
-    stringstream lStream; 
+    stringstream lStream;
     lStream << id;
     local += lStream.str();
 
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     p.put("remote", remote.c_str());
     p.put("carrier", protocol.c_str());
     dd.open(p);
-    
+
     if (!dd.isValid())
     {
         fprintf(stderr, "Error, could not open controlboard\n");
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     dd.view(ipid);
     dd.view(ilim);
     dd.view(ical);
-    
+
     int c=100;
     int nj;
     Vector encoders;
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
             count++;
             double v;
             int jj=0;
-            
+
             for(jj=0; jj<nj; jj++)
                 {
                     //    ienc->getEncoder(jj, encoders.data()+jj);
@@ -156,6 +156,6 @@ int main(int argc, char **argv)
         }
 
     printf("bye bye from %d\n", id);
-    
+
     return 0;
 }

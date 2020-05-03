@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -28,6 +28,6 @@ int main(int argc, char *argv[]) {
         }
         printf("Got [%s]\n", msg.get(0).asString().c_str());
     }
-  
+
     return 0;
 }

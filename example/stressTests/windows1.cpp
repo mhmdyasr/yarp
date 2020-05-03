@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -28,9 +28,9 @@ int main()
         if (tmp=="quit")
             done=true;
     }
-    
+
     std::cout<<"You typed exit.\n";
-   
+
     std::cout<<"Calling Port::close()...";
     port.close();
     std::cout<<"done!\n";

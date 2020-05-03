@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -9,8 +9,7 @@ include(YarpPlugin)
 include(YarpPrintFeature)
 
 yarp_begin_plugin_library(yarpcar OPTION YARP_COMPILE_CARRIER_PLUGINS
-                                  DEFAULT ON
-                                  DOC "carrier plugins")
+                                  DEFAULT ON)
   add_subdirectory(shmem_carrier)
   add_subdirectory(human_carrier)
   add_subdirectory(mpi_carrier)
@@ -20,7 +19,9 @@ yarp_begin_plugin_library(yarpcar OPTION YARP_COMPILE_CARRIER_PLUGINS
   add_subdirectory(bayer_carrier)
   add_subdirectory(priority_carrier)
   add_subdirectory(portmonitor_carrier)
-  add_subdirectory(depth_image_portmonitor)
+  add_subdirectory(depthimage_portmonitor)
+  add_subdirectory(depthimage2_portmonitor)
+  add_subdirectory(segmentationimage_portmonitor)
   add_subdirectory(zfp_portmonitor)
   add_subdirectory(h264_carrier)
 yarp_end_plugin_library(yarpcar QUIET)
@@ -41,7 +42,6 @@ if(NOT "${YARP_yarpcar_PRIVATE_DEPS}" STREQUAL "")
   list(REMOVE_DUPLICATES YARP_yarpcar_PRIVATE_DEPS)
 endif()
 yarp_install_basic_package_files(YARP_yarpcar
-                                 FIRST_TARGET yarpcar
                                  DEPENDENCIES ${YARP_yarpcar_PUBLIC_DEPS}
                                  PRIVATE_DEPENDENCIES ${YARP_yarpcar_PRIVATE_DEPS})
 

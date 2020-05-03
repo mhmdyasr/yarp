@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -6,22 +6,24 @@
 
 yarp_prepare_plugin(multipleanalogsensorsserver
                     CATEGORY device
-                    TYPE yarp::dev::MultipleAnalogSensorsServer
+                    TYPE MultipleAnalogSensorsServer
                     INCLUDE MultipleAnalogSensorsServer.h
+                    EXTRA_CONFIG WRAPPER=multipleanalogsensorsserver
                     DEFAULT ON)
 
-
 if(ENABLE_multipleanalogsensorsserver)
-  set(CMAKE_INCLUDE_CURRENT_DIR ON)
-  yarp_add_plugin(yarp_multipleanalogsensorsserver MultipleAnalogSensorsServer.cpp
-                                                   MultipleAnalogSensorsServer.h
-                                                   $<TARGET_OBJECTS:multipleAnalogSensorsSerializations>)
-  target_include_directories(yarp_multipleanalogsensorsserver
-                             PRIVATE $<TARGET_PROPERTY:multipleAnalogSensorsSerializations,INTERFACE_INCLUDE_DIRECTORIES>)
-  target_link_libraries(yarp_multipleanalogsensorsserver PRIVATE YARP::YARP_OS
+  yarp_add_plugin(yarp_multipleanalogsensorsserver)
+
+  target_sources(yarp_multipleanalogsensorsserver PRIVATE MultipleAnalogSensorsServer.cpp
+                                                          MultipleAnalogSensorsServer.h)
+
+  target_sources(yarp_multipleanalogsensorsserver PRIVATE $<TARGET_OBJECTS:multipleAnalogSensorsSerializations>)
+  target_include_directories(yarp_multipleanalogsensorsserver PRIVATE $<TARGET_PROPERTY:multipleAnalogSensorsSerializations,INTERFACE_INCLUDE_DIRECTORIES>)
+
+  target_link_libraries(yarp_multipleanalogsensorsserver PRIVATE YARP::YARP_os
                                                                  YARP::YARP_sig
                                                                  YARP::YARP_dev)
-  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_os
                                                       YARP_sig
                                                       YARP_dev)
 
@@ -29,10 +31,8 @@ if(ENABLE_multipleanalogsensorsserver)
                EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
-  yarp_install(FILES multipleanalogsensorsserver.ini
-               COMPONENT ${YARP_PLUGIN_MASTER}
-               DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 

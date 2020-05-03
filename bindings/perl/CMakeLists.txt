@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -12,7 +12,7 @@ set_source_files_properties(${SWIG_BINDINGS_SOURCE_FILE} PROPERTIES CPLUSPLUS ON
 set(CMAKE_SWIG_FLAGS "-module;yarp;${SWIG_COMMON_FLAGS}")
 find_package(PerlLibs)
 
-get_filename_component(_CMAKE_INSTALL_PERLDIR ${PERL_LIBRARY} PATH)
+get_filename_component(_CMAKE_INSTALL_PERLDIR ${PERL_LIBRARY} DIRECTORY)
 file(RELATIVE_PATH _CMAKE_INSTALL_PERLDIR "${_CMAKE_INSTALL_PERLDIR}" "${PERL_VENDORARCH}")
 set(_CMAKE_INSTALL_PERLDIR "${CMAKE_INSTALL_LIBDIR}/${_CMAKE_INSTALL_PERLDIR}")
 set(CMAKE_INSTALL_PERLDIR "${_CMAKE_INSTALL_PERLDIR}" CACHE PATH "perl bindings (${_CMAKE_INSTALL_PERLDIR})")
@@ -39,7 +39,7 @@ set_target_properties(${SWIG_MODULE_yarp_perl_REAL_NAME} PROPERTIES PREFIX ""
 
 # Update RPATH
 if(NOT CMAKE_SKIP_RPATH AND NOT CMAKE_SKIP_INSTALL_RPATH)
-  file(RELATIVE_PATH _rel_path "${CMAKE_INSTALL_FULL_PERLDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+  file(RELATIVE_PATH _rel_path "${CMAKE_INSTALL_FULL_PERLDIR}/auto/yarp" "${CMAKE_INSTALL_FULL_LIBDIR}")
   get_target_property(_current_rpath "${SWIG_MODULE_yarp_perl_REAL_NAME}" INSTALL_RPATH)
   if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     list(APPEND _current_rpath "@loader_path/${_rel_path}")

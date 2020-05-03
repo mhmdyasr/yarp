@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -22,7 +22,7 @@ int main() {
     Network yarp;
 
     Property config;
-    config.fromString("(device grabber) (subdevice ffmpeg_grabber) (name /dev1/image) (name2 /dev1/sound)");
+    config.fromString("(device grabberDual) (subdevice ffmpeg_grabber) (name /dev1/image) (name2 /dev1/sound)");
 
     PolyDriver dd(config);
     if (!dd.isValid()) {
@@ -31,7 +31,7 @@ int main() {
     }
 
     Property config2;
-    config2.fromString("(device grabber) (subdevice ffmpeg_grabber) (name /dev2/image) (name2 /dev2/sound)");
+    config2.fromString("(device grabberDual) (subdevice ffmpeg_grabber) (name /dev2/image) (name2 /dev2/sound)");
 
     PolyDriver dd2(config2);
     if (!dd2.isValid()) {

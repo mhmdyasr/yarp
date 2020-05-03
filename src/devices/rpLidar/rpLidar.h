@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,6 @@
 #ifndef RPLIDAR_H
 #define RPLIDAR_H
 
-#include <string>
 
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Semaphore.h>
@@ -27,7 +26,10 @@
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/sig/Vector.h>
-#include <yarp/dev/SerialInterfaces.h>
+#include <yarp/dev/ISerialDevice.h>
+
+#include <mutex>
+#include <string>
 #include <vector>
 
 using namespace yarp::os;
@@ -65,7 +67,7 @@ public:
         if (end == start)
         {
             yError("rpLidar buffer overrun!");
-            start = (start + 1) % maxsize; // full, overwrite 
+            start = (start + 1) % maxsize; // full, overwrite
             return false;
         }
         return true;
@@ -176,7 +178,7 @@ protected:
     PolyDriver driver;
     ISerialDevice *pSerial;
 
-    yarp::os::Mutex mutex;
+    std::mutex mutex;
     rpLidarCircularBuffer * buffer;
 
     int sensorsNum;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -48,7 +48,23 @@ MenuBar {
             autosizeItem.checked = false
         }
     }
-    
+
+    // NB: This is not the best solution but the fastest one.
+    /*!
+      \brief Changes the "saveSingle" menu checked state
+      \param checked Bollean: Whether or not the menu item has to be checked
+      */
+    function saveSingleChecked(checked){
+        saveSingle.checked = checked;
+    }
+    /*!
+      \brief Changes the "saveSet" menu checked state
+      \param checked Bollean: Whether or not the menu item has to be checked
+      */
+    function saveSetChecked(checked){
+        saveSet.checked = checked;
+    }
+
     Menu {
 
         title: "File"
@@ -123,4 +139,3 @@ MenuBar {
     }
 
 }
-

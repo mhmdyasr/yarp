@@ -1,4 +1,4 @@
-% Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+% Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 % Copyright (C) 2012 Juan G. Victores
 % All rights reserved.
 %
@@ -113,7 +113,7 @@ switch flag,
   case 0,
     global numDoubles;
     numDoubles = setNumDoubles;
-    [sys,x0,str,ts,simStateCompliance]=mdlInitializeSizes;    
+    [sys,x0,str,ts,simStateCompliance]=mdlInitializeSizes;
 
   %%%%%%%%%%%%%%%
   % Derivatives %

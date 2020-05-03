@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -16,6 +16,6 @@ int main() {
 
     Network::connect("/out","/in");  // connect two ports.
     // can do the same thing from command line with "yarp connect /out /in"
-    
+
     return 0;
 }

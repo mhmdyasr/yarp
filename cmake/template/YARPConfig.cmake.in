@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -93,47 +93,16 @@ set(YARP_IDL_BINARY_HINT "@PACKAGE_YARP_IDL_BINARY_HINT@")
 # CMake modules directories
 set_and_check(YARP_MODULE_DIR "@PACKAGE_YARP_MODULE_DIR@")
 
-
-# Save the variable, that it should not be modified by find_package(YARP), but
+# Save the variables, that it should not be modified by find_package(YARP), but
 # we need to modify it in order to find all the dependencies.
 set(_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
+set(_YCM_FOUND ${YCM_FOUND})
 
-# Find YCM if needed:
-# * If YARP is static therefore we need YCM (or YARP private version) for private
-#   dependencies.
-# * If deprecated stuff is enabled, we need YCM (or YARP private version) for
-#   compatibility with old versions.
-# If YCM is not found, the private version is used instead.
-if(NOT YARP_IS_SHARED_LIBRARY OR NOT YARP_NO_DEPRECATED)
-  # Until YCM is optional, we always want to look for YCM quietly, therefore we
-  # use find_package instead of find_dependency.
-  # WARNING find_package(YCM) will overwrite the PACKAGE_PREFIX_DIR variable,
-  #         therefore this variable is no longer valid after this line
-  get_property(_yarp_ycm_transitive_dependency_set GLOBAL PROPERTY _CMAKE_YCM_TRANSITIVE_DEPENDENCY SET)
-  find_package(YCM @YCM_REQUIRED_VERSION@ QUIET)
-  # Ensure that YCM is not shown by FeatureSummary if not requested by the user
-  if(NOT _yarp_ycm_transitive_dependency_set)
-    set_property(GLOBAL PROPERTY _CMAKE_YCM_TRANSITIVE_DEPENDENCY TRUE)
-  endif()
-  if(NOT YARP_NO_DEPRECATED)
-    if(YCM_FOUND)
-      set(_YARP_YCM_MODULE_PATH ${YCM_MODULE_PATH})
-    else()
-      set_and_check(YARP_YCM_MODULE_DIR "@PACKAGE_YARP_YCM_MODULE_DIR@")
-      set(_YARP_YCM_MODULE_PATH "${YARP_YCM_MODULE_DIR}/find-modules"
-                                "${YARP_YCM_MODULE_DIR}/modules"
-                                "${YARP_YCM_MODULE_DIR}/3rdparty"
-                                "${YARP_YCM_MODULE_DIR}/cmake-proposed")
-      if(${CMAKE_VERSION} VERSION_LESS 3.8)
-        list(APPEND _YARP_YCM_MODULE_PATH "${YARP_YCM_MODULE_DIR}/cmake-3.8/Modules")
-      endif()
-
-      # We need these paths in order to use the find modules in the following
-      # find_package/find_dependency calls (those are automatically added by
-      # YCM)
-      list(APPEND CMAKE_MODULE_PATH ${_YARP_YCM_MODULE_PATH})
-    endif()
-  endif()
+# Find YCM if YARP is static therefore we need YCM (or YARP private version) for
+# private dependencies.
+if(NOT YARP_IS_SHARED_LIBRARY)
+  include(CMakeFindDependencyMacro)
+  find_dependency(YCM @YCM_REQUIRED_VERSION@ REQUIRED)
 endif()
 
 
@@ -145,35 +114,53 @@ endif()
 
 # Find all requested components
 set(YARP_LIBRARIES YARP::YARP_init)
-foreach(_yarp_module ${YARP_FIND_COMPONENTS})
-  set(_YARP_FIND_PART_${_yarp_module}_REQUIRED)
+foreach(_yarp_component ${YARP_FIND_COMPONENTS})
+
+  if(NOT YARP_NO_DEPRECATED) # Since YARP 3.3
+    set(_yarp_component_is_uppercase_os 0)
+    if("${_yarp_component}" STREQUAL "OS")
+      message(DEPRECATION "The 'OS' component is deprecated. Use 'os' instead, and replace YARP::YARP_OS with YARP::YARP_os.")
+      set(_yarp_component_is_uppercase_os 1)
+      set(_yarp_component os)
+    endif()
+  endif()
+
+  set(_YARP_FIND_PART_${_yarp_component}_REQUIRED)
   # Only propagate REQUIRED if module was not passed to OPTIONAL_COMPONENTS
-  if(YARP_FIND_REQUIRED AND YARP_FIND_REQUIRED_${_yarp_module})
-    set(_YARP_FIND_PART_${_yarp_module}_REQUIRED REQUIRED)
+  if(YARP_FIND_REQUIRED AND YARP_FIND_REQUIRED_${_yarp_component})
+    set(_YARP_FIND_PART_${_yarp_component}_REQUIRED REQUIRED)
   endif()
   set(_YARP_FIND_PARTS_QUIET)
   if(YARP_FIND_QUIETLY)
     set(_YARP_FIND_PARTS_QUIET QUIET)
   endif()
-  get_property(_yarp_${_yarp_module}_transitive_dependency_set GLOBAL PROPERTY _CMAKE_YARP_${_yarp_module}_TRANSITIVE_DEPENDENCY SET)
-  find_package(YARP_${_yarp_module}
+  get_property(_yarp_${_yarp_component}_transitive_dependency_set GLOBAL PROPERTY _CMAKE_YARP_${_yarp_component}_TRANSITIVE_DEPENDENCY SET)
+  find_package(YARP_${_yarp_component}
                ${_YARP_FIND_PARTS_QUIET}
-               ${_YARP_FIND_PART_${_yarp_module}_REQUIRED}
+               ${_YARP_FIND_PART_${_yarp_component}_REQUIRED}
                HINTS "${YARP_CMAKECONFIG_DIR}"
                NO_DEFAULT_PATH)
   # Ensure that YARP components are not shown by FeatureSummary if not requested
   # by the user
-  if(NOT _yarp_${_yarp_module}_transitive_dependency_set)
-    set_property(GLOBAL PROPERTY _CMAKE_YARP_${_yarp_module}_TRANSITIVE_DEPENDENCY TRUE)
+  if(NOT _yarp_${_yarp_component}_transitive_dependency_set)
+    set_property(GLOBAL PROPERTY _CMAKE_YARP_${_yarp_component}_TRANSITIVE_DEPENDENCY TRUE)
   endif()
-  if(YARP_${_yarp_module}_FOUND AND TARGET YARP::YARP_${_yarp_module})
-    list(APPEND YARP_LIBRARIES YARP::YARP_${_yarp_module})
+  if(YARP_${_yarp_component}_FOUND AND TARGET YARP::YARP_${_yarp_component})
+    list(APPEND YARP_LIBRARIES YARP::YARP_${_yarp_component})
+  endif()
+
+  if(NOT YARP_NO_DEPRECATED) # Since YARP 3.3
+    if(_yarp_component_is_uppercase_os)
+      set(YARP_OS_FOUND ${YARP_os_FOUND})
+    endif()
   endif()
 endforeach()
 
-# Restore the original value of the variable
+# Restore the original value of the variables
 set(CMAKE_MODULE_PATH ${_CMAKE_MODULE_PATH})
+set(YCM_FOUND ${_YCM_FOUND})
 unset(_CMAKE_MODULE_PATH)
+unset(_YCM_FOUND)
 
 
 # Ensure that all requested modules are available
@@ -197,6 +184,14 @@ endif()
 
 
 ################################################################################
+# Print YARP information
+
+if(NOT YCM_FIND_QUIETLY)
+  message(STATUS "Found YARP: ${YARP_DIR} (found version \"${YARP_VERSION}\")")
+endif()
+
+
+################################################################################
 # Deprecated variables
 
 if(NOT YARP_NO_DEPRECATED AND NOT COMMAND _YARP_DEPRECATED_VARIABLE_WARNING)
@@ -207,8 +202,12 @@ if(NOT YARP_NO_DEPRECATED AND NOT COMMAND _YARP_DEPRECATED_VARIABLE_WARNING)
     message(DEPRECATION "The ${_variable} variable is deprecated")
   endmacro()
 
+  # YARP_os_LIBRARY is deprecated since YARP 3.0.0
+  set(YARP_os_LIBRARY YARP::YARP_os)
+  variable_watch(YARP_os_LIBRARY _yarp_deprecated_variable_warning)
+
   # YARP_OS_LIBRARY is deprecated since YARP 3.0.0
-  set(YARP_OS_LIBRARY YARP::YARP_OS)
+  set(YARP_OS_LIBRARY YARP::YARP_os)
   variable_watch(YARP_OS_LIBRARY _yarp_deprecated_variable_warning)
 
   # YARP_SIG_LIBRARY is deprecated since YARP 3.0.0

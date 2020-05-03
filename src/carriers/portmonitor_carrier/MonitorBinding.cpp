@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -37,6 +37,6 @@ MonitorBinding* MonitorBinding::create(const char* script_type)
 
     if(std::string(script_type) == "dll")
         return new MonitorSharedLib();
-       
-    return nullptr;        
+
+    return nullptr;
 }

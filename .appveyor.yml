@@ -1,12 +1,12 @@
 version: appveyor.{build}
 
 platform:
-  - Win32
+  #- Win32
   - x64
 
 os:
- - Visual Studio 2015
  - Visual Studio 2017
+ - Visual Studio 2019
 
 configuration:
   - Release
@@ -15,6 +15,7 @@ configuration:
 branches:
   except:
     - /^.*travis.*$/
+    - /^devel$/
 
 environment:
   CTEST_OUTPUT_ON_FAILURE: 1
@@ -26,12 +27,20 @@ init:
 
   # System related variables
   - cmd: set CMAKE_GENERATOR=Visual Studio
-  - cmd: if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" set CMAKE_GENERATOR=%CMAKE_GENERATOR% 14 2015
   - cmd: if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" set CMAKE_GENERATOR=%CMAKE_GENERATOR% 15 2017
-  - cmd: if "%Platform%"=="x64" set CMAKE_GENERATOR=%CMAKE_GENERATOR% Win64
+  - cmd: if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019" set CMAKE_GENERATOR=%CMAKE_GENERATOR% 16 2019
   - cmd: echo CMAKE_GENERATOR=%CMAKE_GENERATOR%
 
-  # Dependencies found in YARP and iCub packages
+  - cmd: set CMAKE_PLATFORM=%Platform%
+  - cmd: echo CMAKE_PLATFORM=%CMAKE_PLATFORM%
+
+  - cmd: set TIMEOUT=%SystemRoot%\System32\timeout.exe
+
+  # Dependencies found in YCM, YARP and iCub packages
+  - cmd: set YCM_LATEST=0.11.0
+  - cmd: set YCM_LATEST_TAG=v%YCM_LATEST%
+  - cmd: set YCM_DIR=%ROBOTOLOGY_ROOT%\ycm-%YCM_LATEST%
+
   - cmd: set YARP_LATEST=2.3.70
   - cmd: set YARP_LATEST_TAG=v%YARP_LATEST%
   - cmd: set YARP_LATEST_PKG=1
@@ -73,6 +82,7 @@ init:
   #- cmd: set PATH=%PATH%;%JPEG_ROOT%\bin
 
   # Installers URLs
+  - cmd: set YCM_INSTALLER=https://github.com/robotology/ycm/releases/download/%YCM_LATEST_TAG%/YCM-%YCM_LATEST%-all.tar.gz
   - cmd: set YARP_INSTALLER=https://github.com/robotology/yarp/releases/download/%YARP_LATEST_TAG%/yarp_%YARP_LATEST%_%ROBOTOLOGY_VS%_%ROBOTOLOGY_ARCH%_1.exe
   - cmd: set ICUB_INSTALLER=https://github.com/robotology/icub-main/releases/download/%ICUB_LATEST_TAG%/iCub_%ICUB_LATEST%_%ROBOTOLOGY_VS%_%ROBOTOLOGY_ARCH%_1.exe
   #- cmd: if "%platform%"=="Win32" set JPEG_INSTALLER=https://sourceforge.net/projects/libjpeg-turbo/files/1.5.1/libjpeg-turbo-1.5.1-vc.exe/download
@@ -90,11 +100,17 @@ init:
 install:
   - cmd: md C:\downloads
 
+  # Get YCM installer
+  - cmd: echo Downloading %YCM_INSTALLER%
+  - cmd: appveyor DownloadFile "%YCM_INSTALLER%" -FileName "C:\downloads\ycm.tar.gz"
+  - cmd: 7z x "C:\downloads\ycm.tar.gz" -so | 7z x -si -ttar > nul
+  - cmd: move YCM-%YCM_LATEST%-all "%YCM_DIR%"
+
   # Get YARP installer
   - cmd: echo Downloading %YARP_INSTALLER%
   - cmd: appveyor DownloadFile "%YARP_INSTALLER%" -FileName "C:\downloads\yarp.exe"
   - cmd: start "" /WAIT "c:\downloads\yarp.exe" /S
-  - cmd: timeout 10
+  - cmd: "%TIMEOUT% /T 10"
   - cmd: rmdir "%ROBOTOLOGY_ROOT%\yarp-%YARP_LATEST%" /S /Q
   - cmd: del "%ROBOTOLOGY_ROOT%\Uninstall_YARP.exe" /F /Q
   - cmd: del "%ROBOTOLOGY_ROOT%\uninstall_YARP.log" /F /Q
@@ -103,7 +119,7 @@ install:
   - cmd: echo Downloading %ICUB_INSTALLER%
   - cmd: appveyor DownloadFile "%ICUB_INSTALLER%" -FileName "C:\downloads\iCub.exe"
   - cmd: start "" /WAIT "c:\downloads\iCub.exe" /S
-  - cmd: timeout 10
+  - cmd: "%TIMEOUT% /T 10"
   - cmd: move "%ROBOTOLOGY_ROOT%\%OpenCV_DEFAULT_REL_DIR%" "%ROBOTOLOGY_ROOT%\%OpenCV_REL_DIR%"
   - cmd: rmdir "%ROBOTOLOGY_ROOT%\icub-%ICUB_LATEST%" /S /Q
   - cmd: rmdir "%ROBOTOLOGY_ROOT%\glut-3.7.6" /S /Q
@@ -117,13 +133,13 @@ install:
   #- cmd: echo Downloading %JPEG_INSTALLER%
   #- cmd: appveyor DownloadFile "%JPEG_INSTALLER%" -FileName "C:\downloads\libjpeg-turbo.exe"
   #- cmd: start "" /WAIT "C:\downloads\libjpeg-turbo.exe" /S /D=%JPEG_DEFAULT_ROOT%
-  #- cmd: timeout 10
+  #- cmd: "%TIMEOUT% /T 10"
   #- cmd: rmdir "%JPEG_DEFAULT_ROOT%\classes" /S /Q
   #- cmd: rmdir "%JPEG_DEFAULT_ROOT%\doc" /S /Q
   #- cmd: del "%JPEG_DEFAULT_ROOT%\*.exe" /S /F /Q
 
 before_build:
-  - cmd: cmake -H%APPVEYOR_BUILD_FOLDER% -B%APPVEYOR_BUILD_FOLDER%\build -G"%CMAKE_GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%APPVEYOR_BUILD_FOLDER%\install -C%APPVEYOR_BUILD_FOLDER%\scripts\admin\initial-cache.cmake
+  - cmd: cmake -H%APPVEYOR_BUILD_FOLDER% -B%APPVEYOR_BUILD_FOLDER%\build -G"%CMAKE_GENERATOR%" -A%CMAKE_PLATFORM% -DCMAKE_INSTALL_PREFIX:PATH=%APPVEYOR_BUILD_FOLDER%\install -C%APPVEYOR_BUILD_FOLDER%\.ci\initial-cache.appveyor.cmake
 
 build:
   project: build\yarp.sln

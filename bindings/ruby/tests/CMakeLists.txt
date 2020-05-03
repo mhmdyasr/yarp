@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -7,7 +7,7 @@
 macro(add_ruby_unit_test rubyscript)
   if(RUBY_EXECUTABLE)
     string(REGEX REPLACE "^test_" "bindings::ruby::" name "${rubyscript}")
-    string(REGEX REPLACE "\.rb$" "" name "${name}")
+    string(REGEX REPLACE "\\.rb$" "" name "${name}")
     add_test(NAME "${name}" COMMAND ${RUBY_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${rubyscript})
     set_tests_properties("${name}" PROPERTIES ENVIRONMENT "RUBYLIB=$<TARGET_FILE_DIR:${SWIG_MODULE_yarp_ruby_REAL_NAME}>")
   endif()

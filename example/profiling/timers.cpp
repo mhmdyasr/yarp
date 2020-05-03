@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -14,7 +14,7 @@ using namespace yarp::os;
 // Timers test.
 // We generate a 50% duty cycle square wave
 // of given period, use only Time::now().
-// 
+//
 // Lorenzo Natale August 2008 (TB improved)
 
 // Parameters:
@@ -26,7 +26,7 @@ using namespace yarp::os;
 static ppEventDebugger pp(0x378);
 #endif
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
     Property p;
     p.fromCommand(argc, argv);

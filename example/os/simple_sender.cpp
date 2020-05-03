@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -22,7 +22,7 @@ int main() {
     int top = 100;
     for (int i=1; i<=top; i++) {
         // prepare a message
-        Bottle bot; 
+        Bottle bot;
         bot.addString("testing");
         bot.addInt32(i);
         bot.addString("of");

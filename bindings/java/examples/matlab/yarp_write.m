@@ -1,4 +1,4 @@
-% Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+% Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 % Copyright (C) 2006-2010 RobotCub Consortium
 % All rights reserved.
 %
@@ -26,15 +26,12 @@ while(~done)
   reply = input('Write a string (''quit'' to quit):', 's');
 
   b.fromString(reply);
-  
+
   port.write(b);
-  
+
   if (strcmp(reply, 'quit'))
-	done=1;
+    done=1;
   end
 end
 
 port.close;
-  
-  
-  

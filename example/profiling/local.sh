@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -36,7 +36,7 @@ for rate in $RATES
     echo "Starting client"
     ../port_latency --client --name end --nframes $NFRAMES &
     jobClient=$!
-	echo $jobClient
+    echo $jobClient
 
     yarp wait $CLIENT_PORT
     yarp connect $SERVER_PORT $CLIENT_PORT $protocol
@@ -52,4 +52,3 @@ for rate in $RATES
     mv timing.txt $reportFile
   done
 done
-

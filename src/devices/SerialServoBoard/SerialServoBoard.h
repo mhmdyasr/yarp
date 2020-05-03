@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2008 Giacomo Spigler
  * All rights reserved.
  *
@@ -11,7 +11,7 @@
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
 
-#include <yarp/dev/SerialInterfaces.h>
+#include <yarp/dev/ISerialDevice.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -162,6 +162,3 @@ public:
         return true;
     }
 };
-
-
-

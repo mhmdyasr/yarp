@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -53,6 +53,13 @@ service yarpdataplayer_IDL
   * @return true/false on success/failure
   */
   bool load(1:string path);
+
+
+  /**
+   * Get slider percentage
+   * @return i32 percentage
+   */
+  i32 getSliderPercentage();
 
   /**
   * Plays the dataSets

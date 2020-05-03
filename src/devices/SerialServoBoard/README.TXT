@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2008 Giacomo Spigler
 # All rights reserved.
 #
@@ -16,12 +16,3 @@ SerialServoBoard:
 
 Requirements:
   The "serialport" module must be compiled in order to use this driver.
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,13 +18,12 @@
 
 #include "depthCameraDriver.h"
 
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/Value.h>
 
 #include <algorithm>
 #include <cmath>
+#include <mutex>
 
-using namespace yarp::dev::impl;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::os;
@@ -56,12 +55,12 @@ static std::map<std::string, RGBDSensorParamParser::RGBDParam> params_map =
     {depthMirroring, RGBDSensorParamParser::RGBDParam(depthMirroring,  1)}
 };
 
-class yarp::dev::impl::streamFrameListener : public openni::VideoStream::NewFrameListener
+class streamFrameListener : public openni::VideoStream::NewFrameListener
 {
 public:
 
     //Properties
-    yarp::os::Mutex         mutex;
+    std::mutex         mutex;
     yarp::os::Stamp         stamp;
     yarp::sig::FlexImage    image;
     openni::PixelFormat     pixF{openni::PixelFormat::PIXEL_FORMAT_DEPTH_1_MM};
@@ -76,13 +75,13 @@ public:
     void destroy(){frameRef.release();}
     bool getImage(FlexImage& inputImage)
     {
-        LockGuard guard(mutex);
+        std::lock_guard<std::mutex> guard(mutex);
         return inputImage.copy(image);
     }
 
     yarp::os::Stamp getStamp()
     {
-        LockGuard guard(mutex);
+        std::lock_guard<std::mutex> guard(mutex);
         return stamp;
     }
 
@@ -98,7 +97,7 @@ streamFrameListener::streamFrameListener()
 
 void streamFrameListener::onNewFrame(openni::VideoStream& stream)
 {
-    LockGuard guard(mutex);
+    std::lock_guard<std::mutex> guard(mutex);
     stream.readFrame(&frameRef);
 
     if (!frameRef.isValid() || !frameRef.getData())
@@ -638,21 +637,9 @@ bool depthCameraDriver::setRgbMirroring(bool mirror)
     return (ret == mirror);
 }
 
-bool depthCameraDriver::setIntrinsic(Property& intrinsic, const RGBDSensorParamParser::IntrinsicParams& values)
+bool depthCameraDriver::setIntrinsic(Property& intrinsic, const yarp::sig::IntrinsicParams& values)
 {
-    intrinsic.put("focalLengthX",       values.focalLengthX);
-    intrinsic.put("focalLengthY",       values.focalLengthY);
-    intrinsic.put("principalPointX",    values.principalPointX);
-    intrinsic.put("principalPointY",    values.principalPointY);
-
-    intrinsic.put("distortionModel", "plumb_bob");
-    intrinsic.put("k1", values.distortionModel.k1);
-    intrinsic.put("k2", values.distortionModel.k2);
-    intrinsic.put("t1", values.distortionModel.t1);
-    intrinsic.put("t2", values.distortionModel.t2);
-    intrinsic.put("k3", values.distortionModel.k3);
-
-    intrinsic.put("stamp", yarp::os::Time::now());
+    values.toProperty(intrinsic);
     return true;
 }
 
@@ -833,7 +820,7 @@ bool depthCameraDriver::getImage(FlexImage& Frame, Stamp* Stamp, streamFrameList
 
 bool depthCameraDriver::getImage(ImageOf<PixelFloat>& Frame, Stamp* Stamp, streamFrameListener* sourceFrame)
 {
-    LockGuard guard(sourceFrame->mutex);
+    std::lock_guard<std::mutex> guard(sourceFrame->mutex);
     if (!sourceFrame->isReady)
     {
         yError() << "device not ready";

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  *
  * This library is free software; you can redistribute it and/or
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     finder.setVerbose();
     finder.setDefaultConfigFile("yarpmotorgui.ini");
     finder.configure(argc, argv);
-    
+
     Bottle         pParts;
     QStringList    enabledParts;
     vector<bool>   enabled;

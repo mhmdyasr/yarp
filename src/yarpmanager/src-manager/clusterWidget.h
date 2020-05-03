@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 #define CLUSTERWIDGET_H
 
 #include <QWidget>
+#include <QMessageBox>
 #include <vector>
 #include <yarp/manager/xmlclusterloader.h>
 #include <customtreewidget.h>
@@ -42,6 +43,7 @@ private slots:
     void onKillSelected();
     void onExecute();
     void onNodeSelectionChanged();
+    void onExecuteTextChanged();
 signals:
     void logError(QString);
     void logMessage(QString);
@@ -53,16 +55,18 @@ public:
 
 private:
     void addRow(const std::string& name="", const std::string& display="none",
-                const std::string& user="", bool onOff=false, bool log=true, int id=0);
+                const std::string& user="", const std::string& address="", bool onOff=false, bool log=true, int id=0);
     std::string getSSHCmd(const std::string& user, const std::string& host, const std::string& ssh_options);
     bool checkNameserver();
     bool checkNode(const std::string& name);
     void updateServerEntries();
-private:
+
+
     Ui::ClusterWidget *ui;
     std::string confFile;
     yarp::manager::Cluster cluster;
     yarp::manager::XmlClusterLoader* clusLoader;
+    bool checkNs;
 };
 
 #endif // CLUSTERWIDGET_H

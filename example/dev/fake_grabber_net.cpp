@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -21,15 +21,15 @@ int main() {
     Network yarp;
 
     // give YARP a factory for creating instances of FakeFrameGrabber
-    DriverCreator *fakey_factory = 
+    DriverCreator *fakey_factory =
         new DriverCreatorOf<FakeFrameGrabber>("fakey",
-                                              "grabber",
+                                              "grabberDual",
                                               "FakeFrameGrabber");
     Drivers::factory().add(fakey_factory); // hand factory over to YARP
 
     // use YARP to create and configure a networked of FakeFrameGrabber
     Property config;
-    config.fromString("(device grabber) (name /fakey) (subdevice fakey) (w 200) (h 200)");
+    config.fromString("(device grabberDual) (name /fakey) (subdevice fakey) (w 200) (h 200)");
     PolyDriver dd(config);
     if (!dd.isValid()) {
         printf("Failed to create and configure a device\n");

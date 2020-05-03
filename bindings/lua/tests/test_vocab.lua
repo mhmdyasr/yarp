@@ -1,6 +1,6 @@
 #!/usr/bin/lua
 
--- Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+-- Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 -- Copyright (C) 2018 Juan G. Victores
 -- All rights reserved.
 --
@@ -22,7 +22,7 @@ end
 function test_vocab_pixel_types_enum()
   assert("number" == type(yarp.VOCAB_PIXEL_RGB))
   assert(6449010 == yarp.VOCAB_PIXEL_RGB) -- VOCAB3
-  assert(761423730 == yarp.VOCAB_PIXEL_RGB_SIGNED) -- VOCAB4 with '-' 
+  assert(761423730 == yarp.VOCAB_PIXEL_RGB_SIGNED) -- VOCAB4 with '-'
   assert(909209453 == yarp.VOCAB_PIXEL_MONO16) -- VOCAB4 with '1' and '6'
 end
 
@@ -36,4 +36,3 @@ end
 test_vocab()
 test_vocab_pixel_types_enum()
 test_vocab_global_scope()
-

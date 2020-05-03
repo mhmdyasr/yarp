@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -7,33 +7,37 @@
 
 yarp_prepare_plugin(mjpeg
                     CATEGORY carrier
-                    TYPE yarp::os::MjpegCarrier
+                    TYPE MjpegCarrier
                     INCLUDE MjpegCarrier.h
                     EXTRA_CONFIG CODE="GET /?ac"
                     DEPENDS "YARP_HAS_JPEG")
 
+cmake_dependent_option(YARP_MJPEG_AUTOCOMPRESS "Automatically compress/decompress images on mjpeg stream" ON
+                       "NOT SKIP_mjpeg" ON)
+mark_as_advanced(YARP_MJPEG_AUTOCOMPRESS)
+include(YarpRenamedOption)
+yarp_renamed_option(MJPEG_AUTOCOMPRESS YARP_MJPEG_AUTOCOMPRESS) # Since YARP 3.3
+
 if(NOT SKIP_mjpeg)
-  option(MJPEG_AUTOCOMPRESS "Automatically compress/decompress images on mjpeg stream" TRUE)
-  if(MJPEG_AUTOCOMPRESS)
-    add_definitions(-DMJPEG_AUTOCOMPRESS)
-  endif()
+  yarp_add_plugin(yarp_mjpeg)
 
-  set(CMAKE_INCLUDE_CURRENT_DIR ON)
+  target_sources(yarp_mjpeg PRIVATE MjpegCarrier.h
+                                    MjpegCarrier.cpp
+                                    MjpegStream.h
+                                    MjpegStream.cpp
+                                    MjpegDecompression.h
+                                    MjpegDecompression.cpp)
 
-
-  yarp_add_plugin(yarp_mjpeg
-                  MjpegCarrier.h
-                  MjpegCarrier.cpp
-                  MjpegStream.h
-                  MjpegStream.cpp
-                  MjpegDecompression.h
-                  MjpegDecompression.cpp)
-  target_link_libraries(yarp_mjpeg PRIVATE YARP::YARP_OS
+  target_link_libraries(yarp_mjpeg PRIVATE YARP::YARP_os
                                            YARP::YARP_sig
                                            YARP::YARP_wire_rep_utils)
-  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_os
                                                       YARP_sig
                                                       YARP_wire_rep_utils)
+
+  if(YARP_MJPEG_AUTOCOMPRESS)
+    target_compile_definitions(yarp_mjpeg PRIVATE MJPEG_AUTOCOMPRESS)
+  endif()
 
   target_include_directories(yarp_mjpeg SYSTEM PRIVATE ${JPEG_INCLUDE_DIR})
   target_link_libraries(yarp_mjpeg PRIVATE ${JPEG_LIBRARY})
@@ -43,10 +47,8 @@ if(NOT SKIP_mjpeg)
                EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
-  yarp_install(FILES mjpeg.ini
-               COMPONENT ${YARP_PLUGIN_MASTER}
-               DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 

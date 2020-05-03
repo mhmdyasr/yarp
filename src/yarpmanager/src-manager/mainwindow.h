@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -109,9 +109,7 @@ private slots:
     void onLogMessage(QString);
     void onHelp();
     void onAbout();
-    void onBuilderWindowFloating(bool);
     void onWizardError(QString);
-    void onViewBuilderWindows();
 
     void onModified(bool);
     void onFileChanged(const QString & path);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,17 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <rpLidar2.h>
+#include "rpLidar2.h"
 
 #include <yarp/os/Time.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/ResourceFinder.h>
-#include <iostream>
-#include <cstring>
+
 #include <cstdlib>
+#include <cstring>
+#include <iostream>
 #include <limits>
+#include <mutex>
 
 #ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
@@ -72,7 +73,7 @@ bool RpLidar2::open(yarp::os::Searchable& config)
         if (general_config.check("sample_buffer_life") == false)  { yError()  << "Missing sample_buffer_life param in GENERAL group"; return false; }
 
         baudrate    = general_config.find("serial_baudrate").asInt32();
-        serial      = general_config.find("serial_port").asString();
+        m_serialPort  = general_config.find("serial_port").asString();
         m_max_angle   = general_config.find("max_angle").asFloat64();
         m_min_angle   = general_config.find("min_angle").asFloat64();
         m_resolution  = general_config.find("resolution").asFloat64();
@@ -133,23 +134,23 @@ bool RpLidar2::open(yarp::os::Searchable& config)
     m_sensorsNum = (int)(fov/m_resolution);
     m_laser_data.resize(m_sensorsNum, 0.0);
 
-    m_drv = RPlidarDriver::CreateDriver(RPlidarDriver::DRIVER_TYPE_SERIALPORT);
+    m_drv = RPlidarDriver::CreateDriver(rp::standalone::rplidar::DRIVER_TYPE_SERIALPORT);
     if (!m_drv)
     {
             yError() << "Create Driver fail, exit\n";
             return false;
     }
 
-    if (IS_FAIL(m_drv->connect(serial.c_str(), (_u32)baudrate)))
+    if (IS_FAIL(m_drv->connect(m_serialPort.c_str(), (_u32)baudrate)))
     {
-        yError() << "Error, cannot bind to the specified serial port:", serial.c_str();
+        yError() << "Error, cannot bind to the specified serial port:", m_serialPort.c_str();
         RPlidarDriver::DisposeDriver(m_drv);
         return false;
     }
 
     m_info = deviceinfo();
     yInfo("max_dist %f, min_dist %f",   m_max_distance, m_min_distance);
- 
+
     bool m_inExpressMode=false;
     result = m_drv->checkExpressScanSupported(m_inExpressMode);
     if (result == RESULT_OK && m_inExpressMode==true)
@@ -221,7 +222,7 @@ bool RpLidar2::close()
 
 bool RpLidar2::getDistanceRange(double& min, double& max)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     min = m_min_distance;
     max = m_max_distance;
     return true;
@@ -229,7 +230,7 @@ bool RpLidar2::getDistanceRange(double& min, double& max)
 
 bool RpLidar2::setDistanceRange(double min, double max)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     m_min_distance = min;
     m_max_distance = max;
     return true;
@@ -237,7 +238,7 @@ bool RpLidar2::setDistanceRange(double min, double max)
 
 bool RpLidar2::getScanLimits(double& min, double& max)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     min = m_min_angle;
     max = m_max_angle;
     return true;
@@ -245,7 +246,7 @@ bool RpLidar2::getScanLimits(double& min, double& max)
 
 bool RpLidar2::setScanLimits(double min, double max)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     m_min_angle = min;
     m_max_angle = max;
     return true;
@@ -253,28 +254,28 @@ bool RpLidar2::setScanLimits(double min, double max)
 
 bool RpLidar2::getHorizontalResolution(double& step)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     step = m_resolution;
     return true;
 }
 
 bool RpLidar2::setHorizontalResolution(double step)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     m_resolution = step;
     return true;
 }
 
 bool RpLidar2::getScanRate(double& rate)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     yWarning("getScanRate not yet implemented");
     return true;
 }
 
 bool RpLidar2::setScanRate(double rate)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     yWarning("setScanRate not yet implemented");
     return false;
 }
@@ -282,7 +283,7 @@ bool RpLidar2::setScanRate(double rate)
 
 bool RpLidar2::getRawData(yarp::sig::Vector &out)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     out           = m_laser_data;
     m_device_status = yarp::dev::IRangefinder2D::DEVICE_OK_IN_USE;
     return true;
@@ -290,7 +291,7 @@ bool RpLidar2::getRawData(yarp::sig::Vector &out)
 
 bool RpLidar2::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     size_t size = m_laser_data.size();
     data.resize(size);
 
@@ -309,7 +310,7 @@ bool RpLidar2::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
 }
 bool RpLidar2::getDeviceStatus(Device_status &status)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     status = m_device_status;
     return true;
 }
@@ -334,7 +335,7 @@ void RpLidar2::run()
     op_result = m_drv->grabScanData(nodes, count);
     if (op_result != RESULT_OK)
     {
-        yError() << "grabbing scan data failed";
+        yError() << m_serialPort << ": grabbing scan data failed";
         handleError(op_result);
         return;
     }
@@ -393,7 +394,7 @@ void RpLidar2::run()
             if (distance < m_min_distance)
             {
                 //laser angular measurements not read by the device are now set to infinity and not to zero
-                distance = std::numeric_limits<double>::infinity(); 
+                distance = std::numeric_limits<double>::infinity();
             }
         }
         if (m_clip_max_enable)
@@ -505,7 +506,7 @@ std::string RpLidar2::deviceinfo()
 
 bool RpLidar2::getDeviceInfo(std::string &device_info)
 {
-    LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     device_info = m_info;
     return true;
 }

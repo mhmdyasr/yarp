@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
 #include <yarp/os/RFModule.h>
 #include <yarprobotinterfaceRpc.h>
 
-namespace RobotInterface
+namespace yarprobotinterface
 {
 
 class Module : public yarp::os::RFModule,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,24 +22,19 @@
 
 #include <yarp/os/Network.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/dev/PreciselyTimed.h>
+#include <yarp/dev/IPreciselyTimed.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
+#include <mutex>
 #include <string>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/Map2DLocation.h>
 #include <yarp/dev/ILocalization2D.h>
 
-namespace yarp {
-    namespace dev {
-        class Localization2DClient;
-    }
-}
 
 /**
  *  @ingroup dev_impl_network_clients
@@ -54,17 +49,15 @@ namespace yarp {
  * | remote         |      -         | string  | -   |   -           | Yes          | Full port name of the port opened on the server side, to which the Localization2DClient connects to.                           | E.g.(https://github.com/robotology/navigation/src/localizationServer)    |
  */
 
-class yarp::dev::Localization2DClient : public DeviceDriver,
-                                       public ILocalization2D
+class Localization2DClient :
+        public yarp::dev::DeviceDriver,
+        public yarp::dev::Nav2D::ILocalization2D
 {
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 protected:
-    yarp::os::Mutex               m_mutex;
+    std::mutex               m_mutex;
     yarp::os::Port                m_rpc_port_localization_server;
     std::string         m_local_name;
     std::string         m_remote_name;
-
-#endif /*DOXYGEN_SHOULD_SKIP_THIS*/
 
 public:
     /* DeviceDriver methods */
@@ -72,8 +65,15 @@ public:
     bool close() override;
 
     /* The following methods belong to ILocalization2D interface */
-    bool   getCurrentPosition(yarp::dev::Map2DLocation &loc) override;
-    bool   setInitialPose(yarp::dev::Map2DLocation& loc) override;
+    bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation &loc) override;
+    bool   getEstimatedOdometry(yarp::dev::OdometryData& odom) override;
+    bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc) override;
+    bool   getLocalizationStatus(yarp::dev::Nav2D::LocalizationStatusEnum& status) override;
+    bool   getEstimatedPoses(std::vector<yarp::dev::Nav2D::Map2DLocation>& poses) override;
+    bool   setInitialPose(const yarp::dev::Nav2D::Map2DLocation& loc, const yarp::sig::Matrix& cov) override;
+    bool   getCurrentPosition(yarp::dev::Nav2D::Map2DLocation& loc, yarp::sig::Matrix& cov) override;
+    bool   startLocalizationService() override;
+    bool   stopLocalizationService() override;
 };
 
 #endif // YARP_DEV_LOCALIZATION2DCLIENT_H

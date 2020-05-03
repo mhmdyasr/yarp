@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -12,7 +12,7 @@
 #include <yarp/sig/all.h>
 #include <yarp/dev/all.h>
 
-class FileFrameGrabber : public yarp::dev::IFrameGrabberImage, 
+class FileFrameGrabber : public yarp::dev::IFrameGrabberImage,
                          public yarp::dev::DeviceDriver {
 private:
     std::string pattern, lastLoad;
@@ -63,15 +63,15 @@ public:
         return findImage(dummy);
     }
 
-    virtual bool open(yarp::os::Searchable& config) { 
-        std::string pattern = 
+    virtual bool open(yarp::os::Searchable& config) {
+        std::string pattern =
             config.check("pattern",yarp::os::Value("%d.ppm")).asString();
         int first = config.check("first",yarp::os::Value(0)).asInt32();
         int last = config.check("last",yarp::os::Value(-1)).asInt32();
         return open(pattern.c_str(),first,last);
     }
 
-    virtual bool close() { 
+    virtual bool close() {
         return true; // easy
     }
 
@@ -95,4 +95,3 @@ public:
         return w;
     }
 };
-

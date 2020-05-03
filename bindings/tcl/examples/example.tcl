@@ -1,6 +1,6 @@
 #!/usr/bin/tclsh
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -33,4 +33,3 @@ for {set i 1} {$i<=$top} {incr i} {
 p close
 
 Network_fini
-

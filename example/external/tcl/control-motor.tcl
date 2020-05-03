@@ -1,6 +1,6 @@
 #!/usr/bin/tclsh
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -34,7 +34,7 @@ set name_server {"localhost" 10000}
 ## Send a single command to a port target, and return the first line
 ## of the response.
 ##
-## Warning: this method is inefficient for multiple commands, since 
+## Warning: this method is inefficient for multiple commands, since
 ## there is no reuse of the socket connection.
 ##
 
@@ -51,8 +51,8 @@ proc send_text {target cmd} {
     set reply [gets $sock]
     # reply should be "Welcome tcl"
     if {[string trim $reply] ne "Welcome tcl"} {
-	puts "Error: target port is not behaving like a YARP port"
-	exit 1
+        puts "Error: target port is not behaving like a YARP port"
+        exit 1
     }
 
     # send the command
@@ -63,10 +63,10 @@ proc send_text {target cmd} {
     set reply [gets $sock]
     set surplus ""
     while {$surplus ne "<ACK>"} {
-	set surplus [gets $sock]
-	if {$surplus ne "<ACK>"} {
-	    set reply "$reply $surplus"
-	}
+        set surplus [gets $sock]
+        if {$surplus ne "<ACK>"} {
+            set reply "$reply $surplus"
+        }
     }
 
     return $reply
@@ -82,9 +82,9 @@ proc query {portname} {
     global name_server
     set r [send_text $name_server "query $portname"]
     if {[string trim $r] eq "*** end of message"} {
-	puts "Error: could not find port $portname"
-	exit 1
-    } 
+        puts "Error: could not find port $portname"
+        exit 1
+    }
     set contact_info [eval "list $r"]
     set result [list [lindex $contact_info 4] [lindex $contact_info 6]]
     puts "Found $portname at $result"
@@ -94,7 +94,7 @@ proc query {portname} {
 #######################################################################
 ##
 ## Convert a "YARP Bottle" to a TCL nested list.  The conversion is
-## quite approximate, and could fail if special characters are 
+## quite approximate, and could fail if special characters are
 ## present in quoted form.
 ##
 
@@ -134,5 +134,3 @@ puts [send_command $motor "get axes"]
 
 # Set the position of the first motor to 50.
 puts [send_command $motor "set pos 0 50"]
-
-

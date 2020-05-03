@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -19,13 +19,10 @@ int main() {
     Bottle in, out;    // Make places to store things.
     while (true) {
         p.read(in,true); // Read from the port, warn that we'll be replying.
-        printf("Got %s\n", in.toString().c_str());                
+        printf("Got %s\n", in.toString().c_str());
         out.clear();
         out.addString("acknowledge");
         out.append(in);
         p.reply(out);    // send reply.
     }
 }
-
-
-

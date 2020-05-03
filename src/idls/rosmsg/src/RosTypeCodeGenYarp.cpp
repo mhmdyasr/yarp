@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -84,7 +84,7 @@ static std::string getDoubleName(const std::string& tname, const std::string& se
 static void writeLicenseHeader(FILE* out)
 {
     fprintf(out, "/*\n");
-    fprintf(out, " * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)\n");
+    fprintf(out, " * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)\n");
     fprintf(out, " * All rights reserved.\n");
     fprintf(out, " *\n");
     fprintf(out, " * This software may be modified and distributed under the terms of the\n");
@@ -957,12 +957,17 @@ RosYarpType RosTypeCodeGenYarp::mapPrimitive(const RosField& field)
     return ry;
 }
 
-
+#include <iostream>
 bool RosTypeCodeGenYarp::writeIndex(RosTypeCodeGenState& state)
 {
-    // Generate _indexALL.txt file
+    // Generate _index.txt file
     string root = (target != "") ? (target + "/") : "";
-    string index_fname = className + "_indexALL.txt";
+    string index_fname;
+    if(!packageName.empty()) {
+        index_fname = packageName + "_" + className + "_index.txt";
+    } else {
+        index_fname = className + "_index.txt";
+    }
 
     yarp::os::mkdir_p((root + index_fname).c_str(), 1);
     out = fopen((root + index_fname).c_str(), "w");

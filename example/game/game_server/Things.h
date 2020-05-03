@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -89,7 +89,7 @@ public:
             Thing& thing = getThing(id);
 
             thing.update();
-      
+
             if(!thing.isAlive()) {
                 // remove.bind(id,id); // for now, don't do this
                 // Players automatically expire from arena when client killed
@@ -106,4 +106,3 @@ public:
 
 
 #endif
-

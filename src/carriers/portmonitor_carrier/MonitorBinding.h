@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -19,11 +19,11 @@ class MonitorBinding
 {
 
 public:
-    virtual ~MonitorBinding();   
+    virtual ~MonitorBinding();
     virtual bool load(const yarp::os::Property& options) = 0;
     virtual bool setParams(const yarp::os::Property& params) = 0;
     virtual bool getParams(yarp::os::Property& params) = 0;
-    
+
     virtual bool hasAccept() = 0;
     virtual bool acceptData(yarp::os::Things& thing) = 0;
 
@@ -39,12 +39,10 @@ public:
     virtual bool canAccept(void) = 0;
 
     /**
-     * factory method 
+     * factory method
      */
     static MonitorBinding *create(const char* script_type);
 
 };
 
-#endif //_MONITORBINDING_INC_
-
-
+#endif //MONITORBINDING_INC_

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,8 +41,9 @@ Rectangle {
     signal changeWindowSize(int w, int h)
     signal synchRate(bool check);
     signal autosize(bool check);
-    signal setName(string name)
-
+    signal setName(string name);
+    signal saveSetClosed(bool check);
+    signal saveSingleClosed(bool check);
 
     /*********Connections*********/
     Connections{
@@ -52,6 +53,8 @@ Rectangle {
                 dataArea.avgFps = avg
                 dataArea.minFps = min
                 dataArea.maxFps = max
+                dataArea.portSizeX = yarpViewCore.videoProducer.frameWidth
+                dataArea.portSizeY = yarpViewCore.videoProducer.frameHeight
             }
         }
         onSendDisplayFps:{
@@ -59,6 +62,8 @@ Rectangle {
                 dataArea.displayAvgFps = avg
                 dataArea.displayMinFps = min
                 dataArea.displayMaxFps= max
+                dataArea.displaySizeX = width
+                dataArea.displaySizeY = height
             }
         }
 
@@ -69,7 +74,7 @@ Rectangle {
         onAutosize:{
             autosize(check);
         }
-        
+
         onSetName:{
             setName(name)
         }
@@ -263,7 +268,7 @@ Rectangle {
 
                 yarpViewCore.clickCoords_2(clickX,clickY)
             }
-            
+
             onPressed: {
                 startclickX = mouse.x
                 startclickY = mouse.y
@@ -282,19 +287,19 @@ Rectangle {
                 clickX = x/ratioW
                 clickY = y/ratioH
             }
-                
+
             onPressAndHold: {
                 pressing = true;
                 canvasOverlay.requestPaint()
             }
-            
+
             onReleased: {
                 if (pressing)
                 {
                     pressing = false;
                     var x = mouse.x
                     var y = mouse.y
-                  
+
                     var frameW = yarpViewCore.videoProducer.frameWidth;
                     var frameH = yarpViewCore.videoProducer.frameHeight
 
@@ -303,7 +308,7 @@ Rectangle {
 
                     var ratioW = w/frameW
                     var ratioH = h/frameH
-                
+
                     lastclickX=mouse.x/ratioW
                     lastclickY=mouse.y/ratioH
 
@@ -311,14 +316,14 @@ Rectangle {
                 }
                 canvasOverlay.requestPaint()
             }
-            
+
             onPositionChanged:
             {
                 currX=mouse.x;
-                currY=mouse.y;   
+                currY=mouse.y;
                 canvasOverlay.requestPaint()
-            }           
-            
+            }
+
             Canvas
             {
                 id:canvasOverlay
@@ -326,7 +331,7 @@ Rectangle {
                 height: parent.height
                 anchors.fill: parent
                 visible: true
- 
+
                 onPaint:
                 {
                     var ctx = canvasOverlay.getContext("2d")
@@ -340,12 +345,12 @@ Rectangle {
                         ctx.lineTo(coordsMouseArea.currX,coordsMouseArea.currY)
                         ctx.closePath()
                         ctx.stroke()
-                    }   
+                    }
                 }
             }
         }
     }
-    
+
 
 
     /************ Dialogs **************/
@@ -360,6 +365,10 @@ Rectangle {
         signal saveFrameSet()
         signal stopSavingFrameSet()
         signal setFileName(url fileName)
+
+        onClosing: {
+            saveSetClosed(false);
+        }
 
         function save(){
             saveFrameSet()
@@ -446,6 +455,10 @@ Rectangle {
 
         signal saveFrame()
         signal setFileName(url fileName)
+
+        onClosing: {
+            saveSingleClosed(false);
+        }
 
         function save(){
             saveFrame()

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -9,14 +9,14 @@
 #ifndef MONITOR_SHAREDLIB_INC
 #define MONITOR_SHAREDLIB_INC
 
-#include <string>
-#include <string>
+#include "MonitorBinding.h"
+
+#include <yarp/os/MonitorObject.h>
 #include <yarp/os/SharedLibraryClass.h>
 #include <yarp/os/SharedLibrary.h>
 #include <yarp/os/YarpPlugin.h>
 
-#include <yarp/os/MonitorObject.h>
-#include "MonitorBinding.h"
+#include <string>
 
 class MonitorSharedLib : public MonitorBinding
 {
@@ -59,5 +59,3 @@ private:
 };
 
 #endif //_MONITOR_SHAREDLIB_INC_
-
-

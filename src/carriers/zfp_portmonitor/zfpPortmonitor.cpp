@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
  * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
+
+#include "zfpPortmonitor.h"
 
 #include <cstdio>
 #include <cstring>
@@ -12,10 +14,10 @@
 #include <algorithm>
 #include <yarp/sig/Image.h>
 #include <yarp/os/LogStream.h>
+
 extern "C" {
     #include "zfp.h"
 }
-#include "zfpPortmonitor.h"
 
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -237,4 +239,3 @@ int ZfpMonitorObject::decompress(float* array, float* &decompressed, int zfpsize
     return status;
 
 }
-

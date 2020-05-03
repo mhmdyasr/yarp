@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -74,7 +74,7 @@ public:
                 ID x = (*it2).ext_id_;
                 ID v = (*it2).int_id_;
                 printf("(%ld,%ld) = %ld\n",x.asInt32(),y.asInt32(),v.asInt32());
-                fout << "piece " << x.asInt32() << " " << y.asInt32() << " " << 
+                fout << "piece " << x.asInt32() << " " << y.asInt32() << " " <<
                     v.asInt32() << std::endl;
                 ids.rebind(v,v);
             }
@@ -97,5 +97,3 @@ public:
 
 
 #endif
-
-

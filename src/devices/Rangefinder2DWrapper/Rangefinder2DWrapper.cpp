@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,13 +29,6 @@ using namespace yarp::sig;
 using namespace yarp::dev;
 using namespace yarp::os;
 using namespace std;
-
-// needed for the driver factory.
-yarp::dev::DriverCreator *createRangefinder2DWrapper() {
-    return new DriverCreatorOf<yarp::dev::Rangefinder2DWrapper>("Rangefinder2DWrapper",
-        "Rangefinder2DWrapper",
-        "yarp::dev::Rangefinder2Dwrapper");
-}
 
 
 /**
@@ -583,12 +576,14 @@ void Rangefinder2DWrapper::run()
 
             int ranges_size = ranges.size();
 
-            yarp::os::Bottle& b = streamingPort.prepare();
-            b.clear();
-            Bottle& bl = b.addList();
-
-            bl.read(ranges);
-            b.addInt32(status);
+            yarp::dev::LaserScan2D& b = streamingPort.prepare();
+            //b.clear();
+            b.scans=ranges;
+            b.angle_min= minAngle;
+            b.angle_max= maxAngle;
+            b.range_min= minDistance;
+            b.range_max= maxDistance;
+            b.status=status;
             streamingPort.setEnvelope(lastStateStamp);
             streamingPort.write();
 

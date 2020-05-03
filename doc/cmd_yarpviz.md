@@ -1,21 +1,21 @@
 yarpviz                                           {#yarpviz}
 =======
 
-The `yarpviz` is a graphical tool for profiling and visualizing Yarp network! 
+The `yarpviz` is a graphical tool for profiling and visualizing YARP network!
 
 ![yarpviz](/images/yarpviz.png)
 
 
-To be compiled, `YARP` has to be configured with `CREATE_GUIS=ON` and `CREATE_YARPVIZ=ON`
+To be compiled, `YARP` has to be configured with `YARP_COMPILE_GUIS=ON` and `YARP_COMPILE_yarpviz=ON`
 
 Dependencies
 ------------
 * [Qt 5](https://www.qt.io/download/)
 * [Graphviz](http://www.graphviz.org/)
- 
+
 ### Ubuntu or Debian-based distribution
 
-* Install graphviz and qt5 
+* Install graphviz and qt5
 ```
 $ sudo apt-get install libgraphviz-dev qtbase5-dev qtdeclarative5-dev \
           qtdeclarative5-qtquick2-plugin qtdeclarative5-window-plugin \
@@ -24,7 +24,7 @@ $ sudo apt-get install libgraphviz-dev qtbase5-dev qtdeclarative5-dev \
 
 ### macOs
 
-* Update brew  
+* Update brew
 ```
 $ brew update
 ```

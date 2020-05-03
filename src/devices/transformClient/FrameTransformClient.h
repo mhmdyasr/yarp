@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,14 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef YARP_DEV_FRAMETRANSFORMCLIENT_FRAMETRANSFORMCLIENT_H
-#define YARP_DEV_FRAMETRANSFORMCLIENT_FRAMETRANSFORMCLIENT_H
+#ifndef YARP_DEV_FRAMETRANSFORMCLIENT_H
+#define YARP_DEV_FRAMETRANSFORMCLIENT_H
 
 
 #include <yarp/os/Network.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/dev/PreciselyTimed.h>
+#include <yarp/dev/IPreciselyTimed.h>
 #include <yarp/dev/IFrameTransform.h>
+#include <yarp/dev/IFrameTransformClientControl.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/sig/Vector.h>
@@ -31,26 +32,19 @@
 #include <yarp/os/Time.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/math/FrameTransform.h>
-#include <yarp/os/RecursiveMutex.h>
 #include <yarp/os/PeriodicThread.h>
+#include <mutex>
 
-namespace yarp {
-    namespace dev {
-        class FrameTransformClient;
-    }
-}
 
 #define DEFAULT_THREAD_PERIOD 20 //ms
 const int TRANSFORM_TIMEOUT_MS = 100; //ms
 const int MAX_PORTS = 5;
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-class Transforms_client_storage : public yarp::os::BufferedPort<yarp::os::Bottle>
+class Transforms_client_storage :
+        public yarp::os::BufferedPort<yarp::os::Bottle>
 {
 private:
-
-
     yarp::os::Bottle m_lastBottle;
     yarp::os::Stamp  m_lastStamp;
     double           m_deltaT;
@@ -64,7 +58,7 @@ private:
     std::vector <yarp::math::FrameTransform> m_transforms;
 
 public:
-    yarp::os::RecursiveMutex  m_mutex;
+    std::recursive_mutex  m_mutex;
     size_t   size();
     yarp::math::FrameTransform& operator[]   (std::size_t idx);
     void clear();
@@ -83,7 +77,6 @@ public:
     void getEstFrequency(int &ite, double &av, double &min, double &max);
 };
 
-#endif /*DOXYGEN_SHOULD_SKIP_THIS*/
 
 /**
 * @ingroup dev_impl_network_clients
@@ -92,17 +85,18 @@ public:
 * The client side of any IBattery capable device.
 * Still single thread! concurrent access is unsafe.
 */
-class yarp::dev::FrameTransformClient: public DeviceDriver,
-                                  public IFrameTransform,
-                                  public yarp::os::PortReader,
-                                  public yarp::os::PeriodicThread
+class FrameTransformClient :
+        public yarp::dev::DeviceDriver,
+        public yarp::dev::IFrameTransform,
+        public yarp::dev::IFrameTransformClientControl,
+        public yarp::os::PortReader,
+        public yarp::os::PeriodicThread
 {
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 private:
     enum ConnectionType {DISCONNECTED = 0, DIRECT, INVERSE, UNDIRECT};
 
-    yarp::dev::FrameTransformClient::ConnectionType getConnectionType(const std::string &target_frame, const std::string &source_frame, std::string* commonAncestor);
-    
+    FrameTransformClient::ConnectionType getConnectionType(const std::string &target_frame, const std::string &source_frame, std::string* commonAncestor);
+
     bool canExplicitTransform(const std::string& target_frame_id, const std::string& source_frame_id) const;
     bool getChainedTransform(const std::string &target_frame_id, const std::string &source_frame_id, yarp::sig::Matrix &transform) const;
 
@@ -112,9 +106,17 @@ protected:
     yarp::os::Port                m_rpc_InterfaceToUser;
     std::string         m_local_name;
     std::string         m_remote_name;
+
+    std::string         m_local_rpcServer;
+    std::string         m_local_rpcUser;
+    std::string         m_remote_rpc;
+    std::string         m_remote_streaming_name;
+    std::string         m_local_streaming_name;
+
+    std::string         m_streaming_connection_type;
     Transforms_client_storage*    m_transform_storage;
     double                        m_period;
-    yarp::os::Mutex               m_rpc_mutex;
+    std::mutex               m_rpc_mutex;
     struct broadcast_port_t
     {
         std::string format;
@@ -123,8 +125,6 @@ protected:
         std::string transform_dst;
     };
     std::vector<broadcast_port_t*>  m_array_of_ports;
-
-#endif /*DOXYGEN_SHOULD_SKIP_THIS*/
 
 public:
 
@@ -155,6 +155,9 @@ public:
      bool     transformQuaternion(const std::string &target_frame_id, const std::string &source_frame_id, const yarp::math::Quaternion &input_quaternion, yarp::math::Quaternion &transformed_quaternion) override;
      bool     waitForTransform(const std::string &target_frame_id, const std::string &source_frame_id, const double &timeout) override;
 
+     bool     isConnectedWithServer() override;
+     bool     reconnectWithServer() override;
+
      FrameTransformClient();
     ~FrameTransformClient();
      bool     threadInit() override;
@@ -162,4 +165,4 @@ public:
      void     run() override;
 };
 
-#endif // YARP_DEV_FRAMETRANSFORMCLIENT_FRAMETRANSFORMCLIENT_H
+#endif // YARP_DEV_FRAMETRANSFORMCLIENT_H

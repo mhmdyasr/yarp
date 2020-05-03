@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -28,7 +28,7 @@ for (my $i=1; $i<=$top; $i++) {
     $bottle->addInt32($top);
     print "Sending ", $bottle->toString(), "\n";
     $p->write();
-    yarp::Time::delay(0.5);
+    yarp::delay(0.5);
 }
 
 $p->close();

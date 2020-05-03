@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,33 +16,49 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "Action.h"
-#include "Device.h"
 #include "Module.h"
-#include "Param.h"
-#include "Robot.h"
-#include "XMLReader.h"
 
+#include <yarp/robotinterface/Action.h>
+#include <yarp/robotinterface/Device.h>
+#include <yarp/robotinterface/Param.h>
+#include <yarp/robotinterface/Robot.h>
+#include <yarp/robotinterface/XMLReader.h>
+
+#include <yarp/conf/system.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RpcServer.h>
 
-class RobotInterface::Module::Private
+#if defined(YARP_HAS_EXECINFO_H) && !defined(__APPLE__)
+#  include <csignal>
+#  include <cstring>
+#  include <execinfo.h>
+#endif
+
+class yarprobotinterface::Module::Private
 {
 public:
     Private(Module *parent);
     ~Private();
 
+#if defined(YARP_HAS_EXECINFO_H) && !defined(__APPLE__)
+    static struct sigaction old_action;
+    static void sigsegv_handler(int nSignum, siginfo_t* si, void* vcontext);
+#endif
+
     Module * const parent;
-    RobotInterface::Robot robot;
+    yarp::robotinterface::Robot robot;
     int interruptReceived;
     yarp::os::RpcServer rpcPort;
     bool closed;
     bool closeOk;
 };
 
+#if defined(YARP_HAS_EXECINFO_H) && !defined(__APPLE__)
+struct sigaction yarprobotinterface::Module::Private::old_action;
+#endif
 
-RobotInterface::Module::Private::Private(Module *parent) :
+yarprobotinterface::Module::Private::Private(Module *parent) :
     parent(parent),
     interruptReceived(0),
     closed(false),
@@ -50,20 +66,52 @@ RobotInterface::Module::Private::Private(Module *parent) :
 {
 }
 
-RobotInterface::Module::Private::~Private() = default;
+yarprobotinterface::Module::Private::~Private() = default;
 
+#if defined(YARP_HAS_EXECINFO_H) && !defined(__APPLE__)
+void yarprobotinterface::Module::Private::sigsegv_handler(int nSignum, siginfo_t* si, void* vcontext)
+{
+    auto context = reinterpret_cast<ucontext_t*>(vcontext);
+    context->uc_mcontext.gregs[REG_RIP]++;
 
-RobotInterface::Module::Module() :
+    const size_t max_depth = 100;
+    size_t stack_depth;
+    void* stack_addrs[max_depth];
+    char** stack_strings;
+    stack_depth = backtrace(stack_addrs, max_depth);
+    stack_strings = backtrace_symbols(stack_addrs, stack_depth);
+
+    yError("yarprobotinterface intercepted a segmentation fault caused by a faulty plugin:");
+    yError("%s\n", stack_strings[2]);
+    yarp_print_trace(stderr, __FILE__, __LINE__);
+
+    // Free memory allocated by backtrace_symbols()
+    free(stack_strings);
+
+    // Restore original action
+    sigaction(SIGSEGV, &old_action, nullptr);
+}
+#endif
+
+yarprobotinterface::Module::Module() :
     mPriv(new Private(this))
 {
+#if defined(YARP_HAS_EXECINFO_H) && !defined(__APPLE__)
+    struct sigaction action;
+    memset(&action, 0, sizeof(struct sigaction));
+    memset(&Private::old_action, 0, sizeof(struct sigaction));
+    action.sa_flags = SA_SIGINFO;
+    action.sa_sigaction = Private::sigsegv_handler;
+    sigaction(SIGSEGV, &action, &Private::old_action);
+#endif
 }
 
-RobotInterface::Module::~Module()
+yarprobotinterface::Module::~Module()
 {
     delete mPriv;
 }
 
-bool RobotInterface::Module::configure(yarp::os::ResourceFinder &rf)
+bool yarprobotinterface::Module::configure(yarp::os::ResourceFinder &rf)
 {
     if (!rf.check("config")) {
         yFatal() << "Missing \"config\" argument";
@@ -73,8 +121,10 @@ bool RobotInterface::Module::configure(yarp::os::ResourceFinder &rf)
     yTrace() << "Reading robot config file" << filename;
 
     bool verbosity = rf.check("verbose");
-    RobotInterface::XMLReader reader;
+    bool deprecated = rf.check("allow-deprecated-dtd");
+    yarp::robotinterface::XMLReader reader;
     reader.setVerbose(verbosity);
+    reader.setEnableDeprecated(deprecated);
     mPriv->robot = reader.getRobot(filename);
     // yDebug() << mPriv->robot;
 
@@ -91,8 +141,8 @@ bool RobotInterface::Module::configure(yarp::os::ResourceFinder &rf)
     attach(mPriv->rpcPort);
 
     // Enter startup phase
-    if (!mPriv->robot.enterPhase(RobotInterface::ActionPhaseStartup) ||
-        !mPriv->robot.enterPhase(RobotInterface::ActionPhaseRun)) {
+    if (!mPriv->robot.enterPhase(yarp::robotinterface::ActionPhaseStartup) ||
+        !mPriv->robot.enterPhase(yarp::robotinterface::ActionPhaseRun)) {
         yError() << "Error in" << ActionPhaseToString(mPriv->robot.currentPhase()) << "phase... see previous messages for more info";
         // stopModule() calls interruptModule() internally.
         // This ensure that interrupt1 phase actions (i.e. detach) are
@@ -107,18 +157,18 @@ bool RobotInterface::Module::configure(yarp::os::ResourceFinder &rf)
     return true;
 }
 
-double RobotInterface::Module::getPeriod()
+double yarprobotinterface::Module::getPeriod()
 {
     return 60;
 }
 
-bool RobotInterface::Module::updateModule()
+bool yarprobotinterface::Module::updateModule()
 {
     yDebug() << "yarprobotinterface running happily";
     return true;
 }
 
-bool RobotInterface::Module::interruptModule()
+bool yarprobotinterface::Module::interruptModule()
 {
     mPriv->interruptReceived++;
 
@@ -138,14 +188,14 @@ bool RobotInterface::Module::interruptModule()
     case 1:
         break;
     case 2:
-        if (!mPriv->robot.enterPhase(RobotInterface::ActionPhaseInterrupt2)) {
-            yError() << "Error in" << ActionPhaseToString(RobotInterface::ActionPhaseInterrupt2) << "phase... see previous messages for more info";
+        if (!mPriv->robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt2)) {
+            yError() << "Error in" << ActionPhaseToString(yarp::robotinterface::ActionPhaseInterrupt2) << "phase... see previous messages for more info";
             return false;
         }
         break;
     case 3:
-        if (!mPriv->robot.enterPhase(RobotInterface::ActionPhaseInterrupt3)) {
-            yError() << "Error in" << ActionPhaseToString(RobotInterface::ActionPhaseInterrupt3) << "phase... see previous messages for more info";
+        if (!mPriv->robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt3)) {
+            yError() << "Error in" << ActionPhaseToString(yarp::robotinterface::ActionPhaseInterrupt3) << "phase... see previous messages for more info";
             return false;
         }
         break;
@@ -156,7 +206,7 @@ bool RobotInterface::Module::interruptModule()
     return true;
 }
 
-bool RobotInterface::Module::close()
+bool yarprobotinterface::Module::close()
 {
     if (mPriv->closed) {
         return mPriv->closeOk;
@@ -167,8 +217,8 @@ bool RobotInterface::Module::close()
     // interrupt phase.
     switch (mPriv->interruptReceived) {
     case 1:
-        if (!mPriv->robot.enterPhase(RobotInterface::ActionPhaseInterrupt1)) {
-            yError() << "Error in" << ActionPhaseToString(RobotInterface::ActionPhaseInterrupt1) << "phase... see previous messages for more info";
+        if (!mPriv->robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt1)) {
+            yError() << "Error in" << ActionPhaseToString(yarp::robotinterface::ActionPhaseInterrupt1) << "phase... see previous messages for more info";
             mPriv->closeOk = false;
         }
         break;
@@ -180,8 +230,8 @@ bool RobotInterface::Module::close()
     }
 
     // Finally call the shutdown phase.
-    if (!mPriv->robot.enterPhase(RobotInterface::ActionPhaseShutdown)) {
-        yError() << "Error in" << ActionPhaseToString(RobotInterface::ActionPhaseShutdown) << "phase... see previous messages for more info";
+    if (!mPriv->robot.enterPhase(yarp::robotinterface::ActionPhaseShutdown)) {
+        yError() << "Error in" << ActionPhaseToString(yarp::robotinterface::ActionPhaseShutdown) << "phase... see previous messages for more info";
         mPriv->closeOk = false;
     }
 
@@ -190,33 +240,33 @@ bool RobotInterface::Module::close()
     return mPriv->closeOk;
 }
 
-bool RobotInterface::Module::attach(yarp::os::RpcServer &source)
+bool yarprobotinterface::Module::attach(yarp::os::RpcServer &source)
 {
     return this->yarp().attachAsServer(source);
 }
 
 
-std::string RobotInterface::Module::get_phase()
+std::string yarprobotinterface::Module::get_phase()
 {
     return ActionPhaseToString(mPriv->robot.currentPhase());
 }
 
-int32_t RobotInterface::Module::get_level()
+int32_t yarprobotinterface::Module::get_level()
 {
     return mPriv->robot.currentLevel();
 }
 
-bool RobotInterface::Module::is_ready()
+bool yarprobotinterface::Module::is_ready()
 {
-    return (mPriv->robot.currentPhase() == RobotInterface::ActionPhaseRun ? true : false);
+    return (mPriv->robot.currentPhase() == yarp::robotinterface::ActionPhaseRun ? true : false);
 }
 
-std::string RobotInterface::Module::get_robot()
+std::string yarprobotinterface::Module::get_robot()
 {
     return mPriv->robot.name();
 }
 
-std::string RobotInterface::Module::quit()
+std::string yarprobotinterface::Module::quit()
 {
     stopModule();
     return "bye";

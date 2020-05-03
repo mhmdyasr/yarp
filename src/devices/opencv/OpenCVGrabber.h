@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * Copyright (C) 2006 Eric Mislivec
  *
@@ -22,30 +22,18 @@
 #define YARP_OPENCV_GRABBER_DEVICE_OPENCVGRABBER_H
 
 /*
- * A Yarp 2 frame grabber device driver using OpenCV to implement
+ * A YARP frame grabber device driver using OpenCV to implement
  * image capture from cameras and AVI files.
- *
- * written by Eric Mislivec
- *
- * edited by paulfitz
- *
  */
 
-namespace yarp {
-    namespace dev {
-        class OpenCVGrabber;
-    }
-}
 
 #include <yarp/os/Property.h>
 #include <yarp/dev/FrameGrabberInterfaces.h>
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/os/Stamp.h>
-#include <yarp/dev/PreciselyTimed.h>
+#include <yarp/dev/IPreciselyTimed.h>
 
 #include <opencv2/highgui/highgui.hpp>
-
-#include <OpenCVGrabber.h>
 
 /**
  * @ingroup dev_impl_media
@@ -54,7 +42,10 @@ namespace yarp {
  * cameras and AVI files.
  * @author Eric Mislivec
  */
-class yarp::dev::OpenCVGrabber : public IFrameGrabberImage, public DeviceDriver, public IPreciselyTimed
+class OpenCVGrabber :
+        public yarp::dev::IFrameGrabberImage,
+        public yarp::dev::DeviceDriver,
+        public yarp::dev::IPreciselyTimed
 {
 public:
 

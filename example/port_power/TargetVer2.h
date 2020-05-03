@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -16,12 +16,12 @@ class Target : public yarp::os::Portable {
 public:
   int x;
   int y;
-  virtual bool write(yarp::os::ConnectionWriter& connection) {
+  bool write(yarp::os::ConnectionWriter& connection) const override {
     connection.appendInt32(x);
     connection.appendInt32(y);
     return true;
   }
-  virtual bool read(yarp::os::ConnectionReader& connection) {
+  bool read(yarp::os::ConnectionReader& connection) override {
     x = connection.expectInt32();
     y = connection.expectInt32();
     return true;

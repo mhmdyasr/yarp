@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -23,7 +23,7 @@ DataProcessor processor;
 
 int main() {
     Network yarp;
-    
+
     DataProcessor processor;
     BufferedPort<Bottle> p;
     p.useCallback(processor);  // input should go to processor.onRead()
@@ -32,6 +32,6 @@ int main() {
         printf("main thread free to do whatever it wants\n");
         Time::delay(10);
     }
-    
+
     return 0;
 }

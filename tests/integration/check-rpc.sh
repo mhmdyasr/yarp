@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -20,4 +20,3 @@ for (( k=0; k<25; k++ )); do
     echo hello | ${YARP_BIN}/yarp rpc $port_name
     wait_port_gone $port_name
 done
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -12,9 +12,8 @@
 #include <string>
 #include <map>
 
-#include <tcpros_carrier_api.h>
-
-class YARP_tcpros_carrier_API RosHeader {
+class RosHeader
+{
 public:
     std::map<std::string,std::string> data;
 

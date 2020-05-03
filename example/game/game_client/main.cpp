@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -11,6 +11,7 @@
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <mutex>
 
 #include <yarp/os/all.h>
 #include <yarp/Logger.h>
@@ -27,15 +28,15 @@ using namespace yarp;
 //#define printf cprintf
 
 String pad(const String& src, int len = 70) {
-	String result = src;
-	int ct = len-src.length();
-	for (int i=0; i<ct; i++) {
-		result += " ";
-	}
-	return result;
+    String result = src;
+    int ct = len-src.length();
+    for (int i=0; i<ct; i++) {
+        result += " ";
+    }
+    return result;
 }
 
-Mutex broadcastMutex();
+std::mutex broadcastMutex();
 String broadcast = "";
 
 class BroadcastHandler : public TypedReaderCallback<Bottle> {
@@ -54,7 +55,7 @@ public:
     Port p;
     String name;
     PortReaderBuffer<Bottle> reader;
-    Mutex mutex;
+    std::mutex mutex;
 
     UpdateThread() : mutex() {
     }

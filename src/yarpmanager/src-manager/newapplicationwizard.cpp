@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 #include <QMessageBox>
 
 #include <dirent.h>
-#include <yarp/os/Network.h>
+#include <yarp/conf/filesystem.h>
 
 using namespace std;
 using namespace yarp::manager;
@@ -121,7 +121,7 @@ NewApplicationWizard::NewApplicationWizard(yarp::os::Property *config, bool _sav
 
 
 
-    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator{yarp::conf::filesystem::preferred_separator};
     if(m_config->check("apppath")){
         string basepath=m_config->check("ymanagerini_dir", yarp::os::Value("")).asString();
         string appPaths(m_config->find("apppath").asString());
@@ -219,7 +219,7 @@ void NewApplicationWizard::buildFileName(){
     //checking if the path terminate with / or not
     if (folderCombo->currentText().at(folderCombo->currentText().size()-1) != '/')
     {
-        sep = yarp::os::Network::getDirectorySeparator().c_str();
+        sep = QString{yarp::conf::filesystem::preferred_separator};
     }
     this->fileName = QString("%1"+sep+"%2").arg(folderCombo->currentText().toLatin1().data()).arg(fileEdit->text().toLatin1().data());
 }
@@ -272,5 +272,3 @@ void NewApplicationWizard::accept()
     }
     QDialog::accept();
 }
-
-

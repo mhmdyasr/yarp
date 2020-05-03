@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -18,7 +18,6 @@
 
 using namespace yarp::os;
 using namespace yarp::sig;
-using namespace yarp::mjpeg;
 using namespace std;
 
 yarp::conf::ssize_t MjpegStream::read(Bytes& b) {
@@ -129,4 +128,3 @@ yarp::conf::ssize_t MjpegStream::read(Bytes& b) {
 void MjpegStream::write(const Bytes& b) {
     delegate->getOutputStream().write(b);
 }
-

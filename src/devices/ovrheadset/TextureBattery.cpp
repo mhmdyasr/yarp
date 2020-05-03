@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,7 @@
 #include "img-battery-charging-low.h"
 
 TextureBattery::TextureBattery(ovrSession session, bool enabled) :
-        SystemRateThread(5000),
+        PeriodicThread(5.0, yarp::os::ShouldUseSystemClock::Yes),
         session(session),
         currentTexture(nullptr),
         currentStatus(BatteryStatusMissing),
@@ -145,7 +145,7 @@ void TextureBattery::run()
     }
     yAssert(ibat);
 
-    int status;
+    yarp::dev::IBattery::Battery_status status;
     double charge;
     bool ret = true;
     ret &= ibat->getBatteryCharge(charge);

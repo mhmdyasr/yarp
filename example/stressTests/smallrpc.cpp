@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -42,7 +42,7 @@ int runServer(Searchable& config) {
 int runClient(Searchable& config) {
     Port p;
     p.open(config.check("name",Value("/rpc/client")).asString().c_str());
-    std::string sname = 
+    std::string sname =
         config.check("remote",Value("/rpc/server")).asString().c_str();
     Network::connect(p.getName().c_str(),sname);
     Network::sync(sname);
@@ -51,7 +51,7 @@ int runClient(Searchable& config) {
         cmd.addString(p.getName().c_str());
         cmd.addInt32(i);
         p.write(cmd,reply);
-        printf("[%s] [%s]\n", cmd.toString().c_str(), 
+        printf("[%s] [%s]\n", cmd.toString().c_str(),
                reply.toString().c_str());
         Time::delay(0.1);
     }
@@ -72,4 +72,3 @@ int main(int argc, char *argv[]) {
     printf("  smallrpc --client --name /rpc/clientN\n");
     return 1;
 }
-

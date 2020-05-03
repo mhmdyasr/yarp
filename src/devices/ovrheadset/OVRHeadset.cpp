@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,12 +34,12 @@
 #include <yarp/os/Stamp.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Image.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/SystemClock.h>
 #include <yarp/math/FrameTransform.h>
 
 #include <cmath>
+#include <mutex>
 #include <unordered_map>
 #include <OVR_CAPI_Util.h>
 #include <OVR_Math.h>
@@ -257,38 +257,7 @@ inline void setHeadLockedLayer(ovrLayerQuad& layer, TextureBuffer* tex,
 
 yarp::dev::OVRHeadset::OVRHeadset() :
         yarp::dev::DeviceDriver(),
-        yarp::os::SystemRateThread(11), // ~90 fps
-        orientationPort(nullptr),
-        positionPort(nullptr),
-        angularVelocityPort(nullptr),
-        linearVelocityPort(nullptr),
-        angularAccelerationPort(nullptr),
-        linearAccelerationPort(nullptr),
-        predictedOrientationPort(nullptr),
-        predictedPositionPort(nullptr),
-        predictedAngularVelocityPort(nullptr),
-        predictedLinearVelocityPort(nullptr),
-        predictedAngularAccelerationPort(nullptr),
-        predictedLinearAccelerationPort(nullptr),
-        displayPorts{ nullptr, nullptr },
-        textureLogo(nullptr),
-        textureCrosshairs(nullptr),
-        textureBattery(nullptr),
-        mirrorTexture(nullptr),
-        mirrorFBO(0),
-        window(nullptr),
-        closed(false),
-        distortionFrameIndex(0),
-        flipInputEnabled(false),
-        imagePoseEnabled(true),
-        userPoseEnabled(false),
-        logoEnabled(true),
-        crosshairsEnabled(true),
-        batteryEnabled(true),
-        inputStateError(false),
-        tfPublisher(nullptr),
-        relative(false),
-        enableGui(true)
+        yarp::os::PeriodicThread(0.011, yarp::os::ShouldUseSystemClock::Yes) // ~90 fps
 {
     yTrace();
 }
@@ -446,7 +415,7 @@ bool yarp::dev::OVRHeadset::open(yarp::os::Searchable& cfg)
         {
             if (!cfg.check(p.first) || !(cfg.find(p.first).*isFunctionMap[p.second])())
             {
-                std::string err_type = err_msgs.find(p.second) == err_msgs.end() ? "[unknow type]" : err_msgs[p.second];
+                std::string err_type = err_msgs.find(p.second) == err_msgs.end() ? "[unknown type]" : err_msgs[p.second];
                 yError() << "ovrHeadset: parameter" << p.first << "not found or not" << err_type << "in configuration file";
                 return false;
             }
@@ -467,13 +436,13 @@ bool yarp::dev::OVRHeadset::open(yarp::os::Searchable& cfg)
                 std::string       groupName  = "GUI_" + std::to_string(i);
                 yarp::os::Bottle& guip       = cfg.findGroup(groupName);
                 guiParam          hud;
-                
+
                 if (guip.isNull())
                 {
                     yError() << "group:" << groupName << "not found in configuration file..";
                     return false;
                 }
-                
+
                 for (auto& p : paramParser)
                 {
                     if (!guip.check(p.first) || !(guip.find(p.first).*isFunctionMap[p.second])())
@@ -498,13 +467,18 @@ bool yarp::dev::OVRHeadset::open(yarp::os::Searchable& cfg)
                 huds.push_back(hud);
             }
         }
-        
+        else
+        {
+            guiEnabled = false;
+        }
+
     }
 
     getStickAsAxis = cfg.find("stick_as_axis").asBool();
     left_frame     = cfg.find("tf_left_hand_frame").asString();
     right_frame    = cfg.find("tf_right_hand_frame").asString();
     root_frame     = cfg.find("tf_root_frame").asString();
+    relative       = cfg.check("hands_relative", yarp::os::Value(false)).asBool();
 
     //getting gui information from cfg
 
@@ -532,18 +506,21 @@ bool yarp::dev::OVRHeadset::open(yarp::os::Searchable& cfg)
     yInfo() << "TransformCLient successfully opened at port: " << cfg.find("tfLocal").asString();
 
     //opening ports
-    ports.push_back(std::make_pair(&orientationPort,                  "orientation"));
-    ports.push_back(std::make_pair(&positionPort,                     "position"));
-    ports.push_back(std::make_pair(&angularVelocityPort,              "angularVelocity"));
-    ports.push_back(std::make_pair(&linearVelocityPort,               "linearVelocity"));
-    ports.push_back(std::make_pair(&angularAccelerationPort,          "angularAcceleration"));
-    ports.push_back(std::make_pair(&linearAccelerationPort,           "linearAcceleration"));
-    ports.push_back(std::make_pair(&predictedOrientationPort,         "predictedOrientation"));
-    ports.push_back(std::make_pair(&predictedPositionPort,            "predictedPosition"));
-    ports.push_back(std::make_pair(&predictedAngularVelocityPort,     "predictedAngularVelocity"));
-    ports.push_back(std::make_pair(&predictedLinearVelocityPort,      "predictedLinearVelocity"));
-    ports.push_back(std::make_pair(&predictedAngularAccelerationPort, "predictedAngularAcceleration"));
-    ports.push_back(std::make_pair(&predictedLinearAccelerationPort,  "predictedLinearAcceleration"));
+    ports =
+    {
+        { &orientationPort,                  "orientation"                  },
+        { &positionPort,                     "position"                     },
+        { &angularVelocityPort,              "angularVelocity"              },
+        { &linearVelocityPort,               "linearVelocity"               },
+        { &angularAccelerationPort,          "angularAcceleration"          },
+        { &linearAccelerationPort,           "linearAcceleration"           },
+        { &predictedOrientationPort,         "predictedOrientation"         },
+        { &predictedPositionPort,            "predictedPosition"            },
+        { &predictedAngularVelocityPort,     "predictedAngularVelocity"     },
+        { &predictedLinearVelocityPort,      "predictedLinearVelocity"      },
+        { &predictedAngularAccelerationPort, "predictedAngularAcceleration" },
+        { &predictedLinearAccelerationPort,  "predictedLinearAcceleration"  }
+    };
 
     for (auto port : ports)
     {
@@ -585,12 +562,15 @@ bool yarp::dev::OVRHeadset::open(yarp::os::Searchable& cfg)
     camHFOV[1] = hfov;
 
     //optional params
-    optionalParams.push_back(std::make_tuple("flipinput",     "[F] Enable input flipping",                &flipInputEnabled,  true));
-    optionalParams.push_back(std::make_tuple("no-imagepose",  "[I] Disable image pose",                   &imagePoseEnabled,  false));
-    optionalParams.push_back(std::make_tuple("userpose",      "[U] Use user pose instead of camera pose", &imagePoseEnabled,  true));
-    optionalParams.push_back(std::make_tuple("no-logo",       "[L] Disable logo",                         &imagePoseEnabled,  false));
-    optionalParams.push_back(std::make_tuple("no-crosshairs", "[C] Disable crosshairs",                   &crosshairsEnabled, false));
-    optionalParams.push_back(std::make_tuple("no-battery",    "[B] Disable battery",                      &batteryEnabled,    false));
+    optionalParams =
+    {
+        { "flipinput",     "[F] Enable input flipping",                &flipInputEnabled,  true },
+        { "no-imagepose",  "[I] Disable image pose",                   &imagePoseEnabled,  false },
+        { "userpose",      "[U] Use user pose instead of camera pose", &userPoseEnabled,   true  },
+        { "no-logo",       "[L] Disable logo",                         &logoEnabled,       false },
+        { "no-crosshairs", "[C] Disable crosshairs",                   &crosshairsEnabled, false },
+        { "no-battery",    "[B] Disable battery",                      &batteryEnabled,    false }
+    };
 
     for (auto p : optionalParams)
     {
@@ -630,7 +610,7 @@ bool yarp::dev::OVRHeadset::threadInit()
     OVR::System::Init();
 
     // Initializes LibOVR, and the Rift
-    ovrInitParams initParams = { ovrInit_RequestVersion, OVR_MINOR_VERSION, ovrDebugCallback, reinterpret_cast<uintptr_t>(this), 0 };
+    ovrInitParams initParams = { ovrInit_RequestVersion | ovrInit_FocusAware, OVR_MINOR_VERSION, ovrDebugCallback, reinterpret_cast<uintptr_t>(this), 0 };
     ovrResult r = ovr_Initialize(&initParams);
 //    VALIDATE(OVR_SUCCESS(r), "Failed to initialize libOVR.");
     if (!OVR_SUCCESS(r)) {
@@ -810,7 +790,7 @@ void yarp::dev::OVRHeadset::threadRelease()
     ports.push_back(predictedLinearVelocityPort);
     ports.push_back(predictedAngularAccelerationPort);
     ports.push_back(predictedLinearAccelerationPort);
-    
+
     for (auto& hud : huds)
     {
         delete hud.texture;
@@ -859,7 +839,7 @@ bool yarp::dev::OVRHeadset::updateService()
         return false;
     }
 
-    const double delay = 5.0;
+    constexpr double delay = 60.0;
     yDebug("Thread ran %d times, est period %lf[ms], used %lf[ms]",
            getIterations(),
            getEstimatedPeriod()*1000,
@@ -935,20 +915,24 @@ void yarp::dev::OVRHeadset::run()
         return;
     }
 
+    if (!sessionStatus.HasInputFocus) {
+      //  return;
+    }
+
     // Begin frame
     ++distortionFrameIndex;
     double frameTiming = ovr_GetPredictedDisplayTime(session, distortionFrameIndex);
     YARP_UNUSED(frameTiming);
 
     // Query the HMD for the current tracking state.
-    ts       = ovr_GetTrackingState(session, ovr_GetTimeInSeconds(), false);
+    ts = ovr_GetTrackingState(session, ovr_GetTimeInSeconds(), false);
     headpose = ts.HeadPose;
     yarp::os::Stamp stamp(distortionFrameIndex, ts.HeadPose.TimeInSeconds);
 
     //Get eye poses, feeding in correct IPD offset
-    ovrVector3f ViewOffset[2] = {EyeRenderDesc[0].HmdToEyeOffset,EyeRenderDesc[1].HmdToEyeOffset};
+    ovrPosef ViewPose[2] = {EyeRenderDesc[0].HmdToEyePose,EyeRenderDesc[1].HmdToEyePose};
     ovrPosef EyeRenderPose[2];
-    ovr_CalcEyePoses(headpose.ThePose, ViewOffset, EyeRenderPose);
+    ovr_CalcEyePoses(headpose.ThePose, ViewPose, EyeRenderPose);
 
     // Query the HMD for the predicted state
     ovrTrackingState predicted_ts = ovr_GetTrackingState(session, ovr_GetTimeInSeconds() + prediction, false);
@@ -962,7 +946,7 @@ void yarp::dev::OVRHeadset::run()
         yarp::sig::Vector rpyHead, rpyRobot;
 
         tfPublisher->getTransform("head_link", "mobile_base_body_link", T_robotHead);
-        ovrVector3f& leftH  = ts.HandPoses[ovrHand_Left].ThePose.Position;
+        ovrVector3f& leftH = ts.HandPoses[ovrHand_Left].ThePose.Position;
         ovrVector3f& rightH = ts.HandPoses[ovrHand_Right].ThePose.Position;
 
         T_RHand    = ovr2matrix(vecSubtract(rightH, headpose.ThePose.Position), OVR::Quatf(ts.HandPoses[ovrHand_Right].ThePose.Orientation) * OVR::Quatf(OVR::Vector3f(0, 0, 1), M_PI_2));
@@ -1151,22 +1135,22 @@ void yarp::dev::OVRHeadset::run()
         layerList.push_back(&eyeLayer.Header);
 
         if (logoEnabled) {
-            setHeadLockedLayer(logoLayer, textureLogo, 0.2, -0.2, -0.5, 0, 0, 0, 1, 0.05, 0.05);
+            setHeadLockedLayer(logoLayer, textureLogo, 0.2f, -0.2f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.05f, 0.05f);
             layerList.push_back(&logoLayer.Header);
         }
 
         if (crosshairsEnabled) {
-            setHeadLockedLayer(crosshairsLayer, textureCrosshairs, 0, 0, -5, 0, 0, 0, 1, 0.08, 0.08);
+            setHeadLockedLayer(crosshairsLayer, textureCrosshairs, 0.0f, 0.0f, -5.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.08f, 0.08f);
             layerList.push_back(&crosshairsLayer.Header);
         }
 
         if (batteryEnabled) {
-            setHeadLockedLayer(batteryLayer, textureBattery->currentTexture, 0.25, 0.25, -0.50, 0, 0, 0, 1, 0.05, 0.05);
+            setHeadLockedLayer(batteryLayer, textureBattery->currentTexture, 0.25f, 0.25f, -0.50f, 0.0f, 0.0f, 0.0f, 1.0f, 0.05f, 0.05f);
             layerList.push_back(&batteryLayer.Header);
         }
 
         //setting up dynamic hud
-        if (enableGui)
+        if (guiEnabled)
         {
             for (auto& hud : huds)
             {
@@ -1184,14 +1168,17 @@ void yarp::dev::OVRHeadset::run()
                 }
 
                 hud.texture->fromImage(session, *image, hud.alpha);
-                setHeadLockedLayer(hud.layer, hud.texture, hud.x, hud.y, hud.z, 0, 0, 0, 1, hud.resizeW, hud.resizeH);
+                setHeadLockedLayer(hud.layer, hud.texture, hud.x, hud.y, hud.z, 0.0f, 0.0f, 0.0f, 1.0f, hud.resizeW, hud.resizeH);
                 layerList.push_back(&hud.layer.Header);
             }
         }
 
         ovrLayerHeader** layers = new ovrLayerHeader*[layerList.size()];
         std::copy(layerList.begin(), layerList.end(), layers);
-        ovrResult result = ovr_SubmitFrame(session, distortionFrameIndex, nullptr, layers, layerList.size());
+
+        ovr_WaitToBeginFrame(session, distortionFrameIndex);
+        ovr_BeginFrame(session, distortionFrameIndex);
+        ovr_EndFrame(session, distortionFrameIndex, nullptr, layers, layerList.size());
         delete[] layers;
 
         // Blit mirror texture to back buffer
@@ -1249,6 +1236,11 @@ void yarp::dev::OVRHeadset::onKey(int key, int scancode, int action, int mods)
     bool rightShiftPressed = (glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS);
     bool leftCtrlPressed = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS);
     bool rightCtrlPressed = (glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
+    bool leftAltPressed = (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS);
+    bool rightAltPressed = (glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS);
+    bool shiftPressed = leftShiftPressed || rightShiftPressed;
+    bool ctrlPressed = leftCtrlPressed || rightCtrlPressed;
+    bool altPressed = leftAltPressed || rightAltPressed;
 
     switch (key) {
     case GLFW_KEY_R:
@@ -1283,9 +1275,11 @@ void yarp::dev::OVRHeadset::onKey(int key, int scancode, int action, int mods)
     case GLFW_KEY_I:
         imagePoseEnabled = !imagePoseEnabled;
         yDebug() << "Image pose" << (imagePoseEnabled ? "ON" : "OFF");
+        yDebug() << "User pose" << (userPoseEnabled ? "ON" : "OFF");
         break;
     case GLFW_KEY_U:
         userPoseEnabled = !userPoseEnabled;
+        yDebug() << "Image pose" << (imagePoseEnabled ? "ON" : "OFF");
         yDebug() << "User pose" << (userPoseEnabled ? "ON" : "OFF");
         break;
     case GLFW_KEY_L:
@@ -1293,14 +1287,16 @@ void yarp::dev::OVRHeadset::onKey(int key, int scancode, int action, int mods)
         yDebug() << "Overlays:" <<
             "Logo" << (logoEnabled ? "ON" : "OFF") <<
             "Crosshairs" << (crosshairsEnabled ? "ON" : "OFF") <<
-            "Battery" << (batteryEnabled ? "ON" : "OFF");
+            "Battery" << (batteryEnabled ? "ON" : "OFF") <<
+            "Gui" << ((guiCount != 0) ? (guiEnabled ? "ON" : "OFF") : "DISABLED");
         break;
     case GLFW_KEY_C:
         crosshairsEnabled = !crosshairsEnabled;
         yDebug() << "Overlays:" <<
             "Logo" << (logoEnabled ? "ON" : "OFF") <<
             "Crosshairs" << (crosshairsEnabled ? "ON" : "OFF") <<
-            "Battery" << (batteryEnabled ? "ON" : "OFF");
+            "Battery" << (batteryEnabled ? "ON" : "OFF") <<
+            "Gui" << ((guiCount != 0) ? (guiEnabled ? "ON" : "OFF") : "DISABLED");
         break;
     case GLFW_KEY_B:
         batteryEnabled = !batteryEnabled;
@@ -1312,7 +1308,18 @@ void yarp::dev::OVRHeadset::onKey(int key, int scancode, int action, int mods)
         yDebug() << "Overlays:" <<
             "Logo" << (logoEnabled ? "ON" : "OFF") <<
             "Crosshairs" << (crosshairsEnabled ? "ON" : "OFF") <<
-            "Battery" << (batteryEnabled ? "ON" : "OFF");
+            "Battery" << (batteryEnabled ? "ON" : "OFF") <<
+            "Gui" << ((guiCount != 0) ? (guiEnabled ? "ON" : "OFF") : "DISABLED");
+        break;
+    case GLFW_KEY_G:
+        if (guiCount != 0) {
+            guiEnabled = !guiEnabled;
+        }
+        yDebug() << "Overlays:" <<
+            "Logo" << (logoEnabled ? "ON" : "OFF") <<
+            "Crosshairs" << (crosshairsEnabled ? "ON" : "OFF") <<
+            "Battery" << (batteryEnabled ? "ON" : "OFF") <<
+            "Gui" << ((guiCount != 0) ? (guiEnabled ? "ON" : "OFF") : "DISABLED") ;
         break;
     case GLFW_KEY_ESCAPE:
         this->close();
@@ -1343,61 +1350,61 @@ void yarp::dev::OVRHeadset::onKey(int key, int scancode, int action, int mods)
         break;
     case GLFW_KEY_UP:
         if (!rightShiftPressed) {
-            displayPorts[0]->pitchOffset += rightCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[0]->pitchOffset += ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Left eye pitch offset =" << displayPorts[0]->pitchOffset;
         }
         if (!leftShiftPressed) {
-            displayPorts[1]->pitchOffset += leftCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[1]->pitchOffset += ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Right eye pitch offset =" << displayPorts[1]->pitchOffset;
         }
         break;
     case GLFW_KEY_DOWN:
         if (!rightShiftPressed) {
-            displayPorts[0]->pitchOffset -= rightCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[0]->pitchOffset -= ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Left eye pitch offset =" << displayPorts[0]->pitchOffset;
         }
         if (!leftShiftPressed) {
-            displayPorts[1]->pitchOffset -= leftCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[1]->pitchOffset -= ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Right eye pitch offset =" << displayPorts[1]->pitchOffset;
         }
         break;
     case GLFW_KEY_LEFT:
         if (!rightShiftPressed) {
-            displayPorts[0]->yawOffset += rightCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[0]->yawOffset += ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Left eye yaw offset =" << displayPorts[0]->yawOffset;
         }
         if (!leftShiftPressed) {
-            displayPorts[1]->yawOffset += leftCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[1]->yawOffset += ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Right eye yaw offset =" << displayPorts[1]->yawOffset;
         }
         break;
     case GLFW_KEY_RIGHT:
         if (!rightShiftPressed) {
-            displayPorts[0]->yawOffset -= rightCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[0]->yawOffset -= ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Left eye yaw offset =" << displayPorts[0]->yawOffset;
         }
         if (!leftShiftPressed) {
-            displayPorts[1]->yawOffset -= leftCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[1]->yawOffset -= ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Right eye yaw offset =" << displayPorts[1]->yawOffset;
         }
         break;
     case GLFW_KEY_PAGE_UP:
         if (!rightShiftPressed) {
-            displayPorts[0]->rollOffset += rightCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[0]->rollOffset += ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Left eye roll offset =" << displayPorts[0]->rollOffset;
         }
         if (!leftShiftPressed) {
-            displayPorts[1]->rollOffset += leftCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[1]->rollOffset += ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Right eye roll offset =" << displayPorts[1]->rollOffset;
         }
         break;
     case GLFW_KEY_PAGE_DOWN:
         if (!rightShiftPressed) {
-            displayPorts[0]->rollOffset -= rightCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[0]->rollOffset -= ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Left eye roll offset =" << displayPorts[0]->rollOffset;
         }
         if (!leftShiftPressed) {
-            displayPorts[1]->rollOffset -= leftCtrlPressed ? 0.05f : 0.0025f;
+            displayPorts[1]->rollOffset -= ctrlPressed ? 0.05f : 0.0025f;
             yDebug() << "Right eye roll offset =" << displayPorts[1]->rollOffset;
         }
         break;
@@ -1408,11 +1415,29 @@ void yarp::dev::OVRHeadset::onKey(int key, int scancode, int action, int mods)
             ovr_SetInt(session, OVR_PERF_HUD_MODE, PerfHudMode);
         }
         break;
-    case GLFW_KEY_G:
-    {
-        enableGui = !enableGui;
-    }
-    break;
+    case GLFW_KEY_P:
+        yDebug() << "--------------------------------------------";
+        yDebug() << "Current settings:";
+        yDebug() << "  Flip input" << (flipInputEnabled ? "ON" : "OFF");
+        yDebug() << "  Image pose" << (imagePoseEnabled ? "ON" : "OFF");
+        yDebug() << "  User pose" << (userPoseEnabled ? "ON" : "OFF");
+        yDebug() << "  Overlays:";
+        yDebug() << "    Logo" << (logoEnabled ? "ON" : "OFF");
+        yDebug() << "    Crosshairs" << (crosshairsEnabled ? "ON" : "OFF");
+        yDebug() << "    Battery" << (batteryEnabled ? "ON" : "OFF");
+        yDebug() << "    Gui" << ((guiCount != 0) ? (guiEnabled ? "ON" : "OFF") : "DISABLED");
+        yDebug() << "  Left eye:";
+        yDebug() << "    HFOV = " << camHFOV[0];
+        yDebug() << "    pitch offset =" << displayPorts[0]->pitchOffset;
+        yDebug() << "    yaw offset =" << displayPorts[0]->yawOffset;
+        yDebug() << "    roll offset =" << displayPorts[0]->rollOffset;
+        yDebug() << "  Right eye:";
+        yDebug() << "    HFOV =" << camHFOV[1];
+        yDebug() << "    pitch offset =" << displayPorts[1]->pitchOffset;
+        yDebug() << "    yaw offset =" << displayPorts[1]->yawOffset;
+        yDebug() << "    roll offset =" << displayPorts[1]->rollOffset;
+        yDebug() << "--------------------------------------------";
+        break;
     default:
         break;
     }
@@ -1549,13 +1574,13 @@ bool yarp::dev::OVRHeadset::getStickDoF(unsigned int stick_id, unsigned int& DoF
 bool yarp::dev::OVRHeadset::getButton(unsigned int button_id, float& value)
 {
     if (inputStateError) return false;
-    yarp::os::LockGuard lock(inputStateMutex);
+    std::lock_guard<std::mutex> lock(inputStateMutex);
     if (button_id > buttonIdToOvrButton.size() - 1)
     {
         yError() << "OVRHeadset: button id out of bound";
         return false;
     }
-    value = inputState.Buttons & buttonIdToOvrButton[button_id] ? 1.0 : 0.0;
+    value = inputState.Buttons & buttonIdToOvrButton[button_id] ? 1.0f : 0.0f;
     return true;
 }
 
@@ -1567,7 +1592,7 @@ bool yarp::dev::OVRHeadset::getTrackball(unsigned int trackball_id, yarp::sig::V
 bool yarp::dev::OVRHeadset::getHat(unsigned int hat_id, unsigned char& value)
 {
     if (inputStateError) return false;
-    yarp::os::LockGuard lock(inputStateMutex);
+    std::lock_guard<std::mutex> lock(inputStateMutex);
     if (hat_id > 0)
     {
         yError() << "OVRHeadset: hat id out of bound";
@@ -1582,7 +1607,7 @@ bool yarp::dev::OVRHeadset::getHat(unsigned int hat_id, unsigned char& value)
 
 bool yarp::dev::OVRHeadset::getAxis(unsigned int axis_id, double& value)
 {
-    yarp::os::LockGuard lock(inputStateMutex);
+    std::lock_guard<std::mutex> lock(inputStateMutex);
     if (axis_id > axisIdToValue.size())
     {
         yError() << "OVRHeadset: axis id out of bound";
@@ -1596,7 +1621,7 @@ bool yarp::dev::OVRHeadset::getAxis(unsigned int axis_id, double& value)
 bool yarp::dev::OVRHeadset::getStick(unsigned int stick_id, yarp::sig::Vector& value, JoypadCtrl_coordinateMode coordinate_mode)
 {
     if (inputStateError) return false;
-    yarp::os::LockGuard lock(inputStateMutex);
+    std::lock_guard<std::mutex> lock(inputStateMutex);
     if (getStickAsAxis)
     {
         return false;

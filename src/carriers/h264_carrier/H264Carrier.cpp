@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -115,40 +115,40 @@ static int getIntParam(Name &n, const char *param)
 // Now, the initial hand-shaking
 bool H264Carrier::prepareSend(ConnectionState& proto)
 {
-     //get all parameters of this carrier
-     Name n(proto.getRoute().getCarrierName() + "://test");
+    //get all parameters of this carrier
+    Name n(proto.getRoute().getCarrierName() + "://test");
 
-     cfgParams.crop.left = getIntParam(n, "cropLeft");
-     cfgParams.crop.right = getIntParam(n, "cropRight");
-     cfgParams.crop.top = getIntParam(n, "cropTop");
-     cfgParams.crop.bottom = getIntParam(n, "cropBottom");
-     cfgParams.fps_max = getIntParam(n, "max_fps");
-     cfgParams.verbose = (getIntParam(n, "verbose") >0) ? true: false;
-
+    cfgParams.crop.left = getIntParam(n, "cropLeft");
+    cfgParams.crop.right = getIntParam(n, "cropRight");
+    cfgParams.crop.top = getIntParam(n, "cropTop");
+    cfgParams.crop.bottom = getIntParam(n, "cropBottom");
+    cfgParams.fps_max = getIntParam(n, "max_fps");
+    cfgParams.verbose = (getIntParam(n, "verbose") >0) ? true: false;
+    cfgParams.removeJitter = (getIntParam(n, "removeJitter") > 0) ? true : false;
     return true;
 }
 
 bool H264Carrier::sendHeader(ConnectionState& proto)
 {
-     //printf("h264: sendHeader \n");
+    //printf("h264: sendHeader \n");
     return true;
 }
 
 bool H264Carrier::expectSenderSpecifier(ConnectionState& proto)
 {
-     printf("h264: expectSenderSpecifier \n");
+    printf("h264: expectSenderSpecifier \n");
     return true;
 }
 
 bool H264Carrier::expectExtraHeader(ConnectionState& proto)
 {
-     printf("h264: expectExtraHeader \n");
+    printf("h264: expectExtraHeader \n");
     return true;
 }
 
 bool H264Carrier::respondToHeader(ConnectionState& proto)
 {
-     printf("h264: respondToHeader \n");
+    printf("h264: respondToHeader \n");
     return true;
 }
 
@@ -221,4 +221,3 @@ yarp::os::Face* H264Carrier::createFace() const
 {
     return new yarp::os::impl::FakeFace();
 }
-

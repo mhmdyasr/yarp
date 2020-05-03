@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -116,6 +116,7 @@ MainWindow::MainWindow(yarp::os::ResourceFinder &rf, QWidget *parent) :
     connect(this,SIGNAL(internalSetFrame(std::string,int)),this,SLOT(onInternalSetFrame(std::string,int)),Qt::BlockingQueuedConnection);
     connect(this,SIGNAL(internalGetFrame(std::string, int*)),this,SLOT(onInternalGetFrame(std::string,int*)),Qt::BlockingQueuedConnection);
     connect(this,SIGNAL(internalQuit()),this,SLOT(onInternalQuit()),Qt::QueuedConnection);
+    connect(this,SIGNAL(internalGetSliderPercentage(int*)),this,SLOT(onInternalGetSliderPercentage(int*)),Qt::BlockingQueuedConnection);
 
     QShortcut *openShortcut = new QShortcut(QKeySequence("Ctrl+O"), parent);
     QObject::connect(openShortcut, SIGNAL(activated()), this, SLOT(onInternalLoad(QString)));
@@ -202,6 +203,24 @@ int MainWindow::getFrame(const string &name)
 void MainWindow::onInternalGetFrame(const string &name, int *frame)
 {
     getFrameCmd(name.c_str(),frame);
+}
+
+/**********************************************************/
+int MainWindow::getSliderPercentage()
+{
+    int percentage = 0;
+    emit internalGetSliderPercentage(&percentage);
+    if (percentage < 1){
+        return -1;
+    } else {
+        return percentage;
+    }
+}
+
+/**********************************************************/
+void MainWindow::onInternalGetSliderPercentage(int *percentage)
+{
+    *percentage = ui->playSlider->value();
 }
 
 /**********************************************************/
@@ -502,23 +521,20 @@ bool  MainWindow::doGuiSetup(QString newPath)
     //look for folders and log files associated with them
     LOG("the full path is %s \n", newPath.toLatin1().data());
     subDirCnt = 0;
-    partsName.clear();
-    partsFullPath.clear();
-    partsInfoPath.clear();
-    partsLogPath.clear();
+    rowInfoVec.clear();
 
 
     itr = 0;
     partMap.clear();
 
     if(!initThread){
-        initThread = new InitThread(utilities,newPath,&partsName,&partsFullPath,&partsInfoPath,&partsLogPath,this);
+        initThread = new InitThread(utilities,newPath,rowInfoVec,this);
         connect(initThread,SIGNAL(initDone(int)),this,SLOT(onInitDone(int)),Qt::QueuedConnection);
         initThread->start();
     }else{
         if(!initThread->isRunning()){
             delete initThread;
-            initThread = new InitThread(utilities,newPath,&partsName,&partsFullPath,&partsInfoPath,&partsLogPath,this);
+            initThread = new InitThread(utilities,newPath,rowInfoVec,this);
             connect(initThread,SIGNAL(initDone(int)),this,SLOT(onInitDone(int)),Qt::QueuedConnection);
             initThread->start();
         }
@@ -725,7 +741,7 @@ void MainWindow::onErrorMessage(QString msg)
 /**********************************************************/
 void MainWindow::onMenuHelpAbout()
 {
-    QString copyright = "Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)";
+    QString copyright = "Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)";
     QString name = APP_NAME;
     QString version = YARP_VERSION;
     AboutDlg dlg(name,version,copyright,"https://www.iit.it/");
@@ -759,14 +775,14 @@ void MainWindow::onMenuPlayBackPlay()
             }
         }
 
-        if ( utilities->masterThread->isRunning() ) {
+        if ( utilities->masterThread->isSuspended() ) {
             LOG("asking the thread to resume\n");
 
             for (int i=0; i < subDirCnt; i++)
                 utilities->partDetails[i].worker->resetTime();
 
             utilities->masterThread->resume();
-        } else {
+        } else if (!utilities->masterThread->isRunning()) {
             LOG("asking the thread to start\n");
             LOG("initializing the workers...\n");
 
@@ -1026,27 +1042,21 @@ void MainWindow::onClose()
 
 /**********************************************************/
 InitThread::InitThread(Utilities *utilities,
-                       QString newPath,
-                       std::vector<std::string>    *partsName,
-                       std::vector<std::string>    *partsFullPath,
-                       std::vector<std::string>    *partsInfoPath,
-                       std::vector<std::string>    *partsLogPath,
-                       QObject *parent) : QThread(parent)
+                       QString  newPath,
+                       std::vector<RowInfo>& rowInfoVec,
+                       QObject *parent) : QThread(parent),
+                                          utilities(utilities),
+                                          newPath(std::move(newPath)),
+                                          mainWindow(dynamic_cast<QMainWindow*> (parent)),
+                                          rowInfoVec(rowInfoVec)
 {
-    this->utilities = utilities;
-    this->newPath = newPath;
-    this->partsName = partsName;
-    this->partsFullPath = partsFullPath;
-    this->partsInfoPath = partsInfoPath;
-    this->partsLogPath = partsLogPath;
-    this->mainWindow = (QMainWindow*)parent;
 }
 
 /**********************************************************/
 void InitThread::run()
 {
     utilities->resetMaxTimeStamp();
-    int subDirCnt = utilities->getRecSubDirList(newPath.toLatin1().data(), *partsName, *partsInfoPath, *partsLogPath, *partsFullPath, 1);
+    int subDirCnt = utilities->getRecSubDirList(newPath.toLatin1().data(), rowInfoVec, 1);
     LOG("the size of subDirs is: %d\n", subDirCnt);
     //reset totalSent to 0
     utilities->totalSent = 0;
@@ -1058,10 +1068,10 @@ void InitThread::run()
 
     //fill in parts with all data
     for (int x=0; x < subDirCnt; x++){
-        utilities->partDetails[x].name = partsName->at(x);
-        utilities->partDetails[x].infoFile = partsInfoPath->at(x);
-        utilities->partDetails[x].logFile = partsLogPath->at(x);
-        utilities->partDetails[x].path = partsFullPath->at(x);
+        utilities->partDetails[x].name = rowInfoVec[x].name;
+        utilities->partDetails[x].infoFile = rowInfoVec[x].info;
+        utilities->partDetails[x].logFile = rowInfoVec[x].log;
+        utilities->partDetails[x].path = rowInfoVec[x].path;
 
         utilities->setupDataFromParts(utilities->partDetails[x]);
 

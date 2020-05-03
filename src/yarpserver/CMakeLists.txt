@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -7,8 +7,9 @@
 
 set(yarpserver_SRCS src/main.cpp)
 
-add_executable(yarpserver ${yarpserver_SRCS})
-target_link_libraries(yarpserver YARP_serversql YARP_name)
+add_executable(yarpserver)
+target_sources(yarpserver PRIVATE ${yarpserver_SRCS})
+target_link_libraries(yarpserver PRIVATE YARP::YARP_serversql)
 
 install(TARGETS yarpserver
         COMPONENT utilities

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -13,8 +13,8 @@ using namespace yarp::sig;
 using namespace yarp::dev;
 
 bool FakeFrameGrabber::getImage(ImageOf<PixelRgb>& image) {
-	Time::delay(0.5);  // simulate waiting for hardware to report
-	image.resize(w,h);
-	image.zero();
-	return true;
+    Time::delay(0.5);  // simulate waiting for hardware to report
+    image.resize(w,h);
+    image.zero();
+    return true;
 }

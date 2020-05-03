@@ -1,61 +1,41 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
 # BSD-3-Clause license. See the accompanying LICENSE file for details.
 
-cmake_minimum_required(VERSION 3.5)
-
-if(NOT ${CMAKE_VERSION} VERSION_LESS 3.8)
-  cmake_policy(SET CMP0067 NEW)
-endif()
-
-# RPATH cmake policy set to NEW
-if(NOT ${CMAKE_VERSION} VERSION_LESS 3.9)
-  cmake_policy(SET CMP0068 NEW)
-endif()
-
-# Run automoc on generated files
-if(NOT ${CMAKE_VERSION} VERSION_LESS 3.10)
-  cmake_policy(SET CMP0071 NEW)
-endif()
-
-# FindOpenGL prefers GLVND by default when available.
-if(NOT ${CMAKE_VERSION} VERSION_LESS 3.11)
-  cmake_policy(SET CMP0072 NEW)
-endif()
+cmake_minimum_required(VERSION 3.12)
 
 # UseSWIG generates now standard target names.
-if(NOT ${CMAKE_VERSION} VERSION_LESS 3.13)
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.13)
   cmake_policy(SET CMP0078 OLD)
 endif()
 
+# UseSWIG honors SWIG_MODULE_NAME via -module flag.
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.14)
+  cmake_policy(SET CMP0086 OLD)
+endif()
 
 # Main project
 project(YARP
-        VERSION 3.1.0
+        VERSION 3.3.103
         LANGUAGES C CXX)
 set(PROJECT_DESCRIPTION "YARP: A thin middleware for humanoid robots and more")
 
 
 # Pick up our CMake scripts - they are all in the cmake subdirectory.
-set(YARP_MODULE_DIR "${CMAKE_SOURCE_DIR}/cmake")
+set(YARP_MODULE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_DIR})
 
-
-# Find or use YCM version in extern.
+# Find YCM
 # This is required here, because YarpVersion uses GitInfo from YCM
-add_subdirectory(extern/ycm)
+set(YCM_REQUIRED_VERSION 0.11.0) # Used also by YarpFindDependencies
+find_package(YCM ${YCM_REQUIRED_VERSION} REQUIRED)
 
 # Get the current YARP version.
 # See cmake/YarpVersion.cmake.
 include(YarpVersion)
-
-message(STATUS "Using:")
-message(STATUS "  CMake: ${CMAKE_VERSION} (${CMAKE_COMMAND})")
-message(STATUS "  C Compiler: ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION} (${CMAKE_C_COMPILER})")
-message(STATUS "  CXX Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} (${CMAKE_CXX_COMPILER})")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS 1)
 set_property(GLOBAL PROPERTY AUTOGEN_TARGETS_FOLDER "Autogen Targets")
@@ -69,17 +49,29 @@ include(YarpSystemCheck)
 # See cmake/YarpOptions.cmake.
 include(YarpOptions)
 
+message(STATUS "Using:")
+message(STATUS "  CMake: ${CMAKE_VERSION} (${CMAKE_COMMAND})")
+message(STATUS "  C Compiler: ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION} (${CMAKE_C_COMPILER})")
+message(STATUS "  CXX Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} (${CMAKE_CXX_COMPILER})")
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "CMake modules directory: ${CMAKE_MODULE_PATH}")
+
 # Check YARP dependencies, find necessary libraries.
 # See cmake/YarpFindDependencies.cmake.
 include(YarpFindDependencies)
-
-include(YarpSourceGroup)
 
 # Make some custom header files containing compile settings.
 add_subdirectory(cmake)
 
 # Build required 3rd party libraries
 add_subdirectory(extern)
+
+
+include(YarpInstallationHelpers)
+include(YarpDeprecatedOption)
+
+yarp_configure_external_installation(yarp WITH_PLUGINS)
+
 
 # Set up the main libraries and utilities.
 add_subdirectory(src)
@@ -93,6 +85,9 @@ add_subdirectory(tests)
 # Platform independent data
 add_subdirectory(data)
 
+# Documentation
+add_subdirectory(doc)
+
 # Output configuration files describing how YARP was built, and how
 # its libraries may be linked against and used.  This uses
 # information accumulated in the global property variables set up earlier.
@@ -103,9 +98,6 @@ include(YarpDescribe)
 # See cmake/YarpPackage.cmake
 include(YarpPackage)
 
-# Make documentation target, documentation goes in doc subdirectory
-# of build.  See cmake/YarpDoc.cmake
-include(YarpDoc)
 
 # add rule for uninstalling YARP
 include(AddUninstallTarget)

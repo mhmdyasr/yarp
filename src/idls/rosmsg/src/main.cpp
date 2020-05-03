@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -50,7 +50,7 @@ void show_usage()
     printf("  --no-cache\n");
     printf("    Do not cache ros msg file\n");
     printf("  --no-index\n");
-    printf("    Do not generate the indexALL.txt file\n");
+    printf("    Do not generate the index.txt file\n");
     printf("  --verbose\n");
     printf("    Verbose output\n");
     printf("\n");

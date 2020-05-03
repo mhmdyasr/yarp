@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ void BatchQosConfDialog::openCons()
     }
     file.close();
 
-    if(ui->treeWidgetCons->topLevelItemCount() > 0) {	
+    if(ui->treeWidgetCons->topLevelItemCount() > 0) {
         ui->pushButtonBatchQosUpdate->setEnabled(true);
         ui->pushButtonBatchQosConfigure->setEnabled(true);
         updateQos();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -21,16 +21,16 @@ int main() {
     Network yarp;
 
     // give YARP a factory for creating instances of FileFrameGrabber
-    DriverCreator *file_grabber_factory = 
+    DriverCreator *file_grabber_factory =
         new DriverCreatorOf<FileFrameGrabber>("file_grabber",
-                                              "grabber",
+                                              "grabberDual",
                                               "FileFrameGrabber");
     Drivers::factory().add(file_grabber_factory); // hand factory over to YARP
 
     // use YARP to create and configure a networked of FakeFrameGrabber
     Property config;
     // You may have to tweak the "image" path to match where your executable is
-    config.fromString("(device grabber) (name /file) (subdevice file_grabber) (pattern \"image/img%04d.ppm\") (first 250)");
+    config.fromString("(device grabberDual) (name /file) (subdevice file_grabber) (pattern \"image/img%04d.ppm\") (first 250)");
     PolyDriver dd(config);
     if (!dd.isValid()) {
         printf("Failed to create and configure a device\n");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
 #include "FrameTransformClient.h"
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/LockGuard.h>
+#include <mutex>
 
 /*! \file FrameTransformClient.cpp */
 
@@ -33,13 +33,13 @@ using namespace yarp::math;
 
 inline void Transforms_client_storage::resetStat()
 {
-    RecursiveLockGuard l(m_mutex);
+    std::lock_guard<std::recursive_mutex> l(m_mutex);
 }
 
 void Transforms_client_storage::onRead(yarp::os::Bottle &b)
 {
     m_now = Time::now();
-    RecursiveLockGuard guard(m_mutex);
+    std::lock_guard<std::recursive_mutex> guard(m_mutex);
 
     if (m_count>0)
     {
@@ -112,7 +112,7 @@ void Transforms_client_storage::onRead(yarp::os::Bottle &b)
 
 inline int Transforms_client_storage::getLast(yarp::os::Bottle &data, Stamp &stmp)
 {
-    RecursiveLockGuard guard(m_mutex);
+    std::lock_guard<std::recursive_mutex> guard(m_mutex);
 
     int ret = m_state;
     if (ret != IFrameTransform::TRANSFORM_GENERAL_ERROR)
@@ -126,7 +126,7 @@ inline int Transforms_client_storage::getLast(yarp::os::Bottle &data, Stamp &stm
 
 inline int Transforms_client_storage::getIterations()
 {
-    RecursiveLockGuard guard(m_mutex);
+    std::lock_guard<std::recursive_mutex> guard(m_mutex);
     int ret = m_count;
     return ret;
 }
@@ -134,7 +134,7 @@ inline int Transforms_client_storage::getIterations()
 // time is in ms
 void Transforms_client_storage::getEstFrequency(int &ite, double &av, double &min, double &max)
 {
-    RecursiveLockGuard guard(m_mutex);
+    std::lock_guard<std::recursive_mutex> guard(m_mutex);
     ite=m_count;
     min=m_deltaTMin*1000;
     max=m_deltaTMax*1000;
@@ -151,7 +151,7 @@ void Transforms_client_storage::getEstFrequency(int &ite, double &av, double &mi
 
 void Transforms_client_storage::clear()
 {
-    RecursiveLockGuard l(m_mutex);
+    std::lock_guard<std::recursive_mutex> l(m_mutex);
     m_transforms.clear();
 }
 
@@ -179,20 +179,20 @@ Transforms_client_storage::~Transforms_client_storage()
 
 size_t   Transforms_client_storage::size()
 {
-    RecursiveLockGuard l(m_mutex);
+    std::lock_guard<std::recursive_mutex> l(m_mutex);
     return m_transforms.size();
 }
 
 yarp::math::FrameTransform& Transforms_client_storage::operator[]   (std::size_t idx)
 {
-    RecursiveLockGuard l(m_mutex);
+    std::lock_guard<std::recursive_mutex> l(m_mutex);
     return m_transforms[idx];
 };
 
 //------------------------------------------------------------------------------------------------------------------------------
-bool yarp::dev::FrameTransformClient::read(yarp::os::ConnectionReader& connection)
+bool FrameTransformClient::read(yarp::os::ConnectionReader& connection)
 {
-    LockGuard lock (m_rpc_mutex);
+    std::lock_guard<std::mutex> lock (m_rpc_mutex);
     yarp::os::Bottle in;
     yarp::os::Bottle out;
     bool ok = in.read(connection);
@@ -208,6 +208,30 @@ bool yarp::dev::FrameTransformClient::read(yarp::os::ConnectionReader& connectio
         out.addString("'publish_transform <src> <dst> <portname> <format>: opens a port to publish transform from src to dst");
         out.addString("'unpublish_transform <portname>: closes a previously opened port to publish a transform");
         out.addString("'unpublish_all <portname>: closes a all previously opened ports to publish a transform");
+        out.addString("'is_connected'");
+        out.addString("'reconnect'");
+    }
+    else if (request == "is_connected")
+    {
+        if (isConnectedWithServer())
+        {
+            out.addString("yes");
+        }
+        else
+        {
+            out.addString("no");
+        }
+    }
+    else if (request == "reconnect")
+    {
+        if (reconnectWithServer())
+        {
+            out.addString("successful");
+        }
+        else
+        {
+            out.addString("unsuccessful");
+        }
     }
     else if (request == "list_frames")
     {
@@ -363,13 +387,14 @@ bool yarp::dev::FrameTransformClient::read(yarp::os::ConnectionReader& connectio
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::open(yarp::os::Searchable &config)
+bool FrameTransformClient::open(yarp::os::Searchable &config)
 {
     m_local_name.clear();
     m_remote_name.clear();
 
     m_local_name  = config.find("local").asString();
     m_remote_name = config.find("remote").asString();
+    m_streaming_connection_type = "udp";
 
     if (m_local_name == "")
     {
@@ -392,41 +417,36 @@ bool yarp::dev::FrameTransformClient::open(yarp::os::Searchable &config)
         yWarning("FrameTransformClient: using default period of %f s" , m_period);
     }
 
-    std::string local_rpcServer = m_local_name;
-    local_rpcServer += "/rpc:o";
-    std::string local_rpcUser = m_local_name;
-    local_rpcUser += "/rpc:i";
-    std::string remote_rpc = m_remote_name;
-    remote_rpc += "/rpc";
-    std::string remote_streaming_name = m_remote_name;
-    remote_streaming_name += "/transforms:o";
-    std::string local_streaming_name = m_local_name;
-    local_streaming_name += "/transforms:i";
+    m_local_rpcServer = m_local_name + "/rpc:o";
+    m_local_rpcUser = m_local_name + "/rpc:i";
+    m_remote_rpc = m_remote_name + "/rpc";
+    m_remote_streaming_name = m_remote_name + "/transforms:o";
+    m_local_streaming_name = m_local_name + "/transforms:i";
 
-    if (!m_rpc_InterfaceToUser.open(local_rpcUser))
+    if (!m_rpc_InterfaceToUser.open(m_local_rpcUser))
     {
-        yError("FrameTransformClient::open() error could not open rpc port %s, check network", local_rpcUser.c_str());
+        yError("FrameTransformClient::open() error could not open rpc port %s, check network", m_local_rpcUser.c_str());
         return false;
     }
 
-    if (!m_rpc_InterfaceToServer.open(local_rpcServer))
+    if (!m_rpc_InterfaceToServer.open(m_local_rpcServer))
     {
-        yError("FrameTransformClient::open() error could not open rpc port %s, check network", local_rpcServer.c_str());
+        yError("FrameTransformClient::open() error could not open rpc port %s, check network", m_local_rpcServer.c_str());
         return false;
     }
 
-    m_transform_storage = new Transforms_client_storage(local_streaming_name);
-    bool ok = Network::connect(remote_streaming_name.c_str(), local_streaming_name.c_str(), "udp");
+    m_transform_storage = new Transforms_client_storage(m_local_streaming_name);
+    bool ok = Network::connect(m_remote_streaming_name.c_str(), m_local_streaming_name.c_str(), m_streaming_connection_type.c_str());
     if (!ok)
     {
-        yError("FrameTransformClient::open() error could not connect to %s", remote_streaming_name.c_str());
+        yError("FrameTransformClient::open() error could not connect to %s", m_remote_streaming_name.c_str());
         return false;
     }
 
-    ok = Network::connect(local_rpcServer, remote_rpc);
+    ok = Network::connect(m_local_rpcServer, m_remote_rpc);
     if (!ok)
     {
-        yError("FrameTransformClient::open() error could not connect to %s", remote_rpc.c_str());
+        yError("FrameTransformClient::open() error could not connect to %s", m_remote_rpc.c_str());
         return false;
     }
 
@@ -435,7 +455,7 @@ bool yarp::dev::FrameTransformClient::open(yarp::os::Searchable &config)
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::close()
+bool FrameTransformClient::close()
 {
     m_rpc_InterfaceToServer.close();
     m_rpc_InterfaceToUser.close();
@@ -447,7 +467,7 @@ bool yarp::dev::FrameTransformClient::close()
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::allFramesAsString(std::string &all_frames)
+bool FrameTransformClient::allFramesAsString(std::string &all_frames)
 {
     for (size_t i = 0; i < m_transform_storage->size(); i++)
     {
@@ -456,7 +476,7 @@ bool yarp::dev::FrameTransformClient::allFramesAsString(std::string &all_frames)
     return true;
 }
 
-yarp::dev::FrameTransformClient::ConnectionType yarp::dev::FrameTransformClient::getConnectionType(const std::string &target_frame, const std::string &source_frame, std::string* commonAncestor = nullptr)
+FrameTransformClient::ConnectionType FrameTransformClient::getConnectionType(const std::string &target_frame, const std::string &source_frame, std::string* commonAncestor = nullptr)
 {
     Transforms_client_storage& tfVec = *m_transform_storage;
     size_t                     i, j;
@@ -464,7 +484,7 @@ yarp::dev::FrameTransformClient::ConnectionType yarp::dev::FrameTransformClient:
     std::vector<std::string>   src2root_vec;
     std::string                ancestor, child;
     child = target_frame;
-    RecursiveLockGuard l(tfVec.m_mutex);
+    std::lock_guard<std::recursive_mutex> l(tfVec.m_mutex);
     while(getParent(child, ancestor))
     {
         if(ancestor == source_frame)
@@ -501,18 +521,18 @@ yarp::dev::FrameTransformClient::ConnectionType yarp::dev::FrameTransformClient:
                 }
                 return UNDIRECT;
             }
-        }    
+        }
     }
 
     return DISCONNECTED;
 }
 
-bool yarp::dev::FrameTransformClient::canTransform(const std::string &target_frame, const std::string &source_frame)
+bool FrameTransformClient::canTransform(const std::string &target_frame, const std::string &source_frame)
 {
     return getConnectionType(target_frame, source_frame) != DISCONNECTED;
 }
 
-bool yarp::dev::FrameTransformClient::clear()
+bool FrameTransformClient::clear()
 {
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
@@ -537,7 +557,7 @@ bool yarp::dev::FrameTransformClient::clear()
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::frameExists(const std::string &frame_id)
+bool FrameTransformClient::frameExists(const std::string &frame_id)
 {
     for (size_t i = 0; i < m_transform_storage->size(); i++)
     {
@@ -547,7 +567,7 @@ bool yarp::dev::FrameTransformClient::frameExists(const std::string &frame_id)
     return false;
 }
 
-bool yarp::dev::FrameTransformClient::getAllFrameIds(std::vector< std::string > &ids)
+bool FrameTransformClient::getAllFrameIds(std::vector< std::string > &ids)
 {
     for (size_t i = 0; i < m_transform_storage->size(); i++)
     {
@@ -572,7 +592,7 @@ bool yarp::dev::FrameTransformClient::getAllFrameIds(std::vector< std::string > 
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::getParent(const std::string &frame_id, std::string &parent_frame_id)
+bool FrameTransformClient::getParent(const std::string &frame_id, std::string &parent_frame_id)
 {
     for (size_t i = 0; i < m_transform_storage->size(); i++)
     {
@@ -587,11 +607,11 @@ bool yarp::dev::FrameTransformClient::getParent(const std::string &frame_id, std
     return false;
 }
 
-bool yarp::dev::FrameTransformClient::canExplicitTransform(const std::string& target_frame_id, const std::string& source_frame_id) const
+bool FrameTransformClient::canExplicitTransform(const std::string& target_frame_id, const std::string& source_frame_id) const
 {
     Transforms_client_storage& tfVec = *m_transform_storage;
     size_t                     i, tfVec_size;
-    RecursiveLockGuard         l(tfVec.m_mutex);
+    std::lock_guard<std::recursive_mutex>         l(tfVec.m_mutex);
 
     tfVec_size = tfVec.size();
     for (i = 0; i < tfVec_size; i++)
@@ -604,11 +624,11 @@ bool yarp::dev::FrameTransformClient::canExplicitTransform(const std::string& ta
     return false;
 }
 
-bool yarp::dev::FrameTransformClient::getChainedTransform(const std::string& target_frame_id, const std::string& source_frame_id, yarp::sig::Matrix& transform) const
+bool FrameTransformClient::getChainedTransform(const std::string& target_frame_id, const std::string& source_frame_id, yarp::sig::Matrix& transform) const
 {
     Transforms_client_storage& tfVec = *m_transform_storage;
     size_t                     i, tfVec_size;
-    RecursiveLockGuard         l(tfVec.m_mutex);
+    std::lock_guard<std::recursive_mutex>         l(tfVec.m_mutex);
 
     tfVec_size = tfVec.size();
     for (i = 0; i < tfVec_size; i++)
@@ -634,7 +654,7 @@ bool yarp::dev::FrameTransformClient::getChainedTransform(const std::string& tar
     return false;
 }
 
-bool yarp::dev::FrameTransformClient::getTransform(const std::string& target_frame_id, const std::string& source_frame_id, yarp::sig::Matrix& transform)
+bool FrameTransformClient::getTransform(const std::string& target_frame_id, const std::string& source_frame_id, yarp::sig::Matrix& transform)
 {
     ConnectionType ct;
     std::string    ancestor;
@@ -663,7 +683,7 @@ bool yarp::dev::FrameTransformClient::getTransform(const std::string& target_fra
     return false;
 }
 
-bool yarp::dev::FrameTransformClient::setTransform(const std::string& target_frame_id, const std::string& source_frame_id, const yarp::sig::Matrix& transform)
+bool FrameTransformClient::setTransform(const std::string& target_frame_id, const std::string& source_frame_id, const yarp::sig::Matrix& transform)
 {
     if(target_frame_id == source_frame_id)
     {
@@ -717,7 +737,7 @@ bool yarp::dev::FrameTransformClient::setTransform(const std::string& target_fra
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::setTransformStatic(const std::string &target_frame_id, const std::string &source_frame_id, const yarp::sig::Matrix &transform)
+bool FrameTransformClient::setTransformStatic(const std::string &target_frame_id, const std::string &source_frame_id, const yarp::sig::Matrix &transform)
 {
     if(target_frame_id == source_frame_id)
     {
@@ -771,7 +791,7 @@ bool yarp::dev::FrameTransformClient::setTransformStatic(const std::string &targ
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::deleteTransform(const std::string &target_frame_id, const std::string &source_frame_id)
+bool FrameTransformClient::deleteTransform(const std::string &target_frame_id, const std::string &source_frame_id)
 {
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
@@ -796,7 +816,7 @@ bool yarp::dev::FrameTransformClient::deleteTransform(const std::string &target_
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::transformPoint(const std::string &target_frame_id, const std::string &source_frame_id, const yarp::sig::Vector &input_point, yarp::sig::Vector &transformed_point)
+bool FrameTransformClient::transformPoint(const std::string &target_frame_id, const std::string &source_frame_id, const yarp::sig::Vector &input_point, yarp::sig::Vector &transformed_point)
 {
     if (input_point.size() != 3)
     {
@@ -816,7 +836,7 @@ bool yarp::dev::FrameTransformClient::transformPoint(const std::string &target_f
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::transformPose(const std::string &target_frame_id, const std::string &source_frame_id, const yarp::sig::Vector &input_pose, yarp::sig::Vector &transformed_pose)
+bool FrameTransformClient::transformPose(const std::string &target_frame_id, const std::string &source_frame_id, const yarp::sig::Vector &input_pose, yarp::sig::Vector &transformed_pose)
 {
     if (input_pose.size() != 6)
     {
@@ -850,7 +870,7 @@ bool yarp::dev::FrameTransformClient::transformPose(const std::string &target_fr
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::transformQuaternion(const std::string &target_frame_id, const std::string &source_frame_id, const yarp::math::Quaternion &input_quaternion, yarp::math::Quaternion &transformed_quaternion)
+bool FrameTransformClient::transformQuaternion(const std::string &target_frame_id, const std::string &source_frame_id, const yarp::math::Quaternion &input_quaternion, yarp::math::Quaternion &transformed_quaternion)
 {
     yarp::sig::Matrix m(4, 4);
     if (!getTransform(target_frame_id, source_frame_id, m))
@@ -864,7 +884,7 @@ bool yarp::dev::FrameTransformClient::transformQuaternion(const std::string &tar
     return true;
 }
 
-bool yarp::dev::FrameTransformClient::waitForTransform(const std::string &target_frame_id, const std::string &source_frame_id, const double &timeout)
+bool FrameTransformClient::waitForTransform(const std::string &target_frame_id, const std::string &source_frame_id, const double &timeout)
 {
     //loop until canTransform == true or timeout expires
     double start = yarp::os::SystemClock::nowSystem();
@@ -888,20 +908,20 @@ FrameTransformClient::FrameTransformClient() : PeriodicThread(0.01),
 
 FrameTransformClient::~FrameTransformClient() = default;
 
-bool     yarp::dev::FrameTransformClient::threadInit()
+bool     FrameTransformClient::threadInit()
 {
     yInfo("Thread started");
     return true;
 }
 
-void     yarp::dev::FrameTransformClient::threadRelease()
+void     FrameTransformClient::threadRelease()
 {
     yInfo("Thread stopped");
 }
 
-void     yarp::dev::FrameTransformClient::run()
+void     FrameTransformClient::run()
 {
-    LockGuard lock (m_rpc_mutex);
+    std::lock_guard<std::mutex> lock (m_rpc_mutex);
     if (m_array_of_ports.size()==0)
     {
         return;
@@ -927,12 +947,31 @@ void     yarp::dev::FrameTransformClient::run()
     }
 }
 
-yarp::dev::DriverCreator *createFrameTransformClient()
+bool     FrameTransformClient::isConnectedWithServer()
 {
-    return new DriverCreatorOf<FrameTransformClient>
-               (
-                   "transformClient",
-                   "",
-                   "transformClient"
-               );
+    bool ok1 = Network::isConnected(m_local_rpcServer.c_str(), m_remote_rpc.c_str());
+    if (!ok1) yInfo() << m_local_rpcServer << "is not connected to: " << m_remote_rpc;
+
+    bool ok2 = Network::isConnected(m_remote_streaming_name.c_str(), m_local_streaming_name.c_str(),m_streaming_connection_type.c_str());
+    if (!ok2) yInfo() << m_remote_streaming_name << "is not connected to: " << m_local_streaming_name;
+
+    return ok1 && ok2;
+}
+
+bool     FrameTransformClient::reconnectWithServer()
+{
+    bool ok = Network::connect(m_remote_streaming_name.c_str(), m_local_streaming_name.c_str(), m_streaming_connection_type.c_str());
+    if (!ok)
+    {
+        yError("FrameTransformClient::reconnectWithServer() error could not connect to %s", m_remote_streaming_name.c_str());
+        return false;
+    }
+
+    ok = Network::connect(m_local_rpcServer, m_remote_rpc);
+    if (!ok)
+    {
+        yError("FrameTransformClient::reconnectWithServer() error could not connect to %s", m_remote_rpc.c_str());
+        return false;
+    }
+    return true;
 }

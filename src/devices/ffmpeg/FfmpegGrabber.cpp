@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * Copyright (C) 2006 Jonas Ruesch
  * Copyright (C) 2006 Arjan Gijsberts
@@ -637,14 +637,13 @@ bool FfmpegGrabber::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb> & image)
     return getAudioVisual(image,sound);
 }
 
-
-bool FfmpegGrabber::getSound(yarp::sig::Sound& sound)
+bool FfmpegGrabber::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, size_t max_number_of_samples, double max_samples_timeout_s)
 {
     if (!_hasAudio) {
         return false;
     }
     ImageOf<PixelRgb> image;
-    return getAudioVisual(image,sound);
+    return getAudioVisual(image, sound);
 }
 
 

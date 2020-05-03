@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -10,16 +10,11 @@
 #define YARP_DEVICE_FAKE_ANALOGSENSOR
 
 #include <yarp/os/PeriodicThread.h>
-#include <yarp/os/Mutex.h>
 
 #include <yarp/dev/all.h>
 #include <yarp/dev/IAnalogSensor.h>
 
-namespace yarp{
-    namespace dev{
-        class FakeAnalogSensor;
-    }
-}
+#include <mutex>
 
 /**
 *
@@ -32,13 +27,14 @@ namespace yarp{
 * |
 */
 
-class yarp::dev::FakeAnalogSensor : public yarp::dev::DeviceDriver,
-                                    public yarp::os::PeriodicThread,
-                                    public yarp::dev::IAnalogSensor
+class FakeAnalogSensor :
+        public yarp::dev::DeviceDriver,
+        public yarp::os::PeriodicThread,
+        public yarp::dev::IAnalogSensor
 {
 private:
 
-    yarp::os::Mutex         mutex;
+    std::mutex         mutex;
 
     std::string   name;    // device name
     unsigned int            channelsNum;

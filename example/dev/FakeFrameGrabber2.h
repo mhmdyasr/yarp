@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -11,8 +11,8 @@
 #include <yarp/sig/all.h>
 #include <yarp/dev/all.h>
 
-class FakeFrameGrabber : public yarp::dev::IFrameGrabberImage, 
-                         public yarp::dev::IFrameGrabberControls, 
+class FakeFrameGrabber : public yarp::dev::IFrameGrabberImage,
+                         public yarp::dev::IFrameGrabberControls,
                          public yarp::dev::DeviceDriver {
 private:
     int w, h;
@@ -33,7 +33,7 @@ public:
         return w>0 && h>0;
     }
 
-    virtual bool open(yarp::os::Searchable& config) { 
+    virtual bool open(yarp::os::Searchable& config) {
         // extract width and height configuration, if present
         // otherwise use 128x128
         int desiredWidth = config.check("w",yarp::os::Value(128)).asInt32();
@@ -41,7 +41,7 @@ public:
         return open(desiredWidth,desiredHeight);
     }
 
-    virtual bool close() { 
+    virtual bool close() {
         return true; // easy
     }
 
@@ -84,12 +84,12 @@ public:
         return false;
     }
 
-	virtual bool getWhiteBalance(double &red, double &green)
-	{
-		red=0;
-		green=0;
-		return false;
-	}
+    virtual bool getWhiteBalance(double &red, double &green)
+    {
+        red=0;
+        green=0;
+        return false;
+    }
 
     virtual double getBrightness() {
         return brightness;
@@ -110,16 +110,16 @@ public:
     }
     virtual bool setSharpness(double v) {
         return false;
-    }    
+    }
     virtual bool setHue(double v) {
         return false;
     }
     virtual bool setSaturation(double v) {
         return false;
-    }    
+    }
      virtual bool setGamma(double v) {
         return false;
-    }    
+    }
     virtual bool setIris(double v) {
         return false;
     }
@@ -138,11 +138,10 @@ public:
     }
     virtual double getGamma() {
         return 0.0;
-    }        
+    }
     virtual double getIris() {
         return 0.0;
     }
-    
+
 
 };
-

@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -7,33 +7,32 @@
 
 yarp_prepare_plugin(serialport
                     CATEGORY device
-                    TYPE yarp::dev::SerialDeviceDriver
+                    TYPE SerialDeviceDriver
                     INCLUDE SerialDeviceDriver.h
                     EXTRA_CONFIG WRAPPER=serial
                     DEPENDS "YARP_HAS_ACE")
 
 if(NOT SKIP_serialport)
-  set(CMAKE_INCLUDE_CURRENT_DIR ON)
+  yarp_add_plugin(yarp_serialport)
 
-  yarp_add_plugin(yarp_serialport SerialDeviceDriver.cpp
-                                  SerialDeviceDriver.h)
-  target_link_libraries(yarp_serialport PRIVATE YARP::YARP_OS
+  target_sources(yarp_serialport PRIVATE SerialDeviceDriver.cpp
+                                         SerialDeviceDriver.h)
+
+  target_link_libraries(yarp_serialport PRIVATE YARP::YARP_os
                                                 YARP::YARP_dev)
-  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_os
                                                       YARP_dev)
 
-  include_directories(SYSTEM ${ACE_INCLUDE_DIRS})
-  target_link_libraries(yarp_serialport PRIVATE ${ACE_LIBRARIES})
-#   list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ACE) (not using targets)
+  target_compile_definitions(yarp_serialport PRIVATE YARP_HAS_ACE)
+  target_link_libraries(yarp_serialport PRIVATE ACE::ACE)
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ACE)
 
   yarp_install(TARGETS yarp_serialport
                EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
-  yarp_install(FILES serialport.ini
-               COMPONENT ${YARP_PLUGIN_MASTER}
-               DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 

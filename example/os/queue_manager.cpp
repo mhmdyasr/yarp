@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -21,12 +21,14 @@
 
 #include <yarp/os/all.h>
 #include <yarp/dev/all.h>
-#include <stdio.h>
-using namespace yarp::os;
-using namespace yarp::dev;
 
 #include <deque>
 #include <string>
+#include <cstdio>
+#include <mutex>
+
+using namespace yarp::os;
+using namespace yarp::dev;
 using namespace std;
 
 class Entry {
@@ -38,7 +40,7 @@ class QueueManager : public DeviceResponder {
 private:
     BufferedPort<Bottle> port;
     deque<Entry> q;
-    Mutex mutex;
+    std::mutex mutex;
 
     bool removeName(const char *name) {
         bool acted = false;
@@ -101,7 +103,7 @@ public:
         addUsage("[del] $foo", "remove a name from the queue");
     }
 
-    virtual bool respond(const yarp::os::Bottle& command, 
+    virtual bool respond(const yarp::os::Bottle& command,
                          yarp::os::Bottle& reply) {
         mutex.lock();
         switch (command.get(0).asVocab()) {
@@ -150,7 +152,7 @@ public:
                         }
                         addQueue(reply);
                     }
-                } 
+                }
             }
             break;
         case yarp::os::createVocab('l','i','s','t'):

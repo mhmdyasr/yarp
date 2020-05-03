@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -19,11 +19,10 @@ using namespace yarp::dev;
 
 void add_fakebot() {
 #if ENABLE_fakebot
-    DriverCreator *factory = 
+    DriverCreator *factory =
         new DriverCreatorOf<FakeBot>("fakebot",
                                            "",
                                            "FakeBot");
     Drivers::factory().add(factory); // hand factory over to YARP
 #endif
 }
-

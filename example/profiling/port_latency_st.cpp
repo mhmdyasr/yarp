@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -64,7 +64,7 @@ int client(int nframes)
 
     port.close();
 
-    fprintf(stderr, "Received: %d average latency %.3lf[ms]\n", 
+    fprintf(stderr, "Received: %d average latency %.3lf[ms]\n",
             count, delay/count);
     return 0;
 }

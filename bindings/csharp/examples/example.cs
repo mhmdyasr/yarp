@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -15,26 +15,25 @@ namespace HelloNameSpace
 {
     public class HelloWorld
     {
-	static void Main(string[] args)
-	{
-	    Network.init();
-	    BufferedPortBottle p = new BufferedPortBottle();
-	    p.open("/csharp");
-	    int top = 100;
-	    for (int i=1; i<top; i++) {
-		Bottle bottle = p.prepare();
-		bottle.clear();
-		bottle.addString("count");
-		bottle.addInt32(i);
-		bottle.addString("of");
-		bottle.addInt32(top);
-		Console.WriteLine("Sending " + bottle.toString());
-		p.write();
-		Time.delay(0.5);
-	    }
-	    p.close();
-	    Network.fini();
-	}
+        static void Main(string[] args)
+        {
+            Network.init();
+            BufferedPortBottle p = new BufferedPortBottle();
+            p.open("/csharp");
+            int top = 100;
+            for (int i=1; i<top; i++) {
+                Bottle bottle = p.prepare();
+                bottle.clear();
+                bottle.addString("count");
+                bottle.addInt32(i);
+                bottle.addString("of");
+                bottle.addInt32(top);
+                Console.WriteLine("Sending " + bottle.toString());
+                p.write();
+                Time.delay(0.5);
+            }
+            p.close();
+            Network.fini();
+        }
     }
 }
-

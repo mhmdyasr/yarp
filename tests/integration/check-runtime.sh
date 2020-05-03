@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -33,7 +33,7 @@ cd $base
 mkdir -p $base/fakebot
 mkdir -p $base/fakebot_static
 
-PLUGIN_FLAGS="-DENABLE_yarpmod_fakebot=TRUE -DENABLE_yarpcar_human_carrier=TRUE -DCREATE_GUIS=OFF"
+PLUGIN_FLAGS="-DENABLE_yarpmod_fakebot=TRUE -DENABLE_yarpcar_human_carrier=TRUE -DYARP_COMPILE_GUIS=OFF"
 
 # Create fakebot device
 cd $base/fakebot
@@ -131,4 +131,3 @@ header "Check installed static fakebot is startable"
 $base/root_static/bin/yarpdev --device fakebot --lifetime 1 || fail "Could not start fakebot"
 
 header "Done, no problems found"
-

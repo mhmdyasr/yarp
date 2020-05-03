@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -12,15 +12,13 @@
 
 void chatterCallback(const yarpros_examples::EncodersConstPtr& enc)
 {
-  printf("Encoder readings for first three joints: %g %g %g\n",
-	 enc->v[0], enc->v[1], enc->v[2]);
+    printf("Encoder readings for first three joints: %g %g %g\n", enc->v[0], enc->v[1], enc->v[2]);
 }
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "yarp_encoder_listener");
-  ros::NodeHandle n;
-  ros::Subscriber chatter_sub = n.subscribe("pos", 1, chatterCallback);
-  ros::spin();
+    ros::init(argc, argv, "yarp_encoder_listener");
+    ros::NodeHandle n;
+    ros::Subscriber chatter_sub = n.subscribe("pos", 1, chatterCallback);
+    ros::spin();
 }
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,11 +23,11 @@
 #include <string>
 
 #include <yarp/os/PeriodicThread.h>
-#include <yarp/os/Mutex.h>
+#include <mutex>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/SerialInterfaces.h>
+#include <yarp/dev/ISerialDevice.h>
 #include <yarp/sig/Vector.h>
 
 using namespace yarp::os;
@@ -39,7 +39,7 @@ protected:
     PolyDriver driver;
     ISerialDevice *pSerial;
 
-    yarp::os::Mutex mutex;
+    std::mutex mutex;
 
     int cardId;
     double period;
@@ -52,7 +52,7 @@ protected:
     int internal_status;
     std::string info;
     Device_status device_status;
-    
+
     enum Laser_mode_type {FAKE_MODE=2, GD_MODE=1, MD_MODE=0};
     enum Error_code
     {

@@ -1,4 +1,4 @@
-% Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+% Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 % Copyright (C) 2006-2010 RobotCub Consortium
 % All rights reserved.
 %
@@ -26,13 +26,10 @@ b=Bottle;
 while(~done)
   port.read(b);
   disp(b);
-  
+
   if (strcmp(b.toString, 'quit'))
-	done=1;
+    done=1;
   end
 end
 
 port.close;
-  
-  
-  

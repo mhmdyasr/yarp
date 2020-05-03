@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -6,19 +6,21 @@
 
 yarp_prepare_plugin(batteryWrapper
                     CATEGORY device
-                    TYPE yarp::dev::BatteryWrapper
+                    TYPE BatteryWrapper
                     INCLUDE BatteryWrapper.h
+                    EXTRA_CONFIG WRAPPER=batteryWrapper
                     DEFAULT ON)
 
 if(NOT SKIP_batteryWrapper)
-  set(CMAKE_INCLUDE_CURRENT_DIR ON)
+  yarp_add_plugin(yarp_batteryWrapper)
 
-  yarp_add_plugin(yarp_batteryWrapper BatteryWrapper.cpp
-                                      BatteryWrapper.h)
-  target_link_libraries(yarp_batteryWrapper PRIVATE YARP::YARP_OS
+  target_sources(yarp_batteryWrapper PRIVATE BatteryWrapper.cpp
+                                             BatteryWrapper.h)
+
+  target_link_libraries(yarp_batteryWrapper PRIVATE YARP::YARP_os
                                                     YARP::YARP_sig
                                                     YARP::YARP_dev)
-  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_os
                                                       YARP_sig
                                                       YARP_dev)
 
@@ -26,10 +28,8 @@ if(NOT SKIP_batteryWrapper)
                EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
-  yarp_install(FILES batteryWrapper.ini
-               COMPONENT ${YARP_PLUGIN_MASTER}
-               DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 

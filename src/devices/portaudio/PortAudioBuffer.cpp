@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,18 +22,4 @@
 #include <cstdlib>
 #include <portaudio.h>
 
-
-circularBuffer::circularBuffer(int bufferSize)
-{
-    maxsize  = bufferSize + 1;
-    start = 0;
-    end   = 0;
-    elems = (SAMPLE *) calloc(maxsize, sizeof(SAMPLE));
-}
-
-circularBuffer::~circularBuffer()
-{
-    free(elems);
-}
-
-
+using namespace yarp::dev;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 #include <yarp/manager/xmlapploader.h>
 #include <yarp/manager/application.h>
 #include <dirent.h>
+#include <yarp/conf/filesystem.h>
 #include <yarp/os/ResourceFinder.h>
 
 /*
@@ -67,7 +68,7 @@ using namespace std;
 
 
 #define CMD_COUNTS          24
-#ifdef WITH_LIBEDIT
+#ifdef YARP_HAS_Libedit
     #include <editline/readline.h>
     const char* commands[CMD_COUNTS] = {"help", "exit","list mod", "list app", "list res", "add mod",
                   "add app", "add res", "load app", "run", "stop", "kill",
@@ -295,7 +296,7 @@ YConsoleManager::YConsoleManager(int argc, char* argv[]) : Manager()
 
     reportErrors();
 
-#ifdef WITH_LIBEDIT
+#ifdef YARP_HAS_Libedit
     updateAppNames(&appnames);
 #endif
 
@@ -335,7 +336,7 @@ YConsoleManager::YConsoleManager(int argc, char* argv[]) : Manager()
                 if(!getKnowledgeBase()->getApplication(application->getName()))
                     getKnowledgeBase()->addApplication(application);
 
-                #ifdef WITH_LIBEDIT
+                #ifdef YARP_HAS_Libedit
                 updateAppNames(&appnames);
                 #endif
 
@@ -420,7 +421,7 @@ void YConsoleManager::myMain()
 {
 
 
-#ifdef WITH_LIBEDIT
+#ifdef YARP_HAS_Libedit
     rl_attempted_completion_function = my_completion;
 #endif
 
@@ -428,7 +429,7 @@ void YConsoleManager::myMain()
     {
         string temp;
 
-#ifdef WITH_LIBEDIT
+#ifdef YARP_HAS_Libedit
         static char* szLine = (char*)nullptr;
         if(szLine)
         {
@@ -529,7 +530,7 @@ bool YConsoleManager::process(const vector<string> &cmdList)
          if(addApplication(cmdList[2].c_str()))
             cout<<INFO<<cmdList[2]<<" is successfully added."<<ENDC<<endl;
          reportErrors();
-        #ifdef WITH_LIBEDIT
+        #ifdef YARP_HAS_Libedit
         updateAppNames(&appnames);
         #endif
          return true;
@@ -788,7 +789,7 @@ bool YConsoleManager::process(const vector<string> &cmdList)
         return true;
     }
 
-    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator{yarp::conf::filesystem::preferred_separator};
 
     /**
      *  list available modules
@@ -1163,7 +1164,7 @@ void YConsoleManager::onCnnFailed(void* which)
 
 bool YConsoleManager::loadRecursiveApplications(const char* szPath)
 {
-    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator{yarp::conf::filesystem::preferred_separator};
     string strPath = szPath;
     if((strPath.rfind(directorySeparator)==string::npos) ||
             (strPath.rfind(directorySeparator)!=strPath.size()-1))
@@ -1246,7 +1247,7 @@ void YConsoleManager::setColorTheme(ColorTheme theme)
 
 
 
-#ifdef WITH_LIBEDIT
+#ifdef YARP_HAS_Libedit
 
 char* dupstr(char* s)
 {

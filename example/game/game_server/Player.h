@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -12,7 +12,7 @@
 
 #include <stdlib.h>
 
-#include <yarp/os/Mutex.h>
+#include <mutex>
 #include "Thing.h"
 #include "Login.h"
 
@@ -26,7 +26,7 @@ public:
 class Player : public Replier {
 public:
     Player() : mutex() {
-  
+
     }
 
     // this is the main command processing function
@@ -85,7 +85,7 @@ public:
     void setFirerange(int f) {firerange = f; };
     int  getFirerange() {return firerange; };
 
-    void setName(const char *txt) { 
+    void setName(const char *txt) {
         login.getThing().setName(txt);
     }
     const char *getName() {
@@ -93,9 +93,9 @@ public:
     }
 
 private:
-  
+
     Replier *replier;
-    yarp::os::Mutex mutex;
+    std::mutex mutex;
 
     ID id;
     Login login;

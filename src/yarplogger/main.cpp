@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,12 +38,13 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    QApplication a(argc, argv);
-    yarp::os::ResourceFinder rf;
+    yarp::os::ResourceFinder &rf = yarp::os::ResourceFinder::getResourceFinderSingleton();
     rf.setVerbose(true);
     rf.setDefaultConfigFile("yarprunLogger.ini");           //overridden by --from parameter
     rf.setDefaultContext("yarprunLogger");                  //overridden by --context parameter
     rf.configure(argc,argv);
+
+    QApplication a(argc, argv); // Eats the "--name" argument, therefore initialized after the ResourceFinder
 
     bool cannot_close = rf.check("no_stop");
     if (cannot_close)
@@ -52,7 +53,7 @@ int main(int argc, char *argv[])
         std::signal(SIGTERM, sighandler);
     }
 
-    MainWindow w(rf);
+    MainWindow w;
     w.show();
 
     return a.exec();

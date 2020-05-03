@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * Copyright (C) 2006 Eric Mislivec
  *
@@ -19,10 +19,11 @@
  */
 
 /*
- * A Yarp 2 frame grabber device driver using OpenCV to implement
+ * A YARP frame grabber device driver using OpenCV to implement
  * image capture from cameras and AVI files.
  */
 
+#include "OpenCVGrabber.h"
 
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/FrameGrabberInterfaces.h>
@@ -42,7 +43,9 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include <OpenCVGrabber.h>
+#if CV_MAJOR_VERSION >= 3
+#include <opencv2/videoio/videoio.hpp>
+#endif
 
 
 using yarp::dev::DeviceDriver;
@@ -91,12 +94,17 @@ bool OpenCVGrabber::open(Searchable & config) {
     } else {
 
         m_loop = false;
-
+#if CV_MAJOR_VERSION >= 3
+        int camera_idx =
+            config.check("camera",
+                         Value(cv::VideoCaptureAPIs::CAP_ANY),
+                         "if present, read from camera identified by this index").asInt32();
+#else
         int camera_idx =
             config.check("camera",
                          Value(CV_CAP_ANY),
                          "if present, read from camera identified by this index").asInt32();
-
+#endif
         // Try to open a capture object for the first camera
         m_cap.open(camera_idx);
         if (!m_cap.isOpened()) {
@@ -110,7 +118,11 @@ bool OpenCVGrabber::open(Searchable & config) {
 
         if ( config.check("framerate","if present, specifies desired camera device framerate") ) {
             double m_fps = config.check("framerate", Value(-1)).asFloat64();
+#if CV_MAJOR_VERSION >= 3
+            m_cap.set(cv::VideoCaptureProperties::CAP_PROP_FPS, m_fps);
+#else
             m_cap.set(CV_CAP_PROP_FPS, m_fps);
+#endif
         }
 
         if (config.check("flip_x", "if present, flip the image along the x-axis"))         m_flip_x = true;
@@ -124,19 +136,35 @@ bool OpenCVGrabber::open(Searchable & config) {
     if (config.check("width","if present, specifies desired image width")) {
         m_w = config.check("width", Value(0)).asInt32();
         if (!fromFile && m_w>0) {
+#if CV_MAJOR_VERSION >= 3
+            m_cap.set(cv::VideoCaptureProperties::CAP_PROP_FRAME_WIDTH, m_w);
+#else
             m_cap.set(CV_CAP_PROP_FRAME_WIDTH, m_w);
+#endif
         }
     } else {
+#if CV_MAJOR_VERSION >= 3
+        m_w = (size_t)m_cap.get(cv::VideoCaptureProperties::CAP_PROP_FRAME_WIDTH);
+#else
         m_w = (size_t)m_cap.get(CV_CAP_PROP_FRAME_WIDTH);
+#endif
     }
 
     if (config.check("height","if present, specifies desired image height")) {
         m_h = config.check("height", Value(0)).asInt32();
         if (!fromFile && m_h>0) {
+#if CV_MAJOR_VERSION >= 3
+            m_cap.set(cv::VideoCaptureProperties::CAP_PROP_FRAME_HEIGHT, m_h);
+#else
             m_cap.set(CV_CAP_PROP_FRAME_HEIGHT, m_h);
+#endif
         }
     } else {
+#if CV_MAJOR_VERSION >= 3
+        m_h = (size_t)m_cap.get(cv::VideoCaptureProperties::CAP_PROP_FRAME_HEIGHT);
+#else
         m_h = (size_t)m_cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+#endif
     }
 
     // Ignore capture properties - they are unreliable

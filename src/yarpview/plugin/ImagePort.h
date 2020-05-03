@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  *
  * This library is free software; you can redistribute it and/or
@@ -55,7 +55,7 @@ public:
     using yarp::os::TypedReaderCallback<yarp::sig::ImageOf<yarp::sig::PixelRgb> >::onRead;
     void onRead(yarp::sig::ImageOf<yarp::sig::PixelRgba> &img) override;
 #endif
- 
+
 private:
     int counter;
     SignalHandler *sigHandler;

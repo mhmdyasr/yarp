@@ -3,7 +3,7 @@
  *
  * \defgroup remote_grabber_basic Example for pipe (remote_grabber_basic)
 
-Instantiates \ref cmd_device_pipe "pipe" device implemented by yarp::dev::DevicePipe.
+Instantiates \ref cmd_device_pipe "pipe" device implemented by DevicePipe.
 \verbatim
 # sending images to a port called "/save" will result in them
 # being saved to test.avi
@@ -32,7 +32,10 @@ PolyDriver dev;
 dev.open(p);
 if (dev.isValid()) { /* use the device via view method */ }
 \endcode
-Here is a list of properties checked when starting up a device based on this configuration file.  Note that which properties are checked can depend on whether other properties are present.  In some cases properties can also vary between operating systems.  So this is just an example
+Here is a list of properties checked when starting up a device based on this configuration file.
+Note that which properties are checked can depend on whether other properties are present.
+In some cases properties can also vary between operating systems.
+So this is just an example
 
 <table>
 <tr><td>PROPERTY</td><td>DESCRIPTION</td><td>DEFAULT</td></tr>
@@ -41,6 +44,6 @@ Here is a list of properties checked when starting up a device based on this con
 <tr><td>sink</td><td>device to write to (string or nested properties)</td><td></td></tr>
 </table>
 
-\sa yarp::dev::DevicePipe
+\sa DevicePipe
 
  */

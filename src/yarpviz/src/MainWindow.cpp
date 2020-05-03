@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -367,15 +367,15 @@ void MainWindow::drawGraph(Graph &graph)
                     continue;
                 }
 
-                if(edge.property.find("type").asString() == "connection") {                    
+                if(edge.property.find("type").asString() == "connection") {
                     //QGVEdge* gve = scene->addEdge(nodeSet[&v1], nodeSet[&v2],
                     //                               edge.property.find("carrier").asString().c_str());
-                    string lable;
+                    string label;
                     if(!ui->actionHideConnectionsLable->isChecked())
-                        lable = edge.property.find("carrier").asString();
+                        label = edge.property.find("carrier").asString();
                     QGVEdge* gve = scene->addEdge((QGVNode*)((GraphicVertex*)&v1)->getGraphicItem(),
                                                   (QGVNode*)((GraphicVertex*)&v2)->getGraphicItem(),
-                                                   lable.c_str());
+                                                   label.c_str());
                     QosStyle::PacketPriorityLevel level=
                             (QosStyle::PacketPriorityLevel)edge.property.find("FromPacketPriority").asInt32();
                     switch (level) {
@@ -603,7 +603,7 @@ void MainWindow::onHighlightLoops() {
     if(!currentGraph)
         return;
 
-    if(ui->actionHighlight_Loops->isChecked()) {        
+    if(ui->actionHighlight_Loops->isChecked()) {
         graph_subset scc;
         Algorithm::calcSCC(*currentGraph, scc);
 

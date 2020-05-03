@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -6,20 +6,22 @@
 
 yarp_prepare_plugin(fakeMotionControl
                     CATEGORY device
-                    TYPE yarp::dev::FakeMotionControl
+                    TYPE FakeMotionControl
                     INCLUDE fakeMotionControl.h
                     EXTRA_CONFIG WRAPPER=controlboardwrapper2
-                    DEPENDS "YARP_HAS_MATH_LIB")
+                    DEPENDS "TARGET YARP::YARP_math")
 
 if(NOT SKIP_fakeMotionControl)
-  set(CMAKE_INCLUDE_CURRENT_DIR ON)
-  yarp_add_plugin(yarp_fakeMotionControl fakeMotionControl.cpp
-                                         fakeMotionControl.h)
-  target_link_libraries(yarp_fakeMotionControl PRIVATE YARP::YARP_OS
+  yarp_add_plugin(yarp_fakeMotionControl)
+
+  target_sources(yarp_fakeMotionControl PRIVATE fakeMotionControl.cpp
+                                                fakeMotionControl.h)
+
+  target_link_libraries(yarp_fakeMotionControl PRIVATE YARP::YARP_os
                                                        YARP::YARP_sig
                                                        YARP::YARP_dev
                                                        YARP::YARP_math)
-  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_os
                                                       YARP_sig
                                                       YARP_dev
                                                       YARP_math)
@@ -28,13 +30,10 @@ if(NOT SKIP_fakeMotionControl)
                EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
-  yarp_install(FILES fakeMotionControl.ini
-               COMPONENT ${YARP_PLUGIN_MASTER}
-               DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
   set_property(TARGET yarp_fakeMotionControl PROPERTY FOLDER "Plugins/Device/Fake")
 endif()
-

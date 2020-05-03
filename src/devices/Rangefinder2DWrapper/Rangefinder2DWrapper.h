@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,12 +38,13 @@
 
 #include <yarp/sig/Vector.h>
 
+#include <yarp/dev/LaserScan2D.h>
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/Wrapper.h>
+#include <yarp/dev/IMultipleWrapper.h>
 #include <yarp/dev/api.h>
-#include <yarp/dev/PreciselyTimed.h>
+#include <yarp/dev/IPreciselyTimed.h>
 
 // ROS state publisher
 #include <yarp/os/Node.h>
@@ -51,18 +52,14 @@
 #include <yarp/rosmsg/sensor_msgs/LaserScan.h>
 #include <yarp/rosmsg/impl/yarpRosHelper.h>
 
-namespace yarp{
-    namespace dev{
-        class Rangefinder2DWrapper;
-        }
-}
 
 #define DEFAULT_THREAD_PERIOD 0.02 //s
 
-class yarp::dev::Rangefinder2DWrapper: public yarp::os::PeriodicThread,
-                                public yarp::dev::DeviceDriver,
-                                public yarp::dev::IMultipleWrapper,
-                                public yarp::os::PortReader
+class Rangefinder2DWrapper:
+        public yarp::os::PeriodicThread,
+        public yarp::dev::DeviceDriver,
+        public yarp::dev::IMultipleWrapper,
+        public yarp::os::PortReader
 {
 public:
     Rangefinder2DWrapper();
@@ -78,7 +75,7 @@ public:
     /**
       * Specify which sensor this thread has to read from.
       */
-    bool attachAll(const PolyDriverList &p) override;
+    bool attachAll(const yarp::dev::PolyDriverList &p) override;
     bool detachAll() override;
 
     void attach(yarp::dev::IRangefinder2D *s);
@@ -89,13 +86,12 @@ public:
     void run() override;
 
 private:
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
     yarp::dev::PolyDriver driver;
     std::string partName;
     std::string streamingPortName;
     std::string rpcPortName;
     yarp::os::Port rpcPort;
-    yarp::os::BufferedPort<yarp::os::Bottle> streamingPort;
+    yarp::os::BufferedPort<yarp::dev::LaserScan2D> streamingPort;
     yarp::dev::IRangefinder2D *sens_p;
     yarp::dev::IPreciselyTimed *iTimed;
     yarp::os::Stamp lastStateStamp;
@@ -119,8 +115,6 @@ private:
     yarp::os::Node                                      *rosNode;                   // add a ROS node
     yarp::os::NetUint32                                 rosMsgCounter;              // incremental counter in the ROS message
     yarp::os::Publisher<yarp::rosmsg::sensor_msgs::LaserScan> rosPublisherPort;     // Dedicated ROS topic publisher
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
 };
 
 #endif // YARP_DEV_RANGEFINDER2DWRAPPER_RANGEFINDER2DWRAPPER_H

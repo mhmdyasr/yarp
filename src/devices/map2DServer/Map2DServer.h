@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <mutex>
 
 #include <yarp/os/Network.h>
 #include <yarp/os/Port.h>
@@ -36,27 +37,20 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/MapGrid2D.h>
 #include <yarp/dev/Map2DLocation.h>
+#include <yarp/dev/Map2DArea.h>
+#include <yarp/dev/Map2DPath.h>
 #include <yarp/os/ResourceFinder.h>
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/Wrapper.h>
 #include <yarp/dev/api.h>
 #include <yarp/os/Publisher.h>
 #include <yarp/os/Subscriber.h>
 #include <yarp/os/Node.h>
-#include <string>
 #include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 #include <yarp/rosmsg/nav_msgs/MapMetaData.h>
 #include <yarp/rosmsg/nav_msgs/OccupancyGrid.h>
 
-namespace yarp
-{
-    namespace dev
-    {
-        class Map2DServer;
-    }
-}
 
 #define DEFAULT_THREAD_PERIOD 20 //ms
 
@@ -76,29 +70,36 @@ namespace yarp
  * Integration with ROS map server is currently under development.
  */
 
-class yarp::dev::Map2DServer : public yarp::dev::DeviceDriver, public yarp::os::PortReader
+class Map2DServer :
+        public yarp::dev::DeviceDriver,
+        public yarp::os::PortReader
 {
 private:
-    std::map<std::string, yarp::dev::MapGrid2D>     m_maps_storage;
-    std::map<std::string, yarp::dev::Map2DLocation> m_locations_storage;
+    std::map<std::string, yarp::dev::Nav2D::MapGrid2D>     m_maps_storage;
+    std::map<std::string, yarp::dev::Nav2D::Map2DLocation> m_locations_storage;
+    std::map<std::string, yarp::dev::Nav2D::Map2DPath>     m_paths_storage;
+    std::map<std::string, yarp::dev::Nav2D::Map2DArea>     m_areas_storage;
 
 public:
     Map2DServer();
     ~Map2DServer();
-    
+
     bool saveMaps(std::string filename);
     bool loadMaps(std::string filename);
-    bool load_locations(std::string locations_file);
-    bool save_locations(std::string locations_file);
+    bool load_locations_and_areas(std::string locations_file);
+    bool save_locations_and_areas(std::string locations_file);
     bool open(yarp::os::Searchable &params) override;
     bool close() override;
     yarp::os::Bottle getOptions();
 
 private:
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+    bool priv_load_locations_and_areas_v1(std::ifstream& file);
+    bool priv_load_locations_and_areas_v2(std::ifstream& file);
+
+private:
     yarp::os::ResourceFinder     m_rf_mapCollection;
-    yarp::os::Mutex              m_mutex;
-    std::string        m_rpcPortName;
+    std::mutex              m_mutex;
+    std::string                  m_rpcPortName;
     yarp::os::Node*              m_rosNode;
     bool                         m_enable_publish_ros_map;
     bool                         m_enable_subscribe_ros_map;
@@ -120,8 +121,6 @@ private:
     void parse_string_command(yarp::os::Bottle& in, yarp::os::Bottle& out);
     void parse_vocab_command(yarp::os::Bottle& in, yarp::os::Bottle& out);
     bool updateVizMarkers();
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
 };
 
 #endif // YARP_DEV_MAP2DSERVER_H

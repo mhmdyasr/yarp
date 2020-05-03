@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -8,13 +8,11 @@
  */
 
 #include <yarp/os/BufferedPort.h>
-#include <yarp/os/Mutex.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/PortInfo.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Stamp.h>
-
 #include <yarp/sig/all.h>
 
 #include <iostream>
@@ -22,30 +20,45 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <array>
 #include <deque>
 #include <utility>
+#include <mutex>
+#include <algorithm>
 
 #ifdef ADD_VIDEO
-    #include <opencv2/opencv.hpp>
-#endif
+#    include <opencv2/opencv.hpp>
+#    include <yarp/cv/Cv.h>
+#    if CV_MAJOR_VERSION >= 3
+#        include <opencv2/core/core_c.h>
+#        include <opencv2/videoio.hpp>
+#    endif // CV_MAJOR_VERSION
+#endif // ADD_VIDEO
 
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
 
+#ifdef ADD_VIDEO
+    using namespace yarp::cv;
+#endif
+
 /**************************************************************************/
-enum DumpType { bottle, image };
-bool save_jpeg = false;
+enum class DumpType { bottle, image };
+enum class DumpFormat { plain, image_jpg, image_png } dump_format;
 
 // Abstract object definition for queueing
 /**************************************************************************/
 class DumpObj
 {
+protected:
+    DumpFormat dump_format{DumpFormat::plain};
+
 public:
     virtual ~DumpObj() = default;
     virtual const string toFile(const string&, unsigned int) = 0;
-    virtual void *getPtr() = 0;
+    virtual void attachFormat(const DumpFormat &format) { dump_format=format; }
 };
 
 
@@ -68,8 +81,6 @@ public:
         string ret=p->toString();
         return ret;
     }
-
-    void *getPtr() override { return nullptr; }
 };
 
 
@@ -88,6 +99,9 @@ class DumpImage : public DumpObj
 {
 private:
     Image *p;
+#ifdef ADD_VIDEO
+    cv::Mat img;
+#endif
 
 public:
     DumpImage() { p=new Image(); }
@@ -112,10 +126,15 @@ public:
             format=file::FORMAT_PGM;
             ext=".pgm";
         }
-        else if (save_jpeg)
+        else if (dump_format==DumpFormat::image_jpg)
         {
             format=file::FORMAT_JPG;
             ext=".jpg";
+        }
+        else if (dump_format==DumpFormat::image_png)
+        {
+            format=file::FORMAT_PNG;
+            ext=".png";
         }
         else
         {
@@ -130,7 +149,25 @@ public:
         return (fName.str()+" ["+Vocab::decode(code)+"]");
     }
 
-    void *getPtr() override { return p->getIplImage(); }
+#ifdef ADD_VIDEO
+    const cv::Mat &getImage()
+    {
+        int code=p->getPixelCode();
+        if (code==VOCAB_PIXEL_MONO_FLOAT)
+        {
+            img=toCvMat(*static_cast<ImageOf<PixelFloat>*>(p));
+        }
+        else if (code==VOCAB_PIXEL_MONO)
+        {
+            img=toCvMat(*static_cast<ImageOf<PixelMono>*>(p));
+        }
+        else
+        {
+            img=toCvMat(*static_cast<ImageOf<PixelRgb>*>(p));
+        }
+        return img;
+    }
+#endif
 };
 
 
@@ -202,7 +239,7 @@ struct DumpItem
 class DumpQueue : public deque<DumpItem>
 {
 private:
-    Mutex mutex;
+    std::mutex mutex;
 
 public:
     void lock()   { mutex.lock();   }
@@ -258,6 +295,7 @@ private:
                 item.timeStamp.setRxStamp(Time::now());
 
             item.obj=factory(obj);
+            item.obj->attachFormat(dump_format);
 
             buf.lock();
             buf.push_back(item);
@@ -288,6 +326,8 @@ private:
     bool            saveData;
     bool            videoOn;
     string          videoType;
+    bool            rxTime;
+    bool            txTime;
     bool            closing;
 
 #ifdef ADD_VIDEO
@@ -301,8 +341,9 @@ private:
 #endif
 
 public:
-    DumpThread(DumpType _type, DumpQueue &Q, string _dirName, int szToWrite,
-               bool _saveData, bool _videoOn, string _videoType) :
+    DumpThread(DumpType _type, DumpQueue &Q, const string &_dirName, const int szToWrite,
+               const bool _saveData, const bool _videoOn, const string &_videoType,
+               const bool _rxTime, const bool _txTime) :
         PeriodicThread(0.05),
         buf(Q),
         type(_type),
@@ -314,6 +355,8 @@ public:
         saveData(_saveData),
         videoOn(_videoOn),
         videoType(std::move(_videoType)),
+        rxTime(_rxTime),
+        txTime(_txTime),
         closing(false)
     {
         infoFile=dirName;
@@ -363,14 +406,23 @@ public:
         }
 
         finfo<<"Type: ";
-        if (type==bottle)
+        if (type==DumpType::bottle)
             finfo<<"Bottle;";
-        else if (type==image)
+        else if (type==DumpType::image)
         {
             finfo<<"Image;";
             if (videoOn)
                 finfo<<" Video:"<<videoType<<"(huffyuv);";
         }
+        finfo<<endl;
+
+        finfo<<"Stamp: ";
+        if (txTime && rxTime)
+            finfo<<"tx+rx;";
+        else if (txTime)
+            finfo<<"tx;";
+        else
+            finfo<<"rx;";
         finfo<<endl;
 
         fdata.open(dataFile.c_str());
@@ -398,8 +450,9 @@ public:
 
     void run() override
     {
+        //!!! access to size must be protected: problem spotted with Linux stl
         buf.lock();
-        unsigned int sz=buf.size(); //!!! access to size must be protected: problem spotted with Linux stl
+        unsigned int sz=(unsigned int)buf.size();
         buf.unlock();
 
         // each 10 seconds it issues a writeToDisk command straightaway
@@ -425,17 +478,15 @@ public:
                 buf.unlock();
 
                 int fps;
-                int frameW=((IplImage*)itemEnd.obj->getPtr())->width;
-                int frameH=((IplImage*)itemEnd.obj->getPtr())->height;
+                auto& img=static_cast<DumpImage*>(itemEnd.obj)->getImage();
+                int frameW=img.size().width;
+                int frameH=img.size().height;
 
                 t0=itemFront.timeStamp.getStamp();
                 double dt=itemEnd.timeStamp.getStamp()-t0;
-                if (dt<=0.0)
-                    fps=25; // default
-                else
-                    fps=int(double(sz-1)/dt);
+                fps=(dt<=0.0)?25:int(double(sz-1)/dt);
 
-                videoWriter.open(videoFile.c_str(),CV_FOURCC('H','F','Y','U'),
+                videoWriter.open(videoFile.c_str(),cv::VideoWriter::fourcc('H','F','Y','U'),
                                  fps,cvSize(frameW,frameH),true);
 
                 doImgParamsExtraction=false;
@@ -464,8 +515,7 @@ public:
             #ifdef ADD_VIDEO
                 if (doSaveFrame)
                 {
-                    cv::Mat img=cv::cvarrToMat((IplImage*)item.obj->getPtr());
-                    videoWriter<<img;
+                    videoWriter << static_cast<DumpImage*>(item.obj)->getImage();
 
                     // write the timecode of the frame
                     int dt=(int)(1000.0*(item.timeStamp.getStamp()-t0));
@@ -525,11 +575,29 @@ private:
     DumpThread       *t{nullptr};
     DumpReporter      reporter;
     Port              rpcPort;
-    DumpType          type{bottle};
+    DumpType          type{DumpType::bottle};
     bool              rxTime{false};
     bool              txTime{false};
     unsigned int      dwnsample{0};
     string            portName;
+
+    void polish_filename(string &fname)
+    {
+        array<char,6> notallowed={':','*','?','|','>','<'};
+        for (const auto& c : notallowed)
+        {
+#if (__cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+            replace(fname.begin(),fname.end(),c,'_');
+#else
+            auto it = fname.begin();
+            for (; it != fname.end(); ++it) {
+                if (*it == c) {
+                    *it = '_';
+                }
+            }
+#endif
+        }
+    }
 
 public:
     DumpModule() = default;
@@ -540,6 +608,7 @@ public:
         if (portName[0]!='/')
             portName="/"+portName;
 
+        dump_format=DumpFormat::plain;
         bool saveData=true;
         bool videoOn=false;
         string videoType=rf.check("videoType",Value("mkv")).asString();
@@ -548,24 +617,23 @@ public:
         {
             string optTypeName=rf.find("type").asString();
             if (optTypeName=="bottle")
-                type=bottle;
-            else if (optTypeName=="image")
+                type=DumpType::bottle;
+            else if ((optTypeName=="image") || (optTypeName=="image_jpg") || (optTypeName=="image_png"))
             {
-                type=image;
+                type=DumpType::image;
+                if (optTypeName=="image_jpg")
+                    dump_format=DumpFormat::image_jpg;
+                else if (optTypeName=="image_png")
+                    dump_format=DumpFormat::image_png;
             #ifdef ADD_VIDEO
                 if (rf.check("addVideo"))
                     videoOn=true;
             #endif
             }
-            else if (optTypeName == "image_jpg")
-            {
-                type=image;
-                save_jpeg = true;
-            }
         #ifdef ADD_VIDEO
             else if (optTypeName=="video")
             {
-                type=image;
+                type=DumpType::image;
                 videoOn=true;
                 saveData=false;
             }
@@ -577,12 +645,13 @@ public:
             }
         }
         else
-            type=bottle;
+            type=DumpType::bottle;
 
         dwnsample=rf.check("downsample",Value(1)).asInt32();
         rxTime=rf.check("rxTime");
         txTime=rf.check("txTime");
         string templateDirName=rf.check("dir")?rf.find("dir").asString():portName;
+        polish_filename(templateDirName);
         if (templateDirName[0]!='/')
             templateDirName="/"+templateDirName;
 
@@ -609,7 +678,7 @@ public:
         yarp::os::mkdir_p(dirName.c_str());
 
         q=new DumpQueue();
-        t=new DumpThread(type,*q,dirName,100,saveData,videoOn,videoType);
+        t=new DumpThread(type,*q,dirName,100,saveData,videoOn,videoType,rxTime,txTime);
 
         if (!t->start())
         {
@@ -621,7 +690,7 @@ public:
 
         reporter.setThread(t);
 
-        if (type==bottle)
+        if (type==DumpType::bottle)
         {
             p_bottle=new DumpPort<Bottle>(*q,dwnsample,rxTime,txTime);
             p_bottle->useCallback();
@@ -642,7 +711,7 @@ public:
         {
             string srcPort=rf.find("connect").asString();
             bool ok=Network::connect(srcPort.c_str(),
-                                     (type==bottle)?p_bottle->getName().c_str():
+                                     (type==DumpType::bottle)?p_bottle->getName().c_str():
                                      p_image->getName().c_str(),"tcp");
 
             ostringstream msg;
@@ -668,7 +737,7 @@ public:
     {
         t->stop();
 
-        if (type==bottle)
+        if (type==DumpType::bottle)
         {
             p_bottle->interrupt();
             p_bottle->close();
@@ -712,11 +781,11 @@ int main(int argc, char *argv[])
         yInfo() << "\t--dir        name: provide explicit name of storage directory";
         yInfo() << "\t--overwrite      : overwrite pre-existing storage directory";
     #ifdef ADD_VIDEO
-        yInfo() << "\t--type       type: type of the data to be dumped [bottle(default), image, image_jpg, video]";
-        yInfo() << "\t--addVideo       : produce video as well (if image is selected)";
+        yInfo() << "\t--type       type: type of the data to be dumped [bottle(default), image, image_jpg, image_png, video]";
+        yInfo() << "\t--addVideo       : produce video as well (if image* is selected)";
         yInfo() << "\t--videoType   ext: produce video of specified container type [mkv(default), avi]";
     #else
-        yInfo() << "\t--type       type: type of the data to be dumped [bottle(default), image, image_jpg]";
+        yInfo() << "\t--type       type: type of the data to be dumped [bottle(default), image, image_jpg, image_png]";
     #endif
         yInfo() << "\t--downsample    n: downsample rate (default: 1 => downsample disabled)";
         yInfo() << "\t--rxTime         : dump the receiver time instead of the sender time";

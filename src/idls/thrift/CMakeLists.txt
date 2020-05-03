@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -24,7 +24,7 @@ set(yarpidl_thrift_SRCS "${CMAKE_CURRENT_BINARY_DIR}/thrift/version.h"
 set(yarpidl_thrift_YARP_SRCS src/t_yarp_generator.cc)
 
 
-if(BISON_FOUND AND FLEX_FOUND)
+if(YARP_HAS_BISON AND YARP_HAS_FLEX AND NOT CMAKE_CROSSCOMPILING)
   bison_target(thrifty
                "${THRIFT_ROOT}/compiler/cpp/src/thrift/thrifty.yy"
                "${CMAKE_CURRENT_BINARY_DIR}/thrift/thrifty.cc"
@@ -89,12 +89,13 @@ else()
   endif()
 endif()
 
-
-add_executable(yarpidl_thrift ${yarpidl_thrift_SRCS}
-                              ${yarpidl_thrift_GEN_SRCS}
-                              ${yarpidl_thrift_YARP_SRCS})
-
+add_executable(yarpidl_thrift)
 add_executable(YARP::yarpidl_thrift ALIAS yarpidl_thrift)
+
+target_sources(yarpidl_thrift PRIVATE ${yarpidl_thrift_SRCS}
+                                      ${yarpidl_thrift_GEN_SRCS}
+                                      ${yarpidl_thrift_YARP_SRCS})
+
 install(TARGETS yarpidl_thrift
         EXPORT YARP_idl_tools
         COMPONENT YARP_idl_tools

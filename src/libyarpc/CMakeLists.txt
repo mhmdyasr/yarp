@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -19,7 +19,6 @@ if(CREATE_YARPC)
 
   unset(YARP_COPY_SRC)
   if(CREATE_YARPC_STANDALONE)
-    include_directories(SYSTEM ${ACE_INCLUDE_DIRS})
     # in some cases, want to be fully stand-alone to not depend on C++ ABI.
     foreach(_comp OS sig dev init)
       get_property(${_comp}_src TARGET YARP_${_comp} PROPERTY SOURCES)
@@ -52,15 +51,18 @@ if(CREATE_YARPC)
     set_property(SOURCE ${_file} APPEND_STRING PROPERTY COMPILE_FLAGS " -fvisibility=default")
   endforeach()
 
-  add_library(yarpc ${yarpc_HDRS}
-                    ${yarpc_SRCS}
-                    ${YARP_COPY_SRC})
+  add_library(yarpc)
   add_library(YARP::yarpc ALIAS yarpc)
 
-  target_link_libraries(yarpc PRIVATE ${ACE_LIBRARIES})
+  target_sources(yarpc PRIVATE ${yarpc_HDRS}
+                               ${yarpc_SRCS}
+                               ${YARP_COPY_SRC})
+
+  target_compile_definitions(yarpc PRIVATE YARP_HAS_ACE)
+  target_link_libraries(yarpc PRIVATE ACE::ACE)
 
   if(NOT CREATE_YARPC_STANDALONE)
-    target_link_libraries(yarpc PRIVATE YARP::YARP_OS
+    target_link_libraries(yarpc PRIVATE YARP::YARP_os
                                         YARP::YARP_init)
     if(YARP_LINK_PLUGINS)
       if(YARP_COMPILE_CARRIER_PLUGINS)
@@ -92,11 +94,13 @@ if(CREATE_YARPC)
   set_property(TARGET yarpc PROPERTY FOLDER "Unmaintained")
 
   if(YARP_COMPILE_TESTS)
-    add_executable(yarpc_test1 test1.cpp)
-    target_link_libraries(yarpc_test1 YARP::yarpc)
+    add_executable(yarpc_test1)
+    target_sources(yarpc_test1 PRIVATE test1.cpp)
+    target_link_libraries(yarpc_test1 PRIVATE YARP::yarpc)
 
-    add_executable(yarpc_test2 test2.cpp)
-    target_link_libraries(yarpc_test2 YARP::yarpc)
-  endif(YARP_COMPILE_TESTS)
+    add_executable(yarpc_test2)
+    target_sources(yarpc_test2 PRIVATE test2.cpp)
+    target_link_libraries(yarpc_test2 PRIVATE YARP::yarpc)
+  endif()
 
 endif(CREATE_YARPC)

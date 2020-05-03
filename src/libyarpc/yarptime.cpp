@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -24,4 +24,3 @@ YARP_DEFINE(double) yarpTimeNow() {
 YARP_DEFINE(void) yarpTimeYield() {
     Time::yield();
 }
-

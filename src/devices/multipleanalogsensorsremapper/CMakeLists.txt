@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -6,20 +6,23 @@
 
 yarp_prepare_plugin(multipleanalogsensorsremapper
                     CATEGORY device
-                    TYPE yarp::dev::MultipleAnalogSensorsRemapper
+                    TYPE MultipleAnalogSensorsRemapper
                     INCLUDE MultipleAnalogSensorsRemapper.h
                     DEFAULT ON)
 
 if(ENABLE_multipleanalogsensorsremapper)
-  set(CMAKE_INCLUDE_CURRENT_DIR ON)
-  yarp_add_plugin(yarp_multipleanalogsensorsremapper MultipleAnalogSensorsRemapper.cpp
-                                                     MultipleAnalogSensorsRemapper.h
-                                                     $<TARGET_OBJECTS:multipleAnalogSensorsSerializations>)
+  yarp_add_plugin(yarp_multipleanalogsensorsremapper)
+
+  target_sources(yarp_multipleanalogsensorsremapper PRIVATE MultipleAnalogSensorsRemapper.cpp
+                                                            MultipleAnalogSensorsRemapper.h)
+
+  target_sources(yarp_multipleanalogsensorsremapper PRIVATE $<TARGET_OBJECTS:multipleAnalogSensorsSerializations>)
   target_include_directories(yarp_multipleanalogsensorsclient PRIVATE $<TARGET_PROPERTY:multipleAnalogSensorsSerializations,INTERFACE_INCLUDE_DIRECTORIES>)
-  target_link_libraries(yarp_multipleanalogsensorsremapper PRIVATE YARP::YARP_OS
+
+  target_link_libraries(yarp_multipleanalogsensorsremapper PRIVATE YARP::YARP_os
                                                                    YARP::YARP_sig
                                                                    YARP::YARP_dev)
-  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_os
                                                       YARP_sig
                                                       YARP_dev)
 
@@ -27,10 +30,8 @@ if(ENABLE_multipleanalogsensorsremapper)
                EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
-  yarp_install(FILES multipleanalogsensorsremapper.ini
-               COMPONENT ${YARP_PLUGIN_MASTER}
-               DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 

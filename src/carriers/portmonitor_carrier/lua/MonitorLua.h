@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -12,9 +12,9 @@
 #include <string>
 #include <string>
 #include <yarp/os/PeriodicThread.h>
-#include <yarp/os/RecursiveMutex.h>
 #include "MonitorBinding.h"
-#include "lua_swig.h"
+#include "swigluarun.h"
+#include <mutex>
 
 class MonitorTrigger;
 
@@ -66,7 +66,7 @@ private:
     bool bHasAcceptCallback;
     bool bHasUpdateCallback;
     bool bHasUpdateReplyCallback;
-    yarp::os::RecursiveMutex luaMutex;
+    std::recursive_mutex luaMutex;
 
 public:
     MonitorTrigger* trigger;
@@ -112,5 +112,3 @@ private:
 
 
 #endif //_MONITORLUA_INC_
-
-

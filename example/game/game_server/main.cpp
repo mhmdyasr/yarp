@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -24,14 +24,12 @@
 #include "Player.h"
 
 #include <yarp/os/all.h>
+#include <mutex>
 #include <string>
 
 using namespace yarp::os;
 
-typedef std::string String;
-
-
-Mutex clientMutex();
+std::mutex clientMutex;
 static int clientCount = 0;
 
 
@@ -40,7 +38,7 @@ public:
     int id;
     bool loggedOn;
     Player player;
-    String result;
+    std::string result;
     ConnectionWriter *writer;
     Replier& broadcaster;
 
@@ -66,11 +64,11 @@ public:
 
     virtual bool read(ConnectionReader& connection) {
         result = "";
-        printf("Reading something from <%s>\n", 
+        printf("Reading something from <%s>\n",
                connection.getRemoteContact().getName().c_str());
         if (!loggedOn) {
             printf("Completing login...\n");
-            String cmd = "connect ";
+            std::string cmd = "connect ";
             cmd += connection.getRemoteContact().getName().c_str();
             player.apply(cmd.c_str());
             loggedOn = true;
@@ -81,7 +79,7 @@ public:
         if (writer!=NULL) {
             // just send the same thing back
             std::string str = receive.get(0).asString();
-            String ask = str.c_str();
+            std::string ask = str.c_str();
             for (int i=1; i<receive.size(); i++) {
                 ask += " ";
                 ask += receive.get(i).asString().c_str();
@@ -98,7 +96,7 @@ public:
         if (result.length()>0 && loggedOn) {
             //if (reply.size()>0) {
             if (writer->isTextMode()) {
-                writer->appendString(result.c_str());
+                writer->appendText(result.c_str());
             } else {
                 Bottle reply;
                 reply.fromString(result.c_str());
@@ -151,7 +149,7 @@ public:
         man.setReaderCreator(*this);
         man.open(Contact("/game", "...", "...", 8080));
         Contact where = man.where();
-        printf("Game reachable at ip %s port %d (registered with yarp as %s)\n", 
+        printf("Game reachable at ip %s port %d (registered with yarp as %s)\n",
                where.getHost().c_str(),
                where.getPort(),
                where.getName().c_str());
@@ -181,7 +179,6 @@ int main() {
     //Network::setLocalMode(true);
     ClientFactory factory;
     Game::getGame().main();
-  
+
     return 0;
 }
-

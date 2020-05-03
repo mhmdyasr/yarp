@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,10 +24,10 @@
 #include <iostream>
 
 using namespace yarp::dev;
-using namespace yarp::dev::SDLJoypadImpl;
 using namespace yarp::sig;
 using namespace yarp::os;
 using namespace std;
+using namespace SDLJoypadImpl;
 
 #define actionsExecutionTime 1.0
 SDLJoypad::SDLJoypad()

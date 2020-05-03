@@ -1,29 +1,26 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
 # BSD-3-Clause license. See the accompanying LICENSE file for details.
 
-if(CREATE_YARPDATADUMPER)
-  if(YARP_HAS_OPENCV)
-    add_definitions(-DADD_VIDEO)
-    include_directories(${OpenCV_INCLUDE_DIRS})
-  else()
-    message(STATUS "yarpdatadumper: OpenCV not selected, keep on building...")
-  endif()
+if(YARP_COMPILE_yarpdatadumper)
+  add_executable(yarpdatadumper)
 
   set(yarpdatadumper_SRCS main.cpp)
 
-  add_executable(yarpdatadumper ${yarpdatadumper_SRCS})
+  target_sources(yarpdatadumper PRIVATE ${yarpdatadumper_SRCS})
 
-  if(YARP_HAS_OPENCV)
-    target_link_libraries(yarpdatadumper ${OpenCV_LIBRARIES})
+  target_link_libraries(yarpdatadumper PRIVATE YARP::YARP_os
+                                               YARP::YARP_init
+                                               YARP::YARP_sig)
+
+  if(YARP_HAS_OpenCV)
+    target_compile_definitions(yarpdatadumper PRIVATE ADD_VIDEO)
+    target_link_libraries(yarpdatadumper PRIVATE ${OpenCV_LIBRARIES})
+    target_link_libraries(yarpdatadumper PRIVATE YARP::YARP_cv)
   endif()
-
-  target_link_libraries(yarpdatadumper YARP::YARP_OS
-                                       YARP::YARP_init
-                                       YARP::YARP_sig)
 
   install(TARGETS yarpdatadumper
           COMPONENT utilities

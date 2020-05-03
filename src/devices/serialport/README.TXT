@@ -1,6 +1,6 @@
 Driver for Serial communications.
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2007 Alexandre Bernardino
 # Copyright (C) 2007 Carlos Beltran-Gonzalez
 # Copyright (C) 2007 Francesco Giovannini
@@ -28,4 +28,3 @@ To test the driver, you may use a rs232 9-pin plun with pins 2 and 3 shortcutted
 read to the output port.
 The sent strings should appear unchanged at the yarp read terminal (except for
 being broken or having extra control characters from the bottle format).
-

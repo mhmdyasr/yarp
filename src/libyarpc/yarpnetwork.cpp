@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -87,6 +87,3 @@ YARP_DEFINE(int) yarpNetworkDisconnect(yarpNetworkPtr network,
     YARP_NETWORK(network).disconnect(src,dest);
     return 0;
 }
-
-
-

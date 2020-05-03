@@ -8,7 +8,7 @@ A user can interact with a YARP device driver directly inside the local applicat
 A quick test can be performed by running the YARP devices with few simple commands. First we need to compile YARP repository, setting the following CMake flags to `true` in order to compile all required modules:
 
 ```
-cmake .. -DCREATE_GUIS=true -DENABLE_yarpcar_depthimage=true -DENABLE_yarpmod_fakeDepthCamera=true
+cmake .. -DYARP_COMPILE_GUIS=true -DENABLE_yarpcar_depthimage=true -DENABLE_yarpmod_fakeDepthCamera=true
 ```
 
 To fully run the test, we need to open 5 terminals for command line input.
@@ -18,7 +18,7 @@ In this example we will use a fake device, for testing purposes: the `fakeDepthC
 
 ```
 Terminal 1: yarpserver
-Terminal 2: yarpdev --device RGBDSensorWrapper --name /server --subdevice fakeDepthCamera --mode ball 
+Terminal 2: yarpdev --device RGBDSensorWrapper --name /server --subdevice fakeDepthCamera --mode ball
 ```
 The parameters here means:
 - device: The server we want to open
@@ -56,7 +56,7 @@ config.put("device", "fakeDepthCamera");            // device producing (fake) d
 
 PolyDriver dd;
 dd.open(config);
-``` 
+```
 
 The Polydriver class will load the required plugin and the makes it available to the user.
 In order to access specific functionality offered by the driver, the user must access to the right YARP interface.
@@ -65,7 +65,7 @@ Polydriver offers the 'view' functionality which expose a particular interface (
 ``` c++
 yarp::dev::IRGBDSensor *RGBDInterface;              // interface we want to use
 dd.view(RGBDInterface);
-``` 
+```
 Now, the user can easily access the device functionality by mean of the interface pointer:
 
 ``` c++
@@ -103,7 +103,7 @@ The `fakeDepthCamera` device driver is opened in the very same way as before. Af
 ```
 yarp::dev::IWrapper *wrapperInterface;
 wrapperDriver.view(wrapperInterface);
-wrapperInterface->attach(&rgbdDriver);                	// Bind the wrapper with the actual device
+wrapperInterface->attach(&rgbdDriver);                  // Bind the wrapper with the actual device
 ```
 
 #### Client side:
@@ -118,7 +118,7 @@ PolyDriver clientDriver;
 Property   clientConfig;
 
 // client configuration
-clientConfig.put("device", "RGBDSensorClient");    		// Network client receiving data from YARP network
+clientConfig.put("device", "RGBDSensorClient"); // Network client receiving data from YARP network
 clientConfig.put(<paramName>, <paramValue>);
 
 // Instantiating RGBD client
@@ -130,7 +130,7 @@ As in the local application, the user has to get the `view` of the required inte
 
 ``` C++
 yarp::dev::IRGBDSensor *RGBDInterface;              // interface we want to use
-clientDriver.view(RGBDInterface);              		// wanted device interface
+clientDriver.view(RGBDInterface);                   // wanted device interface
 
 // Let's use the interface to get info from device
 int rgbImageHeight   = RGBDInterface->getRgbHeight();

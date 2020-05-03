@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -7,22 +7,23 @@
  * BSD-3-Clause license. See the accompanying LICENSE file for details.
  */
 
-#include <stdio.h>
 #include <yarp/os/all.h>
-using namespace yarp::os;
 
 // Thread latency, basic test.
-// Thread A is periodic. Thread B is 
+// Thread A is periodic. Thread B is
 // not periodic, but waits on a mutex. Thread
 // A posts the mutex to wake up B.
-// We measure the time it takes to for B to 
+// We measure the time it takes to for B to
 // wake up.
-// 
+//
 // Lorenzo Natale August 2008
 
 #include <string>
 #include <vector>
+#include <mutex>
+#include <cstdio>
 
+using namespace yarp::os;
 using namespace std;
 
 #ifdef USE_PARALLEL_PORT
@@ -34,7 +35,7 @@ const double THREAD_PERIOD=0.020;
 
 class ThreadB: public Thread
 {
-    Mutex mutex;
+    std::mutex mutex;
     int iterations;
     double stamp;
     vector<double> measures;
@@ -125,7 +126,7 @@ public:
 
 };
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
     Network yarp;
     Property p;

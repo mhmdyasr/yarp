@@ -3,6 +3,8 @@
 
 \ingroup yarp_tools
 
+\tableofcontents
+
 The command-line utility "yarpdev" can create devices and wrap
 them for network visibility.  This is useful in cases where you
 wish to control devices on remote machines.
@@ -18,7 +20,7 @@ Often this will require that you install
 particular libraries or operating system device drivers.
 
 
-@section yarpdev_base yarpdev
+\section yarpdev_base yarpdev
 
 The utility gives a message if called with no arguments to confirm
 that it exists, and to give tips on where to get started using it.
@@ -39,7 +41,7 @@ If you have problems, you can add the "verbose" flag to get more information
    yarpdev --verbose --device ffmpeg_grabber
 \endverbatim
 
-@section yarpdev_list yarpdev --list
+\section yarpdev_list yarpdev --list
 
 With the --list option present, the devices available on your system
 are listed.  For example:
@@ -55,7 +57,6 @@ Device "inertiacube2", C++ class InertiaCube2, has no network wrapper
 Device "jamesarmcalibrator", C++ class JamesArmCalibrator, has no network wrapper
 Device "jameshead", C++ class JamesHead, has no network wrapper
 Device "XSensMTx", C++ class XSensMTx, wrapped by "inertial"
-Device "portaudio", C++ class PortAudioDeviceDriver, wrapped by "grabber"
 Device "opencv_grabber", C++ class OpenCVGrabber, wrapped by "grabber"
 Device "ffmpeg_grabber", C++ class FfmpegGrabber, wrapped by "grabber"
 Device "test_grabber", C++ class TestFrameGrabber, wrapped by "grabber"
@@ -65,13 +66,15 @@ Device "inertial", C++ class ServerInertial, is a network wrapper.
 Device "sound_grabber", C++ class ServerSoundGrabber, is a network wrapper.
 Device "remote_controlboard", C++ class RemoteControlBoard, wrapped by "controlboard"
 Device "controlboard", C++ class ServerControlBoard, is a network wrapper.
+Device "portaudioPlayer", available on request (found in <prefix>/lib/yarp/yarp_portaudioPlayer.so library), wrapped by "AudioPlayerWrapper".
+Device "portaudioRecorder", available on request (found in <prefix>/lib/yarp/yarp_portaudioRecorder.so library), wrapped by "AudioRecorderWrapper".
 \endverbatim
 
 where the first keyword like "test_grabber" is the device name used to instantiate it, class is
 the name of the class that implements it and the latter explains if the device is a network wrapper
 or it has a default network wrapper to be used or it does not have a default wrapper.
 
-@section yarpdev_normal yarpdev --device DEVICENAME --OPTION1 VALUE1 ...
+\section yarpdev_normal yarpdev --device DEVICENAME --OPTION1 VALUE1 ...
 
 This is the normal way to start up a device.  For example:
 \verbatim
@@ -104,10 +107,10 @@ $ yarpdev --device test_grabber --period 0.5 --width 640 --height 480
 \endverbatim
 was automatically expanded to:
 \verbatim
-$ yarpdev --device grabber --subdevice test_grabber --period 0.5 --width 640 --height 480
+$ yarpdev --device grabberDual --subdevice test_grabber --period 0.5 --width 640 --height 480
 \endverbatim
 
-@section yarpdev_verbose yarpdev --verbose --device DEVICENAME  ...
+\section yarpdev_verbose yarpdev --verbose --device DEVICENAME  ...
 
 If we add the "--verbose" flag, yarpdev will report information
 about device configuration.  This can help a lot to work out

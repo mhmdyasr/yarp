@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -11,17 +11,15 @@
 
 #include <yarp/dev/DeviceDriver.h>
 
-namespace yarp {
-    namespace dev {
-      class bazdevice;
-    }
-}
-
-class yarp::dev::bazdevice : public DeviceDriver
+class bazdevice : public yarp::dev::DeviceDriver
 {
-private:
 public:
-    bazdevice() {}
-    virtual bool open(yarp::os::Searchable& config);
-};
+    bazdevice() = default;
+    bazdevice(const bazdevice&) = delete;
+    bazdevice(bazdevice&&) = delete;
+    bazdevice& operator=(const bazdevice&) = delete;
+    bazdevice& operator=(bazdevice&&) = delete;
+    ~bazdevice() override = default;
 
+    bool open(yarp::os::Searchable& config) override;
+};

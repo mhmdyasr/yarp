@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,7 +36,7 @@ class MainWindow :public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(const yarp::os::ResourceFinder& rf, yarp::dev::IBattery* ibat, QWidget *parent = 0);
+    explicit MainWindow(const yarp::os::ResourceFinder& rf, yarp::dev::IBattery* ibat, QWidget *parent = 0, double refresh_period=10.0);
     ~MainWindow();
 
     private slots:

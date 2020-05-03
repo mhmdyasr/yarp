@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2010 Ze Ji
  * All rights reserved.
  *
@@ -45,7 +45,7 @@
 #include <iostream>
 #include <yarp/os/Time.h>
 
-#include <yarp/os/Mutex.h>
+#include <mutex>
 
 #define MOTION_COMPLETION_TOLERANCE 3
 
@@ -78,23 +78,23 @@
 
 /** defines for device parameters - RAM ********************************/
 
-#define CT_TORQUE_ENABLE	24
-#define CT_CW_COMP_MARGIN	26
-#define CT_CWW_COMP_MARGIN	27
-#define CT_CW_COMP_SLOPE	28
-#define CT_CWW_COMP_SLOPE	29
-#define CT_GOAL_POSITION	30
-#define CT_MOVING_SPEED		32
-#define CT_TORQUE_LIMIT		34
-#define CT_PRESENT_POSITION	0x24
-#define CT_PRESENT_SPEED	0x26
-#define CT_PRESENT_LOAD		0x28
-#define CT_PRESENT_VOLTAGE	42
-#define CT_PRESENT_TEMPERATURE	43
-#define CT_REG_INSTRUCTION	44
-#define CT_MOVING		46
-#define CT_LOCK			47
-#define CT_PUNCH		48
+#define CT_TORQUE_ENABLE        24
+#define CT_CW_COMP_MARGIN       26
+#define CT_CWW_COMP_MARGIN      27
+#define CT_CW_COMP_SLOPE        28
+#define CT_CWW_COMP_SLOPE       29
+#define CT_GOAL_POSITION        30
+#define CT_MOVING_SPEED         32
+#define CT_TORQUE_LIMIT         34
+#define CT_PRESENT_POSITION     0x24
+#define CT_PRESENT_SPEED        0x26
+#define CT_PRESENT_LOAD         0x28
+#define CT_PRESENT_VOLTAGE      42
+#define CT_PRESENT_TEMPERATURE  43
+#define CT_REG_INSTRUCTION      44
+#define CT_MOVING               46
+#define CT_LOCK                 47
+#define CT_PUNCH                48
 
 enum ErrorCode {
     VOLTAGE_ERROR,
@@ -107,13 +107,6 @@ enum ErrorCode {
     OK
 };
 
-namespace yarp {
-    namespace dev {
-        class DynamixelAX12FtdiDriver;
-        class FtdiDeviceSettings;
-    }
-}
-
 using namespace yarp::os;
 using namespace yarp::dev;
 
@@ -122,7 +115,8 @@ using namespace yarp::dev;
  * Such a device can contain information:
  * such as: Manufacturer: FTDI, Description: FT232R USB UART, Serial A7003MhG
  */
-class yarp::dev::FtdiDeviceSettings {
+class FtdiDeviceSettings
+{
 public:
     int vendor; //0x0403 normally. Can be found by lsusb on linux
     int product; //0x6001   Can be found by lsusb on linux
@@ -140,7 +134,12 @@ public:
     unsigned int read_chunksize; // ftdi_read_data_set_chunksize(&ftdic, 256);
 };
 
-class yarp::dev::DynamixelAX12FtdiDriver : public DeviceDriver, public IPositionControl, public ITorqueControl, public IEncoders {
+class DynamixelAX12FtdiDriver :
+        public yarp::dev::DeviceDriver,
+        public yarp::dev::IPositionControl,
+        public yarp::dev::ITorqueControl,
+        public yarp::dev::IEncoders
+{
 private:
     /** Handle to FTDI device */
     struct ftdi_context ftdic;
@@ -149,7 +148,7 @@ private:
 
     ErrorCode checkAnswerPacket(unsigned char* packet, const char*& message);
 
-    yarp::os::Mutex mutex;
+    std::mutex mutex;
 
     unsigned char *jointNumbers;
 
@@ -279,6 +278,17 @@ public:
     bool setRefTorque(int j, double t) override;
     bool getTorqueRange(int j, double* min, double* max) override;
     bool getTorqueRanges(double* min, double* max) override;
+
+    // multiple joint version
+    bool positionMove(const int n_joint, const int *joints, const double *refs) override;
+    bool relativeMove(const int n_joint, const int *joints, const double *deltas) override;
+    bool checkMotionDone(const int n_joint, const int *joints, bool *flag) override;
+    bool setRefSpeeds(const int n_joint, const int *joints, const double *spds) override;
+    bool setRefAccelerations(const int n_joint, const int *joints, const double *accs) override;
+    bool getRefSpeeds(const int n_joint, const int *joints, double *spds) override;
+    bool getRefAccelerations(const int n_joint, const int *joints, double *accs) override;
+    bool stop(const int n_joint, const int *joints) override;
+
 private:
 
     double *positions;

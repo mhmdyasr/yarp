@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -10,4 +10,3 @@ set(app_examples xml/applications/eyesviewer-localhost.xml xml/applications/fake
 yarp_install(FILES ${app_examples} DESTINATION ${YARP_APPLICATIONS_INSTALL_DIR})
 
 yarp_install(FILES xml/modules/test_grabber.xml DESTINATION ${YARP_MODULES_INSTALL_DIR})
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -41,7 +41,6 @@ extern "C" {
 
 using namespace yarp::os;
 using namespace yarp::sig;
-using namespace yarp::mjpeg;
 
 struct net_error_mgr {
     struct jpeg_error_mgr pub;
@@ -96,7 +95,7 @@ void term_net_source (j_decompress_ptr cinfo) {
 
 void jpeg_net_src (j_decompress_ptr cinfo, char *buf, int buflen) {
     net_src_ptr src;
-    if (cinfo->src == nullptr) {	/* first time for this JPEG object? */
+    if (cinfo->src == nullptr) {    /* first time for this JPEG object? */
         cinfo->src = (struct jpeg_source_mgr *)
             (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_PERMANENT,
                                         sizeof(jpeg_source_mgr));
@@ -237,4 +236,3 @@ bool MjpegDecompression::isAutomatic() const {
     return false;
 #endif
 }
-

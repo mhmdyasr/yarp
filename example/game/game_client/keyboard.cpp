@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -11,6 +11,7 @@
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <mutex>
 
 #include <yarp/os/all.h>
 using namespace yarp::os;
@@ -22,7 +23,7 @@ using namespace yarp;
 static String dir = "right";
 static String msg = "";
 static int mode = 0;
-static Mutex mutex();
+static std::mutex mutex();
 
 String getPreparation() {
     mutex.lock();
@@ -137,7 +138,3 @@ String getCommand() {
 
     return cmd;
 }
-
-
-
-

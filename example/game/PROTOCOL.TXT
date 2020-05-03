@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -13,7 +13,7 @@ It is accessible via telnet or YARP.
 Here we describe how to use the game via telnet.
 
 First, you need to know where the game is running and how
-to reach it.  You need the name/IP of the server the game 
+to reach it.  You need the name/IP of the server the game
 is on, and the socket number it listens to.
 
 Either ask someone or, if you have YARP, run:
@@ -143,4 +143,3 @@ the client sends:
 The server responds with
   broadcast username the-message-text
 The same response will be placed on the broadcast channel.
-

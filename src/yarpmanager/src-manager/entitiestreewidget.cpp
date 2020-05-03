@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,6 +17,7 @@
  */
 
 #include "entitiestreewidget.h"
+#include <yarp/conf/filesystem.h>
 #include <dirent.h>
 #include <QProcess>
 #include <QHeaderView>
@@ -119,7 +120,7 @@ void EntitiesTreeWidget::addApplication(yarp::manager::Application *app)
 
     string fname;
     string fpath = app->getXmlFile();
-    size_t pos = fpath.rfind(yarp::os::NetworkBase::getDirectorySeparator());
+    size_t pos = fpath.rfind(yarp::conf::filesystem::preferred_separator);
     if (pos!=string::npos) {
         fname = fpath.substr(pos+1);
     } else {
@@ -145,7 +146,7 @@ void EntitiesTreeWidget::addComputer(yarp::manager::Computer* comp)
 
     string fname;
     string fpath = comp->getXmlFile();
-    size_t pos = fpath.rfind(yarp::os::NetworkBase::getDirectorySeparator());
+    size_t pos = fpath.rfind(yarp::conf::filesystem::preferred_separator);
     if (pos!=string::npos) {
         fname = fpath.substr(pos+1);
     } else {
@@ -170,7 +171,7 @@ void EntitiesTreeWidget::addModule(yarp::manager::Module* mod)
 
     string fname;
     string fpath = mod->getXmlFile();
-    size_t pos = fpath.rfind(yarp::os::NetworkBase::getDirectorySeparator());
+    size_t pos = fpath.rfind(yarp::conf::filesystem::preferred_separator);
     if (pos!=string::npos) {
         fname = fpath.substr(pos+1);
     } else {

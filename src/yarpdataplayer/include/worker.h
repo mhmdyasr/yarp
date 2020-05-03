@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,22 +20,26 @@
 #define WORKER_H
 
 #include <QObject>
+#include "include/log.h"
 
 #include <yarp/sig/Image.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Semaphore.h>
+#include <yarp/os/Stamp.h>
 #include <yarp/sig/ImageFile.h>
 #include "include/utils.h"
 #include <yarp/os/Event.h>
 #include <yarp/os/Time.h>
 #include <QMainWindow>
 
-#ifdef HAS_OPENCV
-  #include <cv.h>
-  #include <highgui.h>
-#endif
+#include <chrono>
 
+#ifdef HAS_OPENCV
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <yarp/cv/Cv.h>
+#endif
 
 class Utilities;
 //class MainWindow;
@@ -66,9 +70,14 @@ public:
     */
     void setManager(Utilities *utilities);
     /**
-    * Function that sends the images
+    * Functions that sends data (many different types)
     */
-    int sendImages( int part, int id );
+    int sendBottle(int part, int id);
+    int sendImages( int part, int id);
+
+    template <class T>
+    int sendGenericData(int part, int id);
+
     /**
     * Function that returns the frame rate
     */
@@ -128,16 +137,25 @@ protected:
 public:
     int                     numThreads;
     double                  timePassed, initTime, virtualTime;
+    double                  pauseStart{0.0}, pauseEnd{0.0};
     bool                    stepfromCmd;
+
+    using Moment = std::chrono::time_point<std::chrono::high_resolution_clock>;
+
+    void initialize();
+
+    void tick();
+
+    float diff_seconds() const { return dtSeconds; }
+    float framesPerSecond() const { return fps; }
+
     QMainWindow* wnd;
 
     /**
      * Master thread class
      */
     MasterThread(Utilities *utilities, int numPart, QMainWindow *gui, QObject *parent = NULL);
-    /**
-     * Thread init
-     */
+
     bool threadInit() override;
     /**
      * Thread release
@@ -174,6 +192,9 @@ public:
 
     void goToPercentage(int value);
 
+private:
+    Moment lastUpdate;
+    float dtSeconds, fps;
 
 };
 

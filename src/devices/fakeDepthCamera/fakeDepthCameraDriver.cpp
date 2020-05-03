@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -65,9 +65,9 @@ bool fakeDepthCameraDriver::open(Searchable& config)
         {
             *get<0>(p) = get<2>(p);
         }
-        
+
     }
-    
+
     return true;
 }
 
@@ -97,7 +97,7 @@ bool fakeDepthCameraDriver::getRgbResolution(int &width, int &height)
     return true;
 }
 
-bool yarp::dev::fakeDepthCameraDriver::setRgbResolution(int width, int height)
+bool fakeDepthCameraDriver::setRgbResolution(int width, int height)
 {
     return false;
 }
@@ -147,6 +147,7 @@ bool fakeDepthCameraDriver::setRgbMirroring(bool mirror)
 
 bool fakeDepthCameraDriver::getRgbIntrinsicParam(Property& intrinsic)
 {
+    intrinsic.put("physFocalLength", 0.5);
     intrinsic.put("focalLengthX",    512);
     intrinsic.put("focalLengthY",    512);
     intrinsic.put("principalPointX", 235);
@@ -181,6 +182,7 @@ bool fakeDepthCameraDriver::getDepthFOV(double& horizontalFov, double& verticalF
 
 bool fakeDepthCameraDriver::getDepthIntrinsicParam(Property& intrinsic)
 {
+    intrinsic.put("physFocalLength", 0.5);
     intrinsic.put("focalLengthX",    512);
     intrinsic.put("focalLengthY",    512);
     intrinsic.put("principalPointX", 235);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -11,6 +11,7 @@
 
 #include <cstdio>
 #include <cmath>
+#include <mutex>
 
 #include <yarp/os/Log.h>
 
@@ -31,9 +32,9 @@ int padding = 0;
 class Echo : public TypedReaderCallback<Sound> {
 private:
     PolyDriver poly;
-    IAudioRender *put;
+    IAudioRender *iAudioplay;
     BufferedPort<Sound> port;
-    Mutex mutex;
+    std::mutex mutex;
     bool muted;
     bool saving;
     std::deque<Sound> sounds;
@@ -42,14 +43,13 @@ private:
 
 public:
     Echo() : mutex() {
-        put = nullptr;
+        iAudioplay = nullptr;
         port.useCallback(*this);
         port.setStrict();
         muted = false;
         saving = false;
         samples = 0;
         channels = 0;
-        put = nullptr;
     }
 
     bool open(Searchable& p) {
@@ -66,8 +66,8 @@ public:
 
             if (!p.check("mute")) {
                 // Make sure we can write sound
-                poly.view(put);
-                if (put==nullptr) {
+                poly.view(iAudioplay);
+                if (iAudioplay == nullptr) {
                     yError("cannot open interface\n");
                     return false;
                 }
@@ -118,8 +118,8 @@ public:
           }
         */
         if (!muted) {
-            if (put!=nullptr) {
-                put->renderSound(sound);
+            if (iAudioplay != nullptr) {
+                iAudioplay->renderSound(sound);
             }
         }
         if (saving) {
@@ -195,10 +195,9 @@ int main(int argc, char *argv[]) {
         p.fromCommand(argc,argv);
     }
 
-    // otherwise default device is "portaudio"
+    // otherwise default device is "portaudioPlayer"
     if (!p.check("device")) {
-        p.put("device","portaudio");
-        p.put("write",1);
+        p.put("device","portaudioPlayer");
         p.put("delay",1);
     }
 

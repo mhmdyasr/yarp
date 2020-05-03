@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -29,7 +29,7 @@ void SimpleMonitorObject::destroy(void)
     yDebug("destroyed!\n");
 }
 
-bool SimpleMonitorObject::setparam(const yarp::os::Property& params) 
+bool SimpleMonitorObject::setparam(const yarp::os::Property& params)
 {
     return false;
 }
@@ -40,7 +40,7 @@ bool SimpleMonitorObject::getparam(yarp::os::Property& params)
 }
 
 bool SimpleMonitorObject::accept(yarp::os::Things& thing)
-{   
+{
     Bottle* bt = thing.cast_as<Bottle>();
     if(bt == NULL) {
         yWarning("SimpleMonitorObject: expected type Bottle but got wrong data type!\n");

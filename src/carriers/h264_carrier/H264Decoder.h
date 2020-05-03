@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -9,15 +9,9 @@
 #ifndef H264DECODER_INC
 #define H264DECODER_INC
 
-#include <yarp/os/Mutex.h>
+#include <mutex>
 #include <yarp/sig/Image.h>
 #include <yarp/os/Semaphore.h>
-
-namespace yarp {
-    namespace os {
-        class H264Decoder;
-    }
-}
 
 struct h264Decoder_cfgParamters
 {
@@ -39,16 +33,17 @@ struct h264Decoder_cfgParamters
     int fps_max;    //max value of fps. it is imposed by gstreamer
     int remotePort; // the port on which the server send data
     bool verbose;   //enables debug print of gstream plugin
+    bool removeJitter; //If true, the carrier reorders and removes duplicate RTP packets as they are received from a network source.
 };
 
-class yarp::os::H264Decoder
+class H264Decoder
 {
 private:
     void *sysResource;
     h264Decoder_cfgParamters cfg;
 
 public:
-    yarp::os::Mutex mutex ; //==>create functions to work with it
+    std::mutex mutex ; //==>create functions to work with it
     yarp::os::Semaphore semaphore;
 
     H264Decoder(h264Decoder_cfgParamters &config);

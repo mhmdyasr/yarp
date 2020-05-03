@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     Property options;
     options.fromCommand(argc,argv);
     port.open(options.check("name",Value("/image")).asString());
-  
+
     int ct = 0;
     while (true) {
         ImageOf<PixelRgb>& img = port.prepare();
@@ -33,6 +33,6 @@ int main(int argc, char *argv[]) {
         port.write();
         Time::delay(0.25);
     }
-  
+
     return 0;
 }

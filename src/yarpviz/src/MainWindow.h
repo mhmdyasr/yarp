@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,17 +39,17 @@ public:
         : QTreeWidgetItem(parent, QStringList(vertex->property.find("name").asString().c_str()), type)
     {
         if(dynamic_cast<yarp::profiler::graph::ProcessVertex*>(vertex)) {
-            std::stringstream lable;
-            lable << vertex->property.find("name").asString().c_str()
+            std::stringstream label;
+            label << vertex->property.find("name").asString().c_str()
                   << " (" << vertex->property.find("pid").asInt32() << ")";
-            setText(0, lable.str().c_str());
+            setText(0, label.str().c_str());
         }
         else if(dynamic_cast<yarp::profiler::graph::MachineVertex*> (vertex))
         {
-            std::stringstream lable;
-            lable << vertex->property.find("hostname").asString().c_str()
+            std::stringstream label;
+            label << vertex->property.find("hostname").asString().c_str()
                   << " (" << vertex->property.find("os").asString() << ")";
-            setText(0, lable.str().c_str());
+            setText(0, label.str().c_str());
         }
         checkFlag = false;
         NodeWidgetItem::vertex = vertex;

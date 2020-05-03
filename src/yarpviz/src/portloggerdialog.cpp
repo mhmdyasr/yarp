@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ PortLoggerDialog::PortLoggerDialog(Graph *graph, QWidget *parent) :
             const Vertex &v2 = edge.second();
             if(!v1.property.check("hidden") && !v2.property.check("hidden")) {
                 if(edge.property.find("type").asString() == "connection") {
-                    //yInfo()<<v1.property.find("name").asString()<<"->"<<v2.property.find("name").asString()<<lable;
+                    //yInfo()<<v1.property.find("name").asString()<<"->"<<v2.property.find("name").asString()<<label;
                     std::string source = v1.property.find("name").asString();
                     std::string destination = v2.property.find("name").asString();
                     std::string carrier = edge.property.find("carrier").asString();

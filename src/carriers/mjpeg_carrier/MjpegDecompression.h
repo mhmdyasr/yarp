@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -13,13 +13,9 @@
 #include <yarp/os/InputStream.h>
 #include <yarp/sig/Image.h>
 
-namespace yarp {
-    namespace mjpeg {
-        class MjpegDecompression;
-    }
-}
 
-class yarp::mjpeg::MjpegDecompression {
+class MjpegDecompression
+{
 private:
     void *system_resource;
 public:

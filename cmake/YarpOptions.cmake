@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -119,8 +119,14 @@ option(BUILD_SHARED_LIBS "Compile shared libraries rather than linking staticall
 mark_as_advanced(BUILD_SHARED_LIBS)
 yarp_renamed_option(CREATE_SHARED_LIBRARY BUILD_SHARED_LIBS) # Since YARP 2.3.68.1
 
+set(YARP_DLL OFF)
 if(BUILD_SHARED_LIBS)
   set(YARP_DLL ON)
+endif()
+
+set (YARP_LINK_PLUGINS TRUE)
+if(YARP_FORCE_DYNAMIC_PLUGINS OR BUILD_SHARED_LIBS)
+  set (YARP_LINK_PLUGINS FALSE)
 endif()
 
 
@@ -128,11 +134,6 @@ endif()
 # Add the option to build only libraries and skip the binaries
 
 option(YARP_COMPILE_EXECUTABLES "Enable YARP executables." ON)
-
-
-#########################################################################
-# Add the option to build Robot Testing Framework addons
-option(YARP_COMPILE_RTF_ADDONS "Compile Robot Testing Framework addons." OFF)
 
 
 #########################################################################
@@ -149,10 +150,31 @@ if(YARP_COMPILE_TESTS)
   enable_testing()
 endif()
 
+cmake_dependent_option(YARP_DISABLE_FAILING_TESTS OFF "Disable tests that fail randomly due to race conditions" YARP_COMPILE_TESTS OFF)
+mark_as_advanced(YARP_DISABLE_FAILING_TESTS)
+
+cmake_dependent_option(YARP_ENABLE_BROKEN_TESTS OFF "Enable broken tests" YARP_COMPILE_TESTS OFF)
+mark_as_advanced(YARP_ENABLE_BROKEN_TESTS)
+
+cmake_dependent_option(YARP_ENABLE_INTEGRATION_TESTS OFF "Run integration tests" "YARP_COMPILE_TESTS;UNIX" OFF)
+mark_as_advanced(YARP_ENABLE_INTEGRATION_TESTS)
+yarp_renamed_option(YARP_TEST_INTEGRATION YARP_ENABLE_INTEGRATION_TESTS) # since YARP 3.2.0
+
+
 #########################################################################
 # Run tests under Valgrind
 
-yarp_deprecated_option(VALGRIND_OPTIONS)
+yarp_deprecated_option(YARP_VALGRIND_MEMCHECK_TESTS) # since YARP 3.2.0
+yarp_deprecated_option(YARP_VALGRIND_HELGRIND_TESTS) # since YARP 3.2.0
+yarp_deprecated_option(YARP_VALGRIND_DRD_TESTS) # since YARP 3.2.0
+yarp_deprecated_option(YARP_VALGRIND_SGCHECK_TESTS) # since YARP 3.2.0
+yarp_deprecated_option(YARP_GDB_TESTS) # since YARP 3.2.0
+yarp_deprecated_option(VALGRIND_MEMCHECK_OPTIONS) # since YARP 3.2.0
+yarp_deprecated_option(VALGRIND_HELGRIND_OPTIONS) # since YARP 3.2.0
+yarp_deprecated_option(VALGRIND_DRD_OPTIONS) # since YARP 3.2.0
+yarp_deprecated_option(VALGRIND_SGCHECK_OPTIONS) # since YARP 3.2.0
+yarp_deprecated_option(YARP_GDB_OPTIONS) # since YARP 3.2.0
+
 cmake_dependent_option(YARP_VALGRIND_TESTS
                        "Run YARP tests under Valgrind" OFF
                        "YARP_COMPILE_TESTS" OFF)
@@ -162,65 +184,21 @@ if(YARP_VALGRIND_TESTS)
   find_program(VALGRIND_EXECUTABLE NAMES valgrind)
   mark_as_advanced(VALGRIND_EXECUTABLE)
 
-  set(YARP_VALGRIND_TOOLS MemCheck
-                          Helgrind
-                          DRD
-                          SGCheck)
-
-  set(YARP_VALGRIND_MEMCHECK_TESTS_DEFAULT ON)
-  set(YARP_VALGRIND_HELGRIND_TESTS_DEFAULT OFF)
-  set(YARP_VALGRIND_DRD_TESTS_DEFAULT OFF)
-  set(YARP_VALGRIND_SGCHECK_TESTS_DEFAULT OFF)
-
-  set(VALGRIND_MEMCHECK_OPTIONS_DEFAULT "--leak-check=full")
-  set(VALGRIND_HELGRIND_OPTIONS_DEFAULT "")
-  set(VALGRIND_DRD_OPTIONS_DEFAULT "")
-  set(VALGRIND_SGCHECK_OPTIONS_DEFAULT "")
-
-  foreach(_Tool ${YARP_VALGRIND_TOOLS})
-    string(TOUPPER "${_Tool}" _TOOL)
-    string(TOLOWER "${_Tool}" _tool)
-    if("${_tool}" MATCHES "sgcheck")
-      set(_tool "exp-${_tool}")
-    endif()
-
-    cmake_dependent_option(YARP_VALGRIND_${_TOOL}_TESTS
-                            "Run YARP tests under Valgrind ${_Tool} tool" ${YARP_VALGRIND_${_TOOL}_TESTS_DEFAULT}
-                            "YARP_VALGRIND_TESTS" OFF)
-
-    if(VALGRIND_EXECUTABLE)
-      set(VALGRIND_${_TOOL}_OPTIONS "${VALGRIND_${_TOOL}_OPTIONS_DEFAULT}"
-          CACHE STRING "Valgrind ${_Tool} tool options (--error-exitcode=1 will be appended)")
-      separate_arguments(VALGRIND_${_TOOL}_OPTIONS UNIX_COMMAND "${VALGRIND_${_TOOL}_OPTIONS}")
-      set(VALGRIND_${_TOOL}_COMMAND "${VALGRIND_EXECUTABLE}" --tool=${_tool} ${VALGRIND_${_TOOL}_OPTIONS} --error-exitcode=1 --fullpath-after=${CMAKE_SOURCE_DIR}/)
-      mark_as_advanced(VALGRIND_${_TOOL}_OPTIONS)
-    else()
-      message(WARNING "Valgrind not found. Cannot enable ${_Tool} tests.")
-      unset(VALGRIND_${_TOOL}_COMMAND)
-    endif()
-  endforeach()
-endif()
-
-#########################################################################
-# Run tests under gdb
-
-cmake_dependent_option(YARP_GDB_TESTS
-                       "Run YARP tests under gdb" OFF
-                       "YARP_COMPILE_TESTS" OFF)
-mark_as_advanced(YARP_GDB_TESTS)
-
-if(YARP_GDB_TESTS)
-  find_program(GDB_EXECUTABLE NAMES gdb)
-  mark_as_advanced(GDB_EXECUTABLE)
-  set(GDB_OPTIONS_DEFAULT "")
-  if(GDB_EXECUTABLE)
-    set(GDB_OPTIONS "${GDB_OPTIONS_DEFAULT}"
-        CACHE STRING "gdb options (--return-child-result will be appended)")
-    separate_arguments(GDB_OPTIONS UNIX_COMMAND "${GDB_OPTIONS}")
-    set(GDB_COMMAND "${GDB_EXECUTABLE}" -batch ${GDB_OPTIONS} -ex "run" -ex "bt" --return-child-result --args)
+  if(VALGRIND_EXECUTABLE)
+    set(VALGRIND_OPTIONS "--tool=memcheck --leak-check=full"
+      CACHE STRING "Valgrind options (--error-exitcode=1 will be appended)")
+    mark_as_advanced(VALGRIND_OPTIONS)
+    separate_arguments(VALGRIND_OPTIONS UNIX_COMMAND "${VALGRIND_OPTIONS}")
+    set(VALGRIND_COMMAND "${VALGRIND_EXECUTABLE}" ${VALGRIND_OPTIONS} --error-exitcode=1 --fullpath-after=${CMAKE_SOURCE_DIR}/)
+  else()
+    message(SEND_ERROR "Valgrind executable not found")
   endif()
 endif()
 
+unset(YARP_TEST_LAUNCHER)
+if(DEFINED VALGRIND_COMMAND)
+  set(YARP_TEST_LAUNCHER ${VALGRIND_COMMAND})
+endif()
 
 #########################################################################
 # Enable these messages for debugging flags
@@ -228,7 +206,6 @@ endif()
 #message(STATUS "WANTED_WARNING_FLAGS = ${WANTED_WARNING_FLAGS}")
 #message(STATUS "EXPERIMENTAL_WARNING_FLAGS = ${EXPERIMENTAL_WARNING_FLAGS}")
 #message(STATUS "UNWANTED_WARNING_FLAGS = ${UNWANTED_WARNING_FLAGS}")
-#message(STATUS "VISIBILITY_HIDDEN_FLAGS = ${VISIBILITY_HIDDEN_FLAGS}")
 #message(STATUS "DEPRECATED_DECLARATIONS_FLAGS = ${DEPRECATED_DECLARATIONS_FLAGS}")
 #message(STATUS "HARDENING_FLAGS = ${HARDENING_FLAGS}")
 #message(STATUS "CXX98_FLAGS = ${CXX98_FLAGS}")
@@ -252,7 +229,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WANTED_WARNING_FLAGS} ${UNWANTED_WARNI
 #########################################################################
 # Control whether non-public symbols are filtered out
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VISIBILITY_HIDDEN_FLAGS}")
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 option(YARP_EXPERIMENTAL_FILTER_API "Filter out implemementation symbols from the ABI" OFF)
 mark_as_advanced(YARP_EXPERIMENTAL_FILTER_API)
@@ -301,33 +280,18 @@ endif()
 
 
 #########################################################################
-# Control compilation of device tests.
-# Not really for end-user, but instead for the library developers
-yarp_deprecated_option(CREATE_BUILTIN_DEVICE_TESTS) # Since YARP 2.3.68
-
-
-#########################################################################
-# Control submission of reports
-option(ENABLE_DASHBOARD_SUBMIT "Allow submission of builds to http://dashboard.icub.org/index.php?project=YARP" OFF)
-mark_as_advanced(ENABLE_DASHBOARD_SUBMIT)
-if(ENABLE_DASHBOARD_SUBMIT)
-  include(CTest)
-endif()
-
-
-#########################################################################
 # Control setting an rpath
-yarp_deprecated_option(ENABLE_FORCE_RPATH)
-yarp_deprecated_option(INSTALL_WITH_RPATH)
+
 add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"       # Libraries
                           BIN_DIRS "${CMAKE_INSTALL_FULL_BINDIR}"       # Binaries
                                    "${CMAKE_INSTALL_FULL_LIBDIR}/yarp"  # Plugins
                           INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
                           USE_LINK_PATH)
 
+
 #########################################################################
 # Specify yarp version and copyright into macOS bundles
-set(MACOSX_BUNDLE_COPYRIGHT "© 2006-2019 Istituto Italiano di Tecnologia (IIT), 2006-2010 RobotCub Consortium. YARP is released under the terms of the BSD-3-Clause. See the accompanying LICENSE file for details.")
+set(MACOSX_BUNDLE_COPYRIGHT "© 2006-2020 Istituto Italiano di Tecnologia (IIT), 2006-2010 RobotCub Consortium. YARP is released under the terms of the BSD-3-Clause. See the accompanying LICENSE file for details.")
 set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${YARP_VERSION_SHORT}")
 
 
@@ -360,17 +324,15 @@ endif()
 
 
 #########################################################################
-# Display test machine options for reference, if they are set
+# Deprecated options
 
-if(TEST_MACHINE_HOSTNAME)
-  message(STATUS "TEST_MACHINE_HOSTNAME: ${TEST_MACHINE_HOSTNAME}")
-  message(STATUS "TEST_MACHINE_OS_TYPE: ${TEST_MACHINE_OS_TYPE}")
-  message(STATUS "TEST_MACHINE_TEST_TYPE: ${TEST_MACHINE_TEST_TYPE}")
-endif()
-
-
-
-
+yarp_deprecated_option(ENABLE_FORCE_RPATH) # Since YARP 2.3.65
+yarp_deprecated_option(INSTALL_WITH_RPATH) # Since YARP 2.3.65
+yarp_deprecated_option(CREATE_BUILTIN_DEVICE_TESTS) # Since YARP 2.3.68
 yarp_deprecated_option(YARP_EXPERIMENTAL_CXX11) # Since YARP 3.0.0
 yarp_deprecated_option(YARP_WRAP_STL_STRING) # Since YARP 3.0.0
 yarp_deprecated_option(YARP_WRAP_STL_STRING_INLINE) # Since YARP 3.0.0
+yarp_deprecated_option(ENABLE_DASHBOARD_SUBMIT) # Since YARP 3.3.3
+yarp_deprecated_option(TEST_MACHINE_HOSTNAME) # Since YARP 3.3.3
+yarp_deprecated_option(TEST_MACHINE_OS_TYPE) # Since YARP 3.3.3
+yarp_deprecated_option(TEST_MACHINE_TEST_TYPE) # Since YARP 3.3.3

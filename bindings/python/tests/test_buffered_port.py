@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -24,7 +24,7 @@ class BufferedPortTest(unittest.TestCase):
         self.assertTrue(yarp.Network.connect(p.getName(),p2.getName()))
         p.close()
         p2.close()
-        
+
     def test_open_and_connect_comm(self):
         p = yarp.BufferedPortBottle()
         p2 = yarp.BufferedPortBottle()

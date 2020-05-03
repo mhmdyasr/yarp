@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # Copyright (C) 2006-2010 RobotCub Consortium
 # All rights reserved.
 #
@@ -23,8 +23,7 @@ for f in `cd license_check; find . -type f -iname "*.cpp" \
                                        -or -name "CMakeLists.txt" \
                 | grep -v "/extern" \
                 | grep -v "/qtquick2applicationviewer/" \
-                | grep -v "CTestConfig.cmake" \
-                | grep -v "src/carriers/portmonitor_carrier/lua/lua_swig.h" \
+                | grep -v "/src_gen/" \
 `; do
     ./scripts/admin/update-license-single $f
 done
@@ -80,7 +79,7 @@ cat license-good.txt  | grep "Copyright:" > copyright-good.txt
 
 cat<<EOF
 Unless otherwise stated, files in YARP are:
-  Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+  Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
   All rights reserved.
 
   This software may be modified and distributed under the terms of the
@@ -95,9 +94,13 @@ GPL-2.0 or later, GPL-3.0 or later, or Apache-2.0 License:
  * Some components are released under the terms of the LGPL license, version 2.1
    or later.
    + devices:
+     - \`audioPlayerWrapper\`
+     - \`audioRecorderWrapper\`
      - \`batteryClient\`
      - \`batteryWrapper\`
      - \`depthCamera\`
+     - \`fakeLocalizerDevice\`
+     - \`fakeNavigationDevice\`
      - \`imuBosch_BNO055\`
      - \`laserFromDepth\`
      - \`laserHokuyo\`
@@ -108,6 +111,8 @@ GPL-2.0 or later, GPL-3.0 or later, or Apache-2.0 License:
      - \`opencv\`
      - \`ovrheadset\`
      - \`portaudio\`
+     - \`portaudioPlayer\`
+     - \`portaudioRecorder\`
      - \`Rangefinder2DClient\`
      - \`Rangefinder2DWrapper\`
      - \`rpLidar\`
@@ -115,6 +120,7 @@ GPL-2.0 or later, GPL-3.0 or later, or Apache-2.0 License:
      - \`SDLJoypad\`
      - \`transformClient\`
      - \`transformServer\`
+     - \`usbCamera\`
    + tools:
      - \`yarplogger-console\`
      - \`yarpmanager-console\`
@@ -129,8 +135,8 @@ GPL-2.0 or later, GPL-3.0 or later, or Apache-2.0 License:
      - \`QtYARPView\` and \`yarpview\`
  * Some optional components use 3rd party libraries that may have some extra
    requirements.
-   + \`libYARP_rtf\` and the RTF plugins use
-     [RTF](https://github.com/robotology/robot-testing/blob/master/LICENSE).
+   + \`YARP_robottestingframework\` and the Robot Testing Framework plugins use
+     [Robot Testing Framework](https://github.com/robotology/robot-testing-framework/blob/master/LICENSE).
    + The \`xmlrpc\` carrier uses a custom version of the
      [xmlrpcpp](https://sourceforge.net/projects/xmlrpcpp/) library.
    + The \`bayer\` carrier uses alternatively
@@ -150,7 +156,7 @@ GPL-2.0 or later, GPL-3.0 or later, or Apache-2.0 License:
      [Oculis SDK](https://developer.oculus.com/licenses/).
  * A few optional parts of YARP are released under the terms of the GPL license,
    version 2 or later:
-   + \`libYARP_math\` uses the GNU Scientific Library, under the GPL 2 or later.
+   + \`YARP_gsl\` uses the GNU Scientific Library, under the GPL 2 or later.
    + \`example/matrix/gsl_example.cpp\` uses GSL, under the GPL 2 or later.
  * A few optional parts of YARP are released under the terms of the GPL license,
    version 3 or later:
@@ -214,11 +220,10 @@ EOF
 fi
 
 
-) > license-statement.txt
+) > COPYING
+
+rm -Rf copyright-*.txt license-*.txt license_check
 
 echo
-echo "License statement in license-statement.txt"
-echo
-echo "You can now run:"
-echo "   cp license-statement.txt COPYING"
+echo "COPYING file updated"
 echo

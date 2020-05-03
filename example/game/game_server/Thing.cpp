@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -30,9 +30,9 @@ void Thing::applyMove() {
 
         ID x2 = x.asInt32()+dx;
         ID y2 = y.asInt32()+dy;
-    
+
         if (game.getCell(x2,y2)==0) {
-            game.setCell(x,y,0);    
+            game.setCell(x,y,0);
             x = x2;
             y = y2;
             game.setCell(x,y,id);
@@ -44,5 +44,3 @@ void Thing::applyMove() {
         dx = dy = 0;
     }
 }
-  
-

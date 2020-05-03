@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 #include "ui_mainwindow.h"
 
 #include <yarp/conf/version.h>
+#include <yarp/conf/filesystem.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/ResourceFinder.h>
 #include <dirent.h>
@@ -92,7 +93,13 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType< QVector<int> >("QVector<int>");
     ui->mainToolBar->setContextMenuPolicy(Qt::PreventContextMenu);
     ui->menuBar->setContextMenuPolicy(Qt::PreventContextMenu);
-    builderToolBar = nullptr;
+    auto label = new QLabel("", ui->statusBar);
+    auto yarpino = new QLabel("", ui->statusBar);
+    QPixmap pixmap(QPixmap(":/yarp-robot-22.png").scaledToHeight(ui->statusBar->height()));
+    yarpino->setPixmap(pixmap);
+    label->setText("Powered by");
+    ui->statusBar->insertPermanentWidget(0,label);
+    ui->statusBar->insertPermanentWidget(1,yarpino);
     prevWidget = nullptr;
 
     watcher = new QFileSystemWatcher(this);
@@ -116,13 +123,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionKill_all,SIGNAL(triggered()),this,SLOT(onKill()));
     connect(ui->actionConnect_all,SIGNAL(triggered()),this,SLOT(onConnect()));
     connect(ui->actionDisconnect_all,SIGNAL(triggered()),this,SLOT(onDisconnect()));
-   
+
     connect(ui->actionRun,SIGNAL(triggered()),this,SLOT(onRunSelected()));
     connect(ui->actionStop,SIGNAL(triggered()),this,SLOT(onStopSelected()));
     connect(ui->actionKill,SIGNAL(triggered()),this,SLOT(onKillSelected()));
     connect(ui->actionConnect,SIGNAL(triggered()),this,SLOT(onConnectSelected()));
     connect(ui->actionDisconnect,SIGNAL(triggered()),this,SLOT(onDisconnectSelected()));
-    
+
     connect(ui->actionRefresh_Status,SIGNAL(triggered()),this,SLOT(onRefresh()));
     connect(ui->actionSelect_All,SIGNAL(triggered()),this,SLOT(onSelectAll()));
     connect(ui->actionExport_Graph,SIGNAL(triggered()),this,SLOT(onExportGraph()));
@@ -139,8 +146,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave_As,SIGNAL(triggered()),this,SLOT(onSaveAs()));
     connect(ui->actionHelp,SIGNAL(triggered()),this,SLOT(onHelp()));
     connect(ui->actionAbout,SIGNAL(triggered()),this,SLOT(onAbout()));
-    connect(ui->action_Builder_Window, SIGNAL(triggered()),this, SLOT(onViewBuilderWindows()));
-    connect(ui->action_Manager_Window, SIGNAL(triggered()),this, SLOT(onViewBuilderWindows()));
     connect(ui->actionYarpClean, SIGNAL(triggered()),this, SLOT(onYarpClean()));
     connect(ui->actionYarpNameList, SIGNAL(triggered()),this, SLOT(onYarpNameList()));
 
@@ -216,7 +221,7 @@ void MainWindow::onWizardError(QString err)
 void MainWindow::init(yarp::os::Property config)
 {
     this->config = config;
-    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator{yarp::conf::filesystem::preferred_separator};
 
     string basepath=config.check("ymanagerini_dir", yarp::os::Value("")).asString();
 
@@ -430,7 +435,7 @@ void MainWindow::syncApplicationList(QString selectNodeForEditing, bool open)
  */
 bool MainWindow::loadRecursiveTemplates(const char* szPath)
 {
-    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator{yarp::conf::filesystem::preferred_separator};
     string strPath = szPath;
     if((strPath.rfind(directorySeparator)==string::npos) ||
             (strPath.rfind(directorySeparator)!=strPath.size()-1)) {
@@ -472,7 +477,7 @@ bool MainWindow::loadRecursiveTemplates(const char* szPath)
  */
 bool MainWindow::loadRecursiveApplications(const char* szPath)
 {
-    const std::string directorySeparator = yarp::os::NetworkBase::getDirectorySeparator();
+    const std::string directorySeparator{yarp::conf::filesystem::preferred_separator};
     string strPath = szPath;
     if((strPath.rfind(directorySeparator)==string::npos) ||
             (strPath.rfind(directorySeparator)!=strPath.size()-1))
@@ -608,20 +613,9 @@ void MainWindow::viewApplication(yarp::manager::Application *app,bool editingMod
         }
     }
 
-    if(ui->action_Builder_Window->isChecked())
-        config.put("showBuilder", true);
-    else
-        config.unput("showBuilder");
-
-    if(ui->action_Manager_Window->isChecked())
-        config.put("showManager", true);
-    else
-        config.unput("showManager");
-
     auto* w = new ApplicationViewWidget(app,&lazyManager,&config,editingMode,ui->mainTabs);
     connect(w,SIGNAL(logError(QString)),this,SLOT(onLogError(QString)));
     connect(w,SIGNAL(logWarning(QString)),this,SLOT(onLogWarning(QString)));
-    connect(w,SIGNAL(builderWindowFloating(bool)),this,SLOT(onBuilderWindowFloating(bool)));
     connect(w,SIGNAL(modified(bool)),this,SLOT(onModified(bool)));
     int index = ui->mainTabs->addTab(w,app->getName());
     ui->mainTabs->setTabIcon(index,QIcon(":/run22.svg"));
@@ -908,26 +902,6 @@ void MainWindow::onLogMessage(QString msg)
     ui->logWidget->setCurrentRow(ui->logWidget->count() - 1);
 }
 
-void MainWindow::onBuilderWindowFloating(bool floating)
-{
-    /*
-    if(builderToolBar){
-        removeToolBar(builderToolBar);
-        builderToolBar = NULL;
-    }
-    if(!floating){
-        GenericViewWidget *w = (GenericViewWidget*)ui->mainTabs->widget(ui->mainTabs->currentIndex());
-        if(w && w->getType() == yarp::manager::APPLICATION){
-            ApplicationViewWidget *aw = (ApplicationViewWidget*)w;
-            builderToolBar = aw->getBuilderToolBar();
-            if(builderToolBar){
-                addToolBar(builderToolBar);
-                builderToolBar->show();
-            }
-        }
-    }
-    */
-}
 
 /*! \brief Called when a tab has been pressed
     \param index the index of the tab
@@ -973,31 +947,7 @@ void MainWindow::onTabChangeItem(int index)
             ui->actionSave_As->setEnabled(false);
         }
 
-        /*
-        if(builderToolBar){
-            removeToolBar(builderToolBar);
-            builderToolBar = NULL;
-        }
 
-        builderToolBar = aw->getBuilderToolBar();
-        if(builderToolBar){
-            addToolBar(builderToolBar);
-            builderToolBar->show();
-        }
-        if(aw->isBuilderFloating()){
-            aw->showBuilder(true);
-        }
-    */
-        if(prevWidget && prevWidget != w){
-            if(prevWidget->getType() == yarp::manager::APPLICATION){
-                auto* aw = (ApplicationViewWidget*)prevWidget;
-                if(aw->isBuilderFloating()){
-                    aw->showBuilder(false);
-                }
-            }
-        }
-        prevWidget = w;
-    }else{
         if(w && w->getType() == yarp::manager::RESOURCE){
             ui->actionRefresh_Status->setEnabled(true);
             prevWidget = w;
@@ -1017,24 +967,7 @@ void MainWindow::onTabChangeItem(int index)
         ui->actionRun->setEnabled(false);
         ui->actionStop->setEnabled(false);
         ui->actionKill->setEnabled(false);
-
-        /*
-        if(builderToolBar){
-            removeToolBar(builderToolBar);
-            builderToolBar = NULL;
-        }
-        */
-
-//        if(w){
-//            BuilderWindow *b = (BuilderWindow*)ui->mainTabs->widget(index);
-//            builderToolBar = b->getToolBar();
-//            if(builderToolBar){
-//                addToolBar(builderToolBar);
-//                builderToolBar->show();
-//            }
-//        }
     }
-
 }
 
 /*! \brief Create a new Application */
@@ -1418,7 +1351,7 @@ void MainWindow::onOpen()
 /*! \brief Opens the About Dialog */
 void MainWindow::onAbout()
 {
-    QString copyright = "Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)";
+    QString copyright = "Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)";
     QString name = APP_NAME;
     QString version = YARP_VERSION;
     AboutDlg dlg(name,version,copyright,"https://www.iit.it/");
@@ -1487,27 +1420,5 @@ void MainWindow::onApplicationSelectionChanged()
         ui->actionKill->setEnabled(ww->anyModuleSelected());
         ui->actionConnect->setEnabled(ww->anyConnectionSelected());
         ui->actionDisconnect->setEnabled(ww->anyConnectionSelected());
-    }
-}
-
-void MainWindow::onViewBuilderWindows() {
-    if(ui->action_Builder_Window->isChecked())
-        config.put("showBuilder", true);
-    else
-        config.unput("showBuilder");
-
-    if(ui->action_Manager_Window->isChecked())
-        config.put("showManager", true);
-    else
-        config.unput("showManager");
-
-    for(int i=0;i<ui->mainTabs->count();i++){
-        auto* w = (GenericViewWidget*)ui->mainTabs->widget(i);
-        yAssert(w);
-        if(w->getType() == yarp::manager::APPLICATION){
-            ApplicationViewWidget *aw = ((ApplicationViewWidget*)w);
-            yAssert(aw);
-            aw->showBuilderWindows(config);
-        }
     }
 }

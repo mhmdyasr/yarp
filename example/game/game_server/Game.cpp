@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <yarp/os/Mutex.h>
+#include <mutex>
 #include <yarp/os/Time.h>
 
 #include "Thing.h"
@@ -38,7 +38,7 @@ public:
     Matrix game_matrix;
     DMatrix transient_matrix;
     Things game_things;
-    yarp::os::Mutex game_mutex;
+    std::mutex game_mutex;
 
     GameHelper() : game_mutex() {
     }
@@ -82,7 +82,7 @@ void Game::setMaze(const char *fname) {
             char ch = buf[x];
             ID v = 0;
             if (ch=='+' || ch=='-' || ch=='|'||ch=='#') { v = 1; }
-            if (ch>='0'&&ch<='9') { 
+            if (ch>='0'&&ch<='9') {
                 v = SYS(system_resource).game_things.create();
                 SYS(system_resource).game_things.getThing(v).set(x,y,v);
             }
@@ -108,7 +108,7 @@ Game& Game::getGame() {
 
 Thing& Game::getThing(ID id) {
     Thing& thing = SYS(system_resource).game_things.getThing(id);
-	return thing;
+    return thing;
 }
 
 bool Game::isThing(ID id) {
@@ -122,10 +122,10 @@ Thing& Game::newThing(bool putOnBoard) {
             id = i;
             break;
         }
-    }   
+    }
 
     if(putOnBoard) {
-  
+
         if (id.asInt32()!=-1) {
             ID xx = -1;
             ID yy = -1;
@@ -164,7 +164,7 @@ Thing& Game::newThing(bool putOnBoard) {
     else {
         SYS(system_resource).game_things.create(id);
     }
-  
+
     if (id.asInt32()==-1) {
         return Thing::NOTHING;
     }

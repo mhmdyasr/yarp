@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/os/Mutex.h>
+#include <mutex>
 #include <yarp/sig/Image.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RpcClient.h>
@@ -37,24 +37,32 @@ class MasterThread;
 class QMainWindow;
 
 struct partsData
-    {
-        WorkerClass             *worker;                            //personal rate thread
-        yarp::os::Mutex         mutex;                              //mutex
-        std::string             name;                               //string containing the name of the part
-        std::string             infoFile;                           //string containing the path of the infoFile
-        std::string             logFile;                            //string containing the path of the logFile
-        std::string             path;                               //string containing the path of the part
-        std::string             type;                               //string containing the type of the data
-        int                     currFrame;                          //integer containing the current frame
-        int                     maxFrame;                           //integer containing the maxFrame
-        yarp::os::Bottle        bot;                                //yarp Bottle containing all the data
-        yarp::sig::Vector       timestamp;                          //yarp Vector containing all the timestamps
-        yarp::os::BufferedPort<yarp::os::Bottle>        bottlePort; //yarp port for sending bottles
-        yarp::os::BufferedPort<yarp::sig::Image>        imagePort;  //yarp port for sending images
-        std::string             portName;                           //the name of the port
-        int                     sent;                               //integer used for step from command
-        bool                    hasNotified;                        //boolean used for individual part notification that it has reached eof
-    };
+{
+    WorkerClass             *worker;                            //personal rate thread
+    std::mutex              mutex;                              //mutex
+    std::string             name;                               //string containing the name of the part
+    std::string             infoFile;                           //string containing the path of the infoFile
+    std::string             logFile;                            //string containing the path of the logFile
+    std::string             path;                               //string containing the path of the part
+    std::string             type;                               //string containing the type of the data
+    int                     currFrame;                          //integer containing the current frame
+    int                     maxFrame;                           //integer containing the maxFrame
+    yarp::os::Bottle        bot;                                //yarp Bottle containing all the data
+    yarp::sig::Vector       timestamp;                          //yarp Vector containing all the timestamps
+    yarp::os::Contactable*  outputPort;                         //yarp port for sending out data
+    std::string             portName;                           //the name of the port
+    int                     sent;                               //integer used for step from command
+    bool                    hasNotified;                        //boolean used for individual part notification that it has reached eof
+
+    partsData() { outputPort = nullptr; worker = nullptr;}
+};
+
+struct RowInfo {
+    std::string name;
+    std::string info;
+    std::string log;
+    std::string path;
+};
 
 /**********************************************************/
 class Utilities : public QObject
@@ -98,8 +106,7 @@ public:
     /**
     * function that returns a vector containing path directories - works in a recursive way
     */
-    int getRecSubDirList(std::string dir, std::vector<std::string> &names, std::vector<std::string> &info,
-                         std::vector<std::string> &logs, std::vector<std::string> &paths, int recursive);
+    int getRecSubDirList(const std::string& dir, std::vector<RowInfo>& rowInfoVec, int recursive);
     /**
     * function that checks validity of log files
     */

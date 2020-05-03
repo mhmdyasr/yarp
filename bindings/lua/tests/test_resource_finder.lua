@@ -1,6 +1,6 @@
 #!/usr/bin/lua
 
--- Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+-- Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 -- All rights reserved.
 --
 -- This software may be modified and distributed under the terms of the
@@ -11,7 +11,7 @@ require("yarp")
 function test_resource_finder()
   -- initialize yarp network
   yarp.Network()
-  
+
   local rf = yarp.ResourceFinder()
   rf:setVerbose(true)
   rf:setDefaultContext("myContext")
@@ -20,4 +20,3 @@ function test_resource_finder()
 end
 
 test_resource_finder()
-

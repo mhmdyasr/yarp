@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -6,18 +6,20 @@
 
 yarp_prepare_plugin(dynamixelAX12Ftdi
                     CATEGORY device
-                    TYPE yarp::dev::DynamixelAX12FtdiDriver
+                    TYPE DynamixelAX12FtdiDriver
                     INCLUDE "DynamixelAX12FtdiDriver.h"
                     EXTRA_CONFIG WRAPPER=controlboard
                     DEPENDS "YARP_HAS_FTDI")
 
 if(NOT SKIP_dynamixelAX12Ftdi)
-  set(CMAKE_INCLUDE_CURRENT_DIR ON)
-  yarp_add_plugin(yarp_dynamixelAX12Ftdi DynamixelAX12FtdiDriver.cpp
-                                         DynamixelAX12FtdiDriver.h)
-  target_link_libraries(yarp_dynamixelAX12Ftdi PRIVATE YARP::YARP_OS
+  yarp_add_plugin(yarp_dynamixelAX12Ftdi)
+
+  target_sources(yarp_dynamixelAX12Ftdi PRIVATE DynamixelAX12FtdiDriver.cpp
+                                                DynamixelAX12FtdiDriver.h)
+
+  target_link_libraries(yarp_dynamixelAX12Ftdi PRIVATE YARP::YARP_os
                                                        YARP::YARP_dev)
-  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_os
                                                       YARP_dev)
 
   target_include_directories(yarp_dynamixelAX12Ftdi SYSTEM PRIVATE ${FTDI_INCLUDE_DIR})
@@ -28,14 +30,10 @@ if(NOT SKIP_dynamixelAX12Ftdi)
                EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
-  yarp_install(FILES dynamixelAX12Ftdi.ini
-               COMPONENT ${YARP_PLUGIN_MASTER}
-               DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
   set_property(TARGET yarp_dynamixelAX12Ftdi PROPERTY FOLDER "Unsupported")
 endif()
-
-

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -22,10 +22,10 @@ namespace yarp {
 }
 
 class yarp::dev::FakeBot : public DeviceDriver,
-            public IPositionControl, 
+            public IPositionControl,
             public IVelocityControl,
             public IAmplifierControl,
-            public IEncoders, 
+            public IEncoders,
             public IFrameGrabberImage,
             public DeviceResponder
 {
@@ -72,7 +72,7 @@ public:
 
     // IFrameGrabberImage
     virtual bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image);
-    
+
     virtual int height() const {
         return m_h;
     }
@@ -266,7 +266,7 @@ public:
         }
         return true;
     }
-    
+
     virtual bool getEncoderAcceleration(int j, double *spds) {
         if (j<njoints) {
             (*spds) = 0;
@@ -333,7 +333,7 @@ public:
         *v = 0.0;
         return true;
     }
-    
+
     virtual bool getAmpStatus(int *st) {
         *st = 0;
         return true;
@@ -345,4 +345,3 @@ public:
     }
 
 };
-

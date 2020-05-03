@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,6 @@
 #ifndef RPLIDAR_H
 #define RPLIDAR_H
 
-#include <string>
 
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Semaphore.h>
@@ -27,8 +26,12 @@
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/sig/Vector.h>
-#include <yarp/dev/SerialInterfaces.h>
+#include <yarp/dev/ISerialDevice.h>
+
+#include <mutex>
+#include <string>
 #include <vector>
+
 #include <rplidar.h>
 
 using namespace yarp::os;
@@ -52,7 +55,7 @@ class RpLidar2 : public PeriodicThread, public yarp::dev::IRangefinder2D, public
     void                  handleError(u_result error);
     std::string deviceinfo();
 protected:
-    yarp::os::Mutex       m_mutex;
+    std::mutex       m_mutex;
     int                   m_sensorsNum;
     int                   m_buffer_life;
     double                m_min_angle;
@@ -66,7 +69,8 @@ protected:
     bool                  m_inExpressMode;
     int                   m_pwm_val;
     std::vector <Range_t> m_range_skip_vector;
-    std::string m_info;
+    std::string           m_info;
+    std::string           m_serialPort;
     Device_status         m_device_status;
     yarp::sig::Vector     m_laser_data;
     rplidardrv*           m_drv;

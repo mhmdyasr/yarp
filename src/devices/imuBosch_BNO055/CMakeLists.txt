@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms of the
@@ -6,20 +6,22 @@
 
 yarp_prepare_plugin(imuBosch_BNO055
                     CATEGORY device
-                    TYPE yarp::dev::BoschIMU
+                    TYPE BoschIMU
                     INCLUDE imuBosch_BNO055.h
                     EXTRA_CONFIG WRAPPER=inertial
-                    DEPENDS "NOT WIN32;YARP_HAS_MATH_LIB;YARP_HAS_I2C")
+                    DEPENDS "NOT WIN32;TARGET YARP::YARP_math;YARP_HAS_I2C")
 
 if(ENABLE_imuBosch_BNO055)
-  set(CMAKE_INCLUDE_CURRENT_DIR ON)
-  yarp_add_plugin(yarp_imuBosch_BNO055 imuBosch_BNO055.cpp
-                                       imuBosch_BNO055.h)
-  target_link_libraries(yarp_imuBosch_BNO055 PRIVATE YARP::YARP_OS
+  yarp_add_plugin(yarp_imuBosch_BNO055)
+
+  target_sources(yarp_imuBosch_BNO055 PRIVATE imuBosch_BNO055.cpp
+                                              imuBosch_BNO055.h)
+
+  target_link_libraries(yarp_imuBosch_BNO055 PRIVATE YARP::YARP_os
                                                      YARP::YARP_sig
                                                      YARP::YARP_dev
                                                      YARP::YARP_math)
-  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_OS
+  list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS YARP_os
                                                       YARP_sig
                                                       YARP_dev
                                                       YARP_math)
@@ -33,10 +35,8 @@ if(ENABLE_imuBosch_BNO055)
                EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT ${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR})
-  yarp_install(FILES imuBosch_BNO055.ini
-               COMPONENT ${YARP_PLUGIN_MASTER}
-               DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 

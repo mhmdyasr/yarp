@@ -1,13 +1,13 @@
-#!/usr/bin/lua 
+#!/usr/bin/lua
 
--- Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+-- Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
 -- All rights reserved.
 --
 -- This software may be modified and distributed under the terms of the
 -- BSD-3-Clause license. See the accompanying LICENSE file for details.
 
 
--- LUA_CPATH should have the path to yarp-lua binding library (i.e. yarp.so, yarp.dll) 
+-- LUA_CPATH should have the path to yarp-lua binding library (i.e. yarp.so, yarp.dll)
 require("yarp")
 
 -- initialize yarp network
@@ -38,7 +38,7 @@ end
 
 -- open the interfaces
 ipos = driver:viewIPositionControl()
-if ipos == nil then 
+if ipos == nil then
     print("Cannot open the IPositionControl interface");
     driver:close()
     os.exit()
@@ -58,7 +58,7 @@ for i=1,100 do
     icm:setControlMode(0, VOCAB_CM_POSITION)
     ipos:setRefSpeed(0, 30)
     ipos:positionMove(0, position)
-    yarp.Time_delay(0.5)
+    yarp.delay(0.5)
 end
 
 
@@ -66,4 +66,3 @@ driver:close()
 
 -- Deinitialize yarp network
 yarp.Network_fini()
-

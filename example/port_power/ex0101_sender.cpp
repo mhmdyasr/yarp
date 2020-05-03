@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2006-2010 RobotCub Consortium
  * All rights reserved.
  *
@@ -13,7 +13,7 @@ using namespace yarp::os;
 
 int main() {
     Network yarp;
-    
+
     int ct = 0;
     BufferedPort<Bottle> p; // Create a port.
     p.open("/out");         // Give it a name on the network.

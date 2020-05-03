@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -80,7 +80,7 @@ void MainWindow::updateMain()
 
     //For debug purpose only
     //connected = true;
-    //charge = 100; 
+    //charge = 100;
     //voltage = 40.1;
     //current = -10.3;
 
@@ -197,7 +197,7 @@ void MainWindow::updateMain()
     return;
 }
 
-MainWindow::MainWindow(const yarp::os::ResourceFinder& rf, yarp::dev::IBattery* p_ibat, QWidget *parent) : QMainWindow(parent),
+MainWindow::MainWindow(const yarp::os::ResourceFinder& rf, yarp::dev::IBattery* p_ibat, QWidget *parent, double refresh_period) : QMainWindow(parent),
     ibat(p_ibat),
     drv(nullptr),
     ui(new Ui::MainWindow),
@@ -210,8 +210,8 @@ MainWindow::MainWindow(const yarp::os::ResourceFinder& rf, yarp::dev::IBattery* 
     ui->setupUi(this);
     mainTimer = new QTimer(this);
     connect(mainTimer, SIGNAL(timeout()), this, SLOT(updateMain()));
-    mainTimer->start(1000*10); //10 seconds
-    
+    mainTimer->start(1000*refresh_period); //10 seconds
+
     //this->setWindowFlags(Qt::BypassWindowManagerHint); //Set window with no title bar
     //this->setWindowFlags(Qt::CustomizeWindowHint); //Set window with no title bar
     this->setWindowFlags(Qt::MSWindowsFixedSizeDialogHint); //Set window to fixed size
@@ -234,5 +234,5 @@ MainWindow::MainWindow(const yarp::os::ResourceFinder& rf, yarp::dev::IBattery* 
     img_numbers.setMask(img_numbers.createMaskFromColor(QColor(255, 0, 255)));
 
     scene = new QGraphicsScene;
-    updateMain();
+    QTimer::singleShot(0, this, &MainWindow::updateMain);
 }

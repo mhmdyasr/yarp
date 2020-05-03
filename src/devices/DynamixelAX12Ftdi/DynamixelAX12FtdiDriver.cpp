@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * Copyright (C) 2010 Ze Ji
  * All rights reserved.
  *
@@ -258,9 +258,9 @@ int DynamixelAX12FtdiDriver::sendCommand(unsigned char id, unsigned char inst[],
             //some point, I will get back the correct number of bytes. After doing this enough times,
             //I should work out the timing issue
             retCode = ftdi_read_data(&ftdic, header, 4);
-        }            // retCode: <0,: 	error code from usb_bulk_read()
-            //          0: 	no data was available
-            //          >0: 	number of bytes read
+        }            // retCode: <0,:     error code from usb_bulk_read()
+            //          0:     no data was available
+            //          >0:     number of bytes read
             /// TODO check if it works with Kaspar. Originally made by Sven. Need testing
         while (retCode == 0); // not needed. as it will hang if no device is connected
 
@@ -299,7 +299,7 @@ int DynamixelAX12FtdiDriver::sendCommand(unsigned char id, unsigned char inst[],
                         for (i = 0; i < retCode - 1; i++) {
                             ret[i] = body[i];
                         }
-                        // retSize = retCode;    	// Sven's original code. 
+                        // retSize = retCode;        // Sven's original code.
                         retSize = retCode - 1; // retSize should be retCode - 1, as checksum is not included
                         return 1;
                     }
@@ -449,10 +449,14 @@ bool DynamixelAX12FtdiDriver::checkMotionDone(int j, bool *flag) {
 
 bool DynamixelAX12FtdiDriver::checkMotionDone(bool *flag) {
     bool t = true;
-    for (int k = 0; k < numOfAxes; k++) {
-        if (!this->checkMotionDone(k, &flag[k]))
+    bool tmp_done(false), all_done(true);
+    for (int k = 0; k < numOfAxes; k++)
+    {
+        if (!this->checkMotionDone(k, &tmp_done))
             t = false;
+        all_done &= tmp_done;
     }
+    *flag = all_done;
     return t;
 }
 
@@ -855,7 +859,7 @@ bool DynamixelAX12FtdiDriver::initMotorIndex(yarp::os::Bottle *sensorIndex) {
     unsigned char *tmp = NULL;
     tmp = (unsigned char *) realloc(jointNumbers, numOfAxes * sizeof (unsigned char));
     if (tmp != NULL) {
-        //	jointNumbers = {0x65, 0x74, 0x84, 0x66, 0x75, 0x85, 0x67, 0x76, 0x86, 0x6B, 0x77, 0x87, 0x6A, 0x68, 0x69, 0x6C};
+        //    jointNumbers = {0x65, 0x74, 0x84, 0x66, 0x75, 0x85, 0x67, 0x76, 0x86, 0x6B, 0x77, 0x87, 0x6A, 0x68, 0x69, 0x6C};
         jointNumbers = tmp;
     } else {
         return false;
@@ -890,3 +894,85 @@ bool DynamixelAX12FtdiDriver::initMotorIndex(yarp::os::Bottle *sensorIndex) {
     return true;
 }
 
+bool DynamixelAX12FtdiDriver::positionMove(const int n_joint, const int *joints, const double *refs)
+{
+    bool ret = true;
+    for(int j=0; j<n_joint; j++)
+    {
+        ret &= positionMove(joints[j], refs[j]);
+    }
+    return ret;
+}
+
+bool DynamixelAX12FtdiDriver::relativeMove(const int n_joint, const int *joints, const double *deltas)
+{
+    bool ret = true;
+    for(int j=0; j<n_joint; j++)
+    {
+        ret &= relativeMove(joints[j], deltas[j]);
+    }
+    return ret;
+}
+
+bool DynamixelAX12FtdiDriver::checkMotionDone(const int n_joint, const int *joints, bool *flag)
+{
+    bool ret = true;
+    bool tmp_joint(false), tmp_device(true);
+    for(int j=0; j<n_joint; j++)
+    {
+        ret &= checkMotionDone(joints[j], &tmp_joint);
+        tmp_device &= tmp_joint;
+    }
+    *flag = tmp_device;
+    return ret;
+}
+
+bool DynamixelAX12FtdiDriver::setRefSpeeds(const int n_joint, const int *joints, const double *spds)
+{
+    bool ret = true;
+    for(int j=0; j<n_joint; j++)
+    {
+        ret &= setRefSpeed(joints[j], spds[j]);
+    }
+    return ret;
+}
+
+bool DynamixelAX12FtdiDriver::setRefAccelerations(const int n_joint, const int *joints, const double *accs)
+{
+    bool ret = true;
+    for(int j=0; j<n_joint; j++)
+    {
+        ret &= setRefAcceleration(joints[j], accs[j]);
+    }
+    return ret;
+}
+
+bool DynamixelAX12FtdiDriver::getRefSpeeds(const int n_joint, const int *joints, double *spds)
+{
+    bool ret = true;
+    for(int j=0; j<n_joint; j++)
+    {
+        ret &= getRefSpeed(joints[j], &spds[j]);
+    }
+    return ret;
+}
+
+bool DynamixelAX12FtdiDriver::getRefAccelerations(const int n_joint, const int *joints, double *accs)
+{
+    bool ret = true;
+    for(int j=0; j<n_joint; j++)
+    {
+        ret &= getRefSpeed(joints[j], &accs[j]);
+    }
+    return ret;
+}
+
+bool DynamixelAX12FtdiDriver::stop(const int n_joint, const int *joints)
+{
+    bool ret = true;
+    for(int j=0; j<n_joint; j++)
+    {
+        ret &= stop(joints[j]);
+    }
+    return ret;
+}

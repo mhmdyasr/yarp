@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2019 Istituto Italiano di Tecnologia (IIT)
+ * Copyright (C) 2006-2020 Istituto Italiano di Tecnologia (IIT)
  * All rights reserved.
  *
  * This software may be modified and distributed under the terms of the
@@ -11,13 +11,11 @@
 #define YARP_DEV_MULTIPLEANALOGSENSORSREMAPPER_MULTIPLEANALOGSENSORSREMAPPER_H
 
 #include <yarp/dev/MultipleAnalogSensorsInterfaces.h>
-#include <yarp/dev/Wrapper.h>
+#include <yarp/dev/IMultipleWrapper.h>
 
 #include <vector>
 #include <map>
 
-namespace yarp {
-namespace dev {
 
 /**
  * Internal identifier of the type of sensors.
@@ -32,26 +30,27 @@ enum MAS_SensorType
     SixAxisForceTorqueSensors=5,
     ContactLoadCellArrays=6,
     EncoderArrays=7,
-    SkinPatches=8
+    SkinPatches=8,
+    PositionSensors=9
 };
 
 /**
 * @ingroup dev_impl_remappers
 *
 * \brief `multipleanalogsensorsremapper` : device that takes a list of sensor from multiple analog sensors device and expose them as a single device exposing MultipleAnalogSensors interface.
-* 
+*
 * | YARP device name |
 * |:-----------------:|
 * | `multipleanalogsensorsremapper` |
-* 
+*
 *  Parameters required by this device are:
 * | Parameter name | SubParameter   | Type    | Units          | Default Value | Required                    | Description                                                       | Notes |
 * |:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:--------------------------: |:-----------------------------------------------------------------:|:-----:|
 * | {sensorTag}Names |      -       | vector of strings  | -      |   -           | Yes     | Ordered list of name  that must belong of the remapped device. The list also defines the index that the sensor will  |  |
 *
 * The sensorTag is a tag identifing the spefici sensor interface, see \ref dev_iface_multiple_analog for a list of possible sensors.
-* The tag of each sensor interface is provided in the doxygen documentation of the specific interface. 
-* 
+* The tag of each sensor interface is provided in the doxygen documentation of the specific interface.
+*
 * Configuration file using .ini format.
 *
 * \code{.unparsed}
@@ -83,19 +82,21 @@ enum MAS_SensorType
 *   // Use it as  you would use any controlboard device
 *   // ...
 * \endcode
-* 
+*
 */
-class MultipleAnalogSensorsRemapper: public yarp::dev::DeviceDriver,
-                                     public yarp::dev::IMultipleWrapper,
-                                     public yarp::dev::IThreeAxisGyroscopes,
-                                     public yarp::dev::IThreeAxisLinearAccelerometers,
-                                     public yarp::dev::IThreeAxisMagnetometers,
-                                     public yarp::dev::IOrientationSensors,
-                                     public yarp::dev::ITemperatureSensors,
-                                     public yarp::dev::ISixAxisForceTorqueSensors,
-                                     public yarp::dev::IContactLoadCellArrays,
-                                     public yarp::dev::IEncoderArrays,
-                                     public yarp::dev::ISkinPatches
+class MultipleAnalogSensorsRemapper :
+        public yarp::dev::DeviceDriver,
+        public yarp::dev::IMultipleWrapper,
+        public yarp::dev::IThreeAxisGyroscopes,
+        public yarp::dev::IThreeAxisLinearAccelerometers,
+        public yarp::dev::IThreeAxisMagnetometers,
+        public yarp::dev::IOrientationSensors,
+        public yarp::dev::ITemperatureSensors,
+        public yarp::dev::ISixAxisForceTorqueSensors,
+        public yarp::dev::IContactLoadCellArrays,
+        public yarp::dev::IEncoderArrays,
+        public yarp::dev::ISkinPatches,
+        public yarp::dev::IPositionSensors
 {
 private:
     bool m_verbose{false};
@@ -110,7 +111,7 @@ private:
         {}
         SensorInSubDevice(size_t p_subDevice, size_t p_indexInSubDevice):
             subDevice(p_subDevice), indexInSubDevice(p_indexInSubDevice) {}
-        
+
         size_t subDevice;
         size_t indexInSubDevice;
     };
@@ -127,6 +128,8 @@ private:
     std::vector<yarp::dev::IContactLoadCellArrays*> m_iContactLoadCellArrays;
     std::vector<yarp::dev::IEncoderArrays*> m_iEncoderArrays;
     std::vector<yarp::dev::ISkinPatches*> m_iSkinPatches;
+    std::vector<yarp::dev::IPositionSensors*> m_iPositionSensors;
+
 
     // Templated methods to streamline of the function implementation for all the different sensors
     // This part is complicated, but is useful to avoid a huge code duplication
@@ -134,10 +137,10 @@ private:
     //   * Method templates ( http://en.cppreference.com/w/cpp/language/member_template )
     //   * Pointer to method functions ( http://en.cppreference.com/w/cpp/language/pointer#Pointers_to_member_functions )
     template<typename Interface>
-    MAS_status genericGetStatus(const MAS_SensorType sensorType,
+    yarp::dev::MAS_status genericGetStatus(const MAS_SensorType sensorType,
                                 size_t& sens_index,
                                 const std::vector<Interface *>& subDeviceVec,
-                                MAS_status (Interface::*methodPtr)(size_t) const) const;
+                                yarp::dev::MAS_status (Interface::*methodPtr)(size_t) const) const;
     template<typename Interface>
     bool genericGetName(const MAS_SensorType sensorType,
                                 size_t& sens_index, std::string &name,
@@ -162,7 +165,7 @@ private:
     template<typename Interface>
     bool genericAttachAll(const MAS_SensorType sensorType,
                           std::vector<Interface *>& subDeviceVec,
-                          const PolyDriverList &polylist,
+                          const yarp::dev::PolyDriverList &polylist,
                           bool (Interface::*getNameMethodPtr)(size_t, std::string&) const,
                           size_t (Interface::*getNrOfSensorsMethodPtr)() const);
 
@@ -172,37 +175,37 @@ public:
     bool close() override;
 
     /** MultipeWrapper methods */
-    bool attachAll(const PolyDriverList &p) override;
+    bool attachAll(const yarp::dev::PolyDriverList &p) override;
     bool detachAll() override;
 
-    /* IThreeAxisGyroscopes methods */ 
+    /* IThreeAxisGyroscopes methods */
     size_t getNrOfThreeAxisGyroscopes() const override;
     yarp::dev::MAS_status getThreeAxisGyroscopeStatus(size_t sens_index) const override;
     bool getThreeAxisGyroscopeName(size_t sens_index, std::string &name) const override;
     bool getThreeAxisGyroscopeFrameName(size_t sens_index, std::string &frameName) const override;
     bool getThreeAxisGyroscopeMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
-    
-    /* IThreeAxisLinearAccelerometers methods */ 
+
+    /* IThreeAxisLinearAccelerometers methods */
     size_t getNrOfThreeAxisLinearAccelerometers() const override;
     yarp::dev::MAS_status getThreeAxisLinearAccelerometerStatus(size_t sens_index) const override;
     bool getThreeAxisLinearAccelerometerName(size_t sens_index, std::string &name) const override;
     bool getThreeAxisLinearAccelerometerFrameName(size_t sens_index, std::string &frameName) const override;
     bool getThreeAxisLinearAccelerometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
-    
-    /* IThreeAxisMagnetometers methods */ 
+
+    /* IThreeAxisMagnetometers methods */
     size_t getNrOfThreeAxisMagnetometers() const override;
     yarp::dev::MAS_status getThreeAxisMagnetometerStatus(size_t sens_index) const override;
     bool getThreeAxisMagnetometerName(size_t sens_index, std::string &name) const override;
     bool getThreeAxisMagnetometerFrameName(size_t sens_index, std::string &frameName) const override;
     bool getThreeAxisMagnetometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
-    
-    /* IOrientationSensors methods */ 
+
+    /* IOrientationSensors methods */
     size_t getNrOfOrientationSensors() const override;
     yarp::dev::MAS_status getOrientationSensorStatus(size_t sens_index) const override;
     bool getOrientationSensorName(size_t sens_index, std::string &name) const override;
     bool getOrientationSensorFrameName(size_t sens_index, std::string &frameName) const override;
     bool getOrientationSensorMeasureAsRollPitchYaw(size_t sens_index, yarp::sig::Vector& rpy, double& timestamp) const override;
-    
+
     /* ITemperatureSensors methods */
     size_t getNrOfTemperatureSensors() const override;
     yarp::dev::MAS_status getTemperatureSensorStatus(size_t sens_index) const override;
@@ -210,8 +213,8 @@ public:
     bool getTemperatureSensorFrameName(size_t sens_index, std::string &frameName) const override;
     bool getTemperatureSensorMeasure(size_t sens_index, double& out, double& timestamp) const override;
     bool getTemperatureSensorMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
-    
-    /* ISixAxisForceTorqueSensors */ 
+
+    /* ISixAxisForceTorqueSensors */
     size_t getNrOfSixAxisForceTorqueSensors() const override;
     yarp::dev::MAS_status getSixAxisForceTorqueSensorStatus(size_t sens_index) const override;
     bool getSixAxisForceTorqueSensorName(size_t sens_index, std::string &name) const override;
@@ -224,24 +227,28 @@ public:
     bool getContactLoadCellArrayName(size_t sens_index, std::string &name) const override;
     bool getContactLoadCellArrayMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
     size_t getContactLoadCellArraySize(size_t sens_index) const override;
-    
+
     /* IEncoderArrays */
     size_t getNrOfEncoderArrays() const override;
     yarp::dev::MAS_status getEncoderArrayStatus(size_t sens_index) const override;
     bool getEncoderArrayName(size_t sens_index, std::string &name) const override;
     bool getEncoderArrayMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
     size_t getEncoderArraySize(size_t sens_index) const override;
-    
+
     /* ISkinPatches */
     size_t getNrOfSkinPatches() const override;
     yarp::dev::MAS_status getSkinPatchStatus(size_t sens_index) const override;
     bool getSkinPatchName(size_t sens_index, std::string &name) const override;
     bool getSkinPatchMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
     size_t getSkinPatchSize(size_t sens_index) const override;
-};
 
-}
-}
+    /* IPositionSensors methods */
+    size_t getNrOfPositionSensors() const override;
+    yarp::dev::MAS_status getPositionSensorStatus(size_t sens_index) const override;
+    bool getPositionSensorName(size_t sens_index, std::string& name) const override;
+    bool getPositionSensorFrameName(size_t sens_index, std::string& frameName) const override;
+    bool getPositionSensorMeasure(size_t sens_index, yarp::sig::Vector& xyz, double& timestamp) const override;
+};
 
 
 #endif
